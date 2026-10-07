@@ -4,13 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ContaCore EMCO | Executive Financial Intelligence</title>
-  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <script>
@@ -130,9 +127,15 @@
       </div>
 
       <div class="flex items-center gap-3">
+        <!-- BOTÓN DE CONFIGURACIÓN API KEY GEMINI -->
+        <button onclick="toggleApiKeyModal(true)" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-300 hover:text-white transition">
+          <i class="ph-bold ph-key text-indigo-400 text-sm"></i>
+          <span id="api-key-indicator">Configurar Gemini Key</span>
+        </button>
+
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Transaccional ACID Firestore</span>
+          <span>Transaccional ACID</span>
         </div>
       </div>
     </header>
@@ -198,7 +201,7 @@
               <tr>
                 <th class="p-4">Folio / UUID</th>
                 <th class="p-4">Cliente</th>
-                <th class="p-4">Vencimiento</th>
+                <th class="p-4">Emisión / Venc.</th>
                 <th class="p-4">Monto Total</th>
                 <th class="p-4">Comprobante</th>
                 <th class="p-4">Estado Cobro</th>
@@ -230,7 +233,7 @@
               <tr>
                 <th class="p-4">Folio / UUID</th>
                 <th class="p-4">Proveedor</th>
-                <th class="p-4">Vencimiento</th>
+                <th class="p-4">Emisión / Venc.</th>
                 <th class="p-4">Monto Total</th>
                 <th class="p-4">Comprobante</th>
                 <th class="p-4">Estado Pago</th>
@@ -279,24 +282,51 @@
     </div>
   </main>
 
+  <!-- MODAL: GESTOR DE API KEY GEMINI -->
+  <div id="modal-api-key" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-key text-indigo-400 text-lg"></i>
+          <h4 class="text-base font-bold text-white">API Key de Google Gemini</h4>
+        </div>
+        <button onclick="toggleApiKeyModal(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini 2.5 Flash en la extracción inteligente de PDFs e imágenes.
+      </p>
+
+      <div>
+        <label class="block uppercase tracking-wider text-[11px] font-mono text-slate-400 mb-1">Gemini API Key</label>
+        <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono text-xs">
+      </div>
+
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+        <button type="button" onclick="toggleApiKeyModal(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 text-xs font-semibold">Cerrar</button>
+        <button type="button" onclick="saveGeminiApiKey()" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 text-xs font-semibold shadow-lg shadow-indigo-600/20">Guardar Llave</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL INTELIGENTE: ELEVAR Y PROCESAR FACTURAS (CXC Y CXP) -->
   <div id="modal-invoice" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
           <h4 id="modal-invoice-title" class="text-base font-bold text-white">Procesar Factura con IA</h4>
-          <span class="text-[11px] text-slate-400 font-mono">Soporte documental XML (Nativo) o PDF/Imagen (Gemini 2.5 Flash)</span>
+          <span class="text-[11px] text-slate-400 font-mono">CFDI XML nativo o PDF/Imagen con Gemini 2.5 Flash</span>
         </div>
         <button onclick="closeInvoiceModal()" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
       </div>
 
-      <!-- Zona de Carga Inteligente de Documentos -->
+      <!-- Zona Drag & Drop -->
       <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-4 text-center bg-slate-950/50 cursor-pointer relative group transition" id="drop-zone">
         <input type="file" id="invoice-file" accept=".xml, .pdf, .jpg, .jpeg, .png" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="handleFileUpload(event)">
         <div id="upload-idle" class="space-y-1">
           <i class="ph-bold ph-file-arrow-up text-2xl text-indigo-400 group-hover:scale-110 transition-transform inline-block"></i>
           <p class="text-xs font-semibold text-slate-200">Arrastra o selecciona el XML, PDF o Comprobante</p>
-          <p class="text-[10px] text-slate-400 font-mono">Lectura instantánea CFDI o extracción por Gemini 2.5 Flash</p>
+          <p class="text-[10px] text-slate-400 font-mono">Detección automática de UUID, Retenciones, Emisor/Receptor y Total</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
           <i class="ph ph-spinner animate-spin text-2xl text-indigo-400 inline-block"></i>
@@ -315,18 +345,18 @@
             <input type="text" id="invoice-entity" placeholder="Razón Social o Nombre" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
           </div>
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Folio o UUID Fiscal</label>
-            <input type="text" id="invoice-folio" placeholder="Ej: F-1029 / UUID" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono uppercase">
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Folio o UUID Fiscal (36 car.)</label>
+            <input type="text" id="invoice-folio" placeholder="602B1C8B-D848-45E5..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono uppercase">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Monto Total ($ MXN)</label>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Monto Total Neto ($ MXN)</label>
             <input type="number" step="0.01" id="invoice-total" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
           </div>
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Vencimiento</label>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha Emisión / Vencimiento</label>
             <input type="date" id="invoice-due-date" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
           </div>
         </div>
@@ -395,7 +425,7 @@
     </div>
   </div>
 
-  <!-- MOTOR JAVASCRIPT CON FIREBASE Y GEMINI 2.5 FLASH -->
+  <!-- SCRIPT ENGINE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -422,6 +452,39 @@
 
     let currentStaff = null;
     let currentPermissions = [];
+
+    // GESTIÓN DE LA API KEY DE GEMINI EN LOCALSTORAGE
+    window.toggleApiKeyModal = (show) => {
+      document.getElementById('modal-api-key').classList.toggle('hidden', !show);
+      if (show) {
+        document.getElementById('input-gemini-key').value = localStorage.getItem('GEMINI_API_KEY') || '';
+      }
+    };
+
+    window.saveGeminiApiKey = () => {
+      const key = document.getElementById('input-gemini-key').value.trim();
+      if (!key) {
+        alert("Por favor introduce una API Key válida.");
+        return;
+      }
+      localStorage.setItem('GEMINI_API_KEY', key);
+      updateApiKeyIndicator();
+      window.toggleApiKeyModal(false);
+      alert("API Key de Gemini configurada con éxito.");
+    };
+
+    function updateApiKeyIndicator() {
+      const key = localStorage.getItem('GEMINI_API_KEY');
+      const ind = document.getElementById('api-key-indicator');
+      if (key) {
+        ind.innerText = "Gemini Key Activa";
+        ind.className = "text-emerald-400 font-semibold";
+      } else {
+        ind.innerText = "Configurar Gemini Key";
+        ind.className = "text-amber-400 font-medium";
+      }
+    }
+    updateApiKeyIndicator();
 
     // RBAC DINÁMICO
     function enforceDynamicRBAC() {
@@ -513,12 +576,11 @@
       }
     };
 
-    // CONTROL DEL MODAL DE FACTURAS
     window.openInvoiceModal = (type) => {
       document.getElementById('invoice-type').value = type;
       const isCxC = type === 'CXC';
       document.getElementById('modal-invoice-title').innerText = isCxC ? "Emitir Factura por Cobrar (CxC)" : "Registrar Factura de Proveedor (CxP)";
-      document.getElementById('label-entity').innerText = isCxC ? "Cliente / Razón Social" : "Proveedor / Razón Social";
+      document.getElementById('label-entity').innerText = isCxC ? "Cliente / Receptor" : "Proveedor / Emisor";
       document.getElementById('form-invoice').reset();
       document.getElementById('uploaded-doc-url').value = '';
       document.getElementById('uploaded-doc-name').value = '';
@@ -536,7 +598,7 @@
       if (!show) document.getElementById('form-activo').reset();
     };
 
-    // PROCESAMIENTO HÍBRIDO DE ARCHIVOS (XML O PDF/IMAGEN CON GEMINI 2.5 FLASH)
+    // PROCESAMIENTO HÍBRIDO DE ARCHIVOS
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -549,7 +611,6 @@
       procBox.classList.remove('hidden');
 
       try {
-        // 1. Subir a Firebase Storage
         procText.innerText = "Subiendo archivo a Firebase Storage...";
         const folder = document.getElementById('invoice-type').value.toLowerCase();
         const storagePath = `comprobantes/${folder}/${Date.now()}_${file.name}`;
@@ -560,22 +621,27 @@
         document.getElementById('uploaded-doc-url').value = downloadUrl;
         document.getElementById('uploaded-doc-name').value = file.name;
 
-        // 2. Extracción de Metadatos: XML nativo o IA
         if (file.name.toLowerCase().endsWith('.xml')) {
           procText.innerText = "Extrayendo CFDI vía XML nativo...";
           const text = await file.text();
           parseXMLInvoice(text);
         } else {
-          // PDF o Imagen: Procesar con Gemini 2.5 Flash
-          procText.innerText = "Extrayendo campos con Gemini 2.5 Flash...";
+          const geminiKey = localStorage.getItem('GEMINI_API_KEY');
+          if (!geminiKey) {
+            alert("No tienes configurada la API Key de Gemini. Haz clic en 'Configurar Gemini Key' en la barra superior para habilitar el análisis de PDFs.");
+            window.toggleApiKeyModal(true);
+            return;
+          }
+
+          procText.innerText = "Extrayendo CFDI con Gemini 2.5 Flash...";
           const base64Data = await fileToBase64(file);
-          await parseWithGeminiFlash(base64Data, file.type);
+          await parseWithGeminiFlash(base64Data, file.type, geminiKey);
         }
 
         procText.innerText = "¡Datos extraídos con éxito!";
       } catch (err) {
         console.error("Fallo al procesar documento:", err);
-        alert("Aviso al procesar: " + err.message + ". Puedes llenar los campos manualmente.");
+        alert("Aviso: " + err.message + ". Puedes completar los campos manualmente.");
       } finally {
         setTimeout(() => {
           idleBox.classList.remove('hidden');
@@ -591,6 +657,9 @@
 
       const comprobante = xmlDoc.getElementsByTagName("cfdi:Comprobante")[0] || xmlDoc.getElementsByTagName("Comprobante")[0];
       const total = comprobante ? comprobante.getAttribute("Total") : "";
+      
+      const timbre = xmlDoc.getElementsByTagName("tfd:TimbreFiscalDigital")[0] || xmlDoc.getElementsByTagName("TimbreFiscalDigital")[0];
+      const uuid = timbre ? timbre.getAttribute("UUID") : "";
       const folio = comprobante ? (comprobante.getAttribute("Folio") || comprobante.getAttribute("Serie")) : "";
 
       const emisor = xmlDoc.getElementsByTagName("cfdi:Emisor")[0] || xmlDoc.getElementsByTagName("Emisor")[0];
@@ -603,7 +672,7 @@
       }
 
       if (total) document.getElementById('invoice-total').value = total;
-      if (folio) document.getElementById('invoice-folio').value = folio;
+      if (uuid || folio) document.getElementById('invoice-folio').value = uuid || folio;
       
       const fecha = comprobante?.getAttribute("Fecha");
       if (fecha) {
@@ -620,18 +689,25 @@
       });
     }
 
-    async function parseWithGeminiFlash(base64Data, mimeType) {
-      const apiKey = firebaseConfig.apiKey;
+    // PROMPT REFINADO PARA CFDI MEXICANO Y GEMINI 2.5 FLASH
+    async function parseWithGeminiFlash(base64Data, mimeType, apiKey) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
       const isCxC = document.getElementById('invoice-type').value === 'CXC';
-      const prompt = `Extrae los siguientes datos clave de este comprobante/factura y responde EXCLUSIVAMENTE con un JSON válido con esta estructura:
-      {
-        "razon_social": "${isCxC ? 'Nombre o Razón social del cliente/receptor' : 'Nombre o Razón social del proveedor/emisor'}",
-        "folio": "Folio, número de factura o UUID",
-        "monto_total": 0.00,
-        "fecha_vencimiento": "AAAA-MM-DD"
-      }`;
+
+      const prompt = `Eres un auditor contable experto en comprobantes fiscales digitales de México (CFDI 4.0 y 3.3). 
+Analiza detalladamente este documento (factura/recibo) y extrae:
+1. "razon_social": ${isCxC ? 'Nombre/Razón Social del RECEPTOR o CLIENTE (a quien le facturan)' : 'Nombre/Razón Social del EMISOR o PROVEEDOR (quien expide la factura)'}.
+2. "folio": El Folio Fiscal o UUID completo de 36 caracteres (ej: 8DC5741F-0011-468A-93D2-7DEA17C9698A o 602B1C8B-D848-45E5-A3A3-55761463BCAB). Si no hay UUID, extrae el número de folio interno (ej: 6814).
+3. "monto_total": El TOTAL NETO FINAL A PAGAR en número decimal. CUIDADO: Toma en cuenta retenciones si existen (Subtotal + IVA trasladado - IVA retenido - ISR retenido = Total). Debe ser exactamente el valor final de la casilla TOTAL.
+4. "fecha_emision": Fecha de emisión en formato YYYY-MM-DD.
+
+Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
+{
+  "razon_social": "STRING",
+  "folio": "STRING",
+  "monto_total": 0.00,
+  "fecha_emision": "YYYY-MM-DD"
+}`;
 
       const response = await fetch(url, {
         method: 'POST',
@@ -647,7 +723,11 @@
         })
       });
 
-      if (!response.ok) throw new Error("No se pudo conectar con Gemini 2.5 Flash");
+      if (!response.ok) {
+        const errDetail = await response.json();
+        throw new Error(errDetail.error?.message || "Error al invocar Gemini API");
+      }
+
       const resData = await response.json();
       const rawJson = resData.candidates[0].content.parts[0].text;
       const parsed = JSON.parse(rawJson);
@@ -655,7 +735,7 @@
       if (parsed.razon_social) document.getElementById('invoice-entity').value = parsed.razon_social;
       if (parsed.folio) document.getElementById('invoice-folio').value = parsed.folio;
       if (parsed.monto_total) document.getElementById('invoice-total').value = parsed.monto_total;
-      if (parsed.fecha_vencimiento) document.getElementById('invoice-due-date').value = parsed.fecha_vencimiento;
+      if (parsed.fecha_emision) document.getElementById('invoice-due-date').value = parsed.fecha_emision;
     }
 
     // REGISTRO DE FACTURA (CXC / CXP)
@@ -724,7 +804,6 @@
       }
     };
 
-    // ELIMINAR REGISTROS
     window.eliminarItem = async (colName, id) => {
       if (confirm("¿Deseas eliminar este registro contable?")) {
         try {
@@ -735,7 +814,7 @@
       }
     };
 
-    // SINCRONIZACIÓN EN TIEMPO REAL Y RECALCULO DE KPIS
+    // RECALCULO DE MÉTRICAS Y TABLAS EN TIEMPO REAL
     function initLiveMetrics() {
       // 1. Cuentas por Cobrar (CxC)
       onSnapshot(query(collection(db, "accounts_receivable"), orderBy("created_at", "desc")), (snap) => {
@@ -768,7 +847,7 @@
 
           html += `
             <tr class="hover:bg-slate-800/40 transition">
-              <td class="p-4 font-mono font-bold text-xs text-white">${item.folio}</td>
+              <td class="p-4 font-mono font-bold text-xs text-white max-w-[150px] truncate" title="${item.folio}">${item.folio}</td>
               <td class="p-4 font-medium text-slate-200">${item.entity_name}</td>
               <td class="p-4 font-mono text-xs text-slate-400">${item.due_date || 'S/F'}</td>
               <td class="p-4 font-mono text-white font-semibold">$${Number(item.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
@@ -816,7 +895,7 @@
 
           html += `
             <tr class="hover:bg-slate-800/40 transition">
-              <td class="p-4 font-mono font-bold text-xs text-white">${item.folio}</td>
+              <td class="p-4 font-mono font-bold text-xs text-white max-w-[150px] truncate" title="${item.folio}">${item.folio}</td>
               <td class="p-4 font-medium text-slate-200">${item.entity_name}</td>
               <td class="p-4 font-mono text-xs text-slate-400">${item.due_date || 'S/F'}</td>
               <td class="p-4 font-mono text-white font-semibold">$${Number(item.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
@@ -871,7 +950,7 @@
               <td class="p-4 text-slate-300 font-medium">${item.assigned_to || '<span class="text-slate-500 italic">Sin asignar</span>'}</td>
               <td class="p-4 font-mono text-white font-semibold">$${cost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
               <td class="p-4 text-right">
-                <button onclick="eliminarItem('fixed_assets', '${d.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition">
+                <button onclick="eliminarItem('fixed_assets', '${d.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar registro">
                   <i class="ph ph-trash text-base"></i>
                 </button>
               </td>

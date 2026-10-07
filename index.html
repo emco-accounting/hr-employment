@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Contable & Activos | EMCO</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex">
+
+  <!-- SIDEBAR NAVEGACIÓN -->
+  <aside class="w-64 bg-slate-900 text-slate-200 flex flex-col justify-between shrink-0">
+    <div>
+      <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+        <i class="ph-bold ph-scales text-indigo-400 text-2xl"></i>
+        <div>
+          <h1 class="font-bold text-base tracking-wide text-white leading-tight">ContaCore EMCO</h1>
+          <span class="text-[11px] text-slate-400 font-mono">HR-EMCO System</span>
+        </div>
+      </div>
+
+      <nav class="p-4 space-y-1">
+        <button onclick="navigate('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors text-white bg-slate-800">
+          <i class="ph ph-chart-pie text-lg"></i> Resumen General
+        </button>
+        <button onclick="navigate('cxc')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
+          <i class="ph ph-hand-coins text-lg"></i> Cuentas por Cobrar (CxC)
+        </button>
+        <button onclick="navigate('cxp')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
+          <i class="ph ph-receipt text-lg"></i> Cuentas por Pagar (CxP)
+        </button>
+        <button onclick="navigate('activos')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
+          <i class="ph ph-laptop text-lg"></i> Activos Fijos & Resguardos
+        </button>
+        <button onclick="navigate('polizas')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
+          <i class="ph ph-book-open text-lg"></i> Catálogo & Pólizas
+        </button>
+      </nav>
+    </div>
+
+    <!-- Indicador de Conexión Firebase -->
+    <div class="p-4 border-t border-slate-800 text-xs text-slate-400">
+      <div class="flex items-center gap-2">
+        <span id="db-status-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+        <span id="db-status-text">Conectando a contabilidad-general...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+    <!-- Topbar -->
+    <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center shrink-0">
+      <h2 id="view-title" class="text-xl font-bold text-slate-800">Resumen General</h2>
+      <div class="flex items-center gap-4">
+        <span class="text-xs bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full font-mono font-medium border border-emerald-200">
+          Firebase Live: contabilidad-general-hr-emco
+        </span>
+      </div>
+    </header>
+
+    <!-- ÁREA DE VISTAS -->
+    <div class="p-8 flex-1">
+      
+      <!-- VISTA: DASHBOARD -->
+      <section id="view-dashboard" class="view-panel space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs text-slate-500 font-semibold uppercase">Por Cobrar (CxC)</span>
+            <p id="kpi-cxc" class="text-2xl font-bold text-emerald-600 mt-1">$0.00</p>
+          </div>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs text-slate-500 font-semibold uppercase">Por Pagar (CxP)</span>
+            <p id="kpi-cxp" class="text-2xl font-bold text-rose-600 mt-1">$0.00</p>
+          </div>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs text-slate-500 font-semibold uppercase">Activos Registrados</span>
+            <p id="kpi-activos" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+          </div>
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+            <span class="text-xs text-slate-500 font-semibold uppercase">Valor Inventario Activos</span>
+            <p id="kpi-valor-libros" class="text-2xl font-bold text-indigo-600 mt-1">$0.00</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA: CUENTAS POR COBRAR (CxC) -->
+      <section id="view-cxc" class="view-panel hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-slate-800">Cartera de Clientes</h3>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+            + Nueva Cuenta por Cobrar
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 font-medium border-b border-slate-200 text-xs uppercase">
+              <tr>
+                <th class="p-4">Cliente</th>
+                <th class="p-4">Folio / UUID</th>
+                <th class="p-4">Vencimiento</th>
+                <th class="p-4">Monto Total</th>
+                <th class="p-4">Saldo Pendiente</th>
+                <th class="p-4">Estado</th>
+                <th class="p-4 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="table-cxc" class="divide-y divide-slate-100">
+              <tr><td colspan="7" class="p-4 text-center text-slate-400">Sin cuentas pendientes cargadas.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VISTA: CUENTAS POR PAGAR (CxP) -->
+      <section id="view-cxp" class="view-panel hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-slate-800">Obligaciones con Proveedores</h3>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+            + Registrar Factura de Proveedor
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 font-medium border-b border-slate-200 text-xs uppercase">
+              <tr>
+                <th class="p-4">Proveedor</th>
+                <th class="p-4">Folio / UUID</th>
+                <th class="p-4">Vencimiento</th>
+                <th class="p-4">Monto Total</th>
+                <th class="p-4">Saldo</th>
+                <th class="p-4">Estado</th>
+                <th class="p-4 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="table-cxp" class="divide-y divide-slate-100">
+              <tr><td colspan="7" class="p-4 text-center text-slate-400">Sin cuentas por pagar registradas.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VISTA: ACTIVOS FIJOS (Laptops, Módems, etc.) -->
+      <section id="view-activos" class="view-panel hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-slate-800">Laptops, Módems Móviles y Software</h3>
+          <button onclick="toggleModalActivo(true)" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2">
+            <i class="ph-bold ph-plus"></i> Registrar Activo
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <table class="w-full text-left text-sm text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 font-medium border-b border-slate-200 text-xs uppercase">
+              <tr>
+                <th class="p-4">Código</th>
+                <th class="p-4">Dispositivo / Activo</th>
+                <th class="p-4">Tipo</th>
+                <th class="p-4">Serie / MAC / IMEI</th>
+                <th class="p-4">Responsable</th>
+                <th class="p-4">Costo Adquisición</th>
+                <th class="p-4 text-right">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="table-activos" class="divide-y divide-slate-100">
+              <tr><td colspan="7" class="p-4 text-center text-slate-400">Cargando inventario desde Firestore...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VISTA: PÓLIZAS CONTABLES -->
+      <section id="view-polizas" class="view-panel hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="text-lg font-semibold text-slate-800">Libro Diario Contable</h3>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
+            + Póliza Manual
+          </button>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-8 shadow-sm text-center text-slate-400">
+          Catálogo de cuentas y partida doble vinculada a CxC / CxP.
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- MODAL: REGISTRAR ACTIVO -->
+  <div id="modal-activo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 space-y-5">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h4 class="text-lg font-bold text-slate-800">Alta de Activo / Equipo</h4>
+        <button onclick="toggleModalActivo(false)" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-activo" class="space-y-4 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Código Interno</label>
+            <input type="text" id="asset-code" placeholder="Ej: LAP-01, MODEM-04" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Categoría</label>
+            <select id="asset-type" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+              <option value="TANGIBLE_HARDWARE">Hardware (Laptop / PC)</option>
+              <option value="TANGIBLE_NETWORK">Red (Módem Móvil / Router)</option>
+              <option value="INTANGIBLE_SOFTWARE">Software / Licencia</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Descripción / Modelo</label>
+          <input type="text" id="asset-name" placeholder="Ej: Laptop Dell Latitude 5440 / Módem ZTE 4G" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Serie / MAC / IMEI</label>
+            <input type="text" id="asset-serial" placeholder="Número de serie o IMEI" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Costo Adquisición ($)</label>
+            <input type="number" step="0.01" id="asset-cost" placeholder="0.00" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Empleado Asignado (Responsable)</label>
+          <input type="text" id="asset-assigned" placeholder="Nombre completo del responsable" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="toggleModalActivo(false)" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">Cancelar</button>
+          <button type="submit" id="btn-submit-asset" class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition">Guardar Activo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FIREBASE SCRIPTS (SDK Modular v10 via CDN) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      deleteDoc, 
+      doc, 
+      onSnapshot, 
+      serverTimestamp, 
+      query, 
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 1. CONFIGURACIÓN DEL PROYECTO FIREBASE
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    // 2. INICIALIZAR SERVICIOS
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    window.db = db;
+
+    // 3. ENRUTADOR DE PESTAÑAS
+    window.navigate = function(viewId) {
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      const activePanel = document.getElementById(`view-${viewId}`);
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      const titles = {
+        dashboard: "Resumen General",
+        cxc: "Cuentas por Cobrar (CxC)",
+        cxp: "Cuentas por Pagar (CxP)",
+        activos: "Activos Fijos & Resguardos",
+        polizas: "Catálogo & Pólizas"
+      };
+      document.getElementById('view-title').innerText = titles[viewId] || "Módulo";
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-slate-800', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+      event.currentTarget.classList.add('bg-slate-800', 'text-white');
+      event.currentTarget.classList.remove('text-slate-400');
+    };
+
+    // 4. CONTROL DE MODAL
+    window.toggleModalActivo = function(show) {
+      const modal = document.getElementById('modal-activo');
+      if (show) {
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+        document.getElementById('form-activo').reset();
+      }
+    };
+
+    // 5. ESCUCHADOR EN TIEMPO REAL: ACTIVOS FIJOS
+    const assetsQuery = query(collection(db, "fixed_assets"), orderBy("created_at", "desc"));
+    
+    onSnapshot(assetsQuery, (snapshot) => {
+      const dot = document.getElementById('db-status-dot');
+      const text = document.getElementById('db-status-text');
+      dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+      text.innerText = "Firestore Conectado";
+
+      const tbody = document.getElementById('table-activos');
+      let totalCost = 0;
+      let totalCount = snapshot.docs.length;
+
+      if (snapshot.empty) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Sin activos registrados en Firestore.</td></tr>';
+        document.getElementById('kpi-activos').innerText = '0';
+        document.getElementById('kpi-valor-libros').innerText = '$0.00';
+        return;
+      }
+
+      let rowsHtml = '';
+      snapshot.forEach(docSnap => {
+        const item = docSnap.data();
+        const docId = docSnap.id;
+        const cost = Number(item.purchase_cost || 0);
+        totalCost += cost;
+
+        let badgeType = "bg-blue-100 text-blue-700";
+        let typeLabel = "Laptop / PC";
+        if (item.category === "TANGIBLE_NETWORK") {
+          badgeType = "bg-amber-100 text-amber-700";
+          typeLabel = "Módem / Red";
+        } else if (item.category === "INTANGIBLE_SOFTWARE") {
+          badgeType = "bg-purple-100 text-purple-700";
+          typeLabel = "Software / Lic.";
+        }
+
+        rowsHtml += `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="p-4 font-mono font-semibold text-xs text-slate-900">${item.asset_code || 'S/N'}</td>
+            <td class="p-4 font-medium text-slate-800">${item.name}</td>
+            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium ${badgeType}">${typeLabel}</span></td>
+            <td class="p-4 font-mono text-xs text-slate-600">${item.serial_number}</td>
+            <td class="p-4 text-slate-700">${item.assigned_to || '<span class="text-slate-400 italic">Sin asignar</span>'}</td>
+            <td class="p-4 font-medium text-slate-900">$${cost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4 text-right">
+              <button onclick="window.eliminarActivo('${docId}')" class="text-rose-600 hover:text-rose-800 p-1 rounded transition" title="Eliminar">
+                <i class="ph ph-trash text-base"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = rowsHtml;
+      document.getElementById('kpi-activos').innerText = totalCount;
+      document.getElementById('kpi-valor-libros').innerText = `$${totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+    }, (error) => {
+      console.error("Error al conectar Firestore:", error);
+      const dot = document.getElementById('db-status-dot');
+      const text = document.getElementById('db-status-text');
+      dot.className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+      text.innerText = "Error de Firestore";
+    });
+
+    // 6. CREAR NUEVO ACTIVO
+    document.getElementById('form-activo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-asset');
+      btn.disabled = true;
+      btn.innerText = "Guardando...";
+
+      try {
+        await addDoc(collection(db, "fixed_assets"), {
+          asset_code: document.getElementById('asset-code').value.trim().toUpperCase(),
+          category: document.getElementById('asset-type').value,
+          name: document.getElementById('asset-name').value.trim(),
+          serial_number: document.getElementById('asset-serial').value.trim(),
+          purchase_cost: parseFloat(document.getElementById('asset-cost').value) || 0,
+          assigned_to: document.getElementById('asset-assigned').value.trim(),
+          status: document.getElementById('asset-assigned').value.trim() ? "ASSIGNED" : "AVAILABLE",
+          created_at: serverTimestamp()
+        });
+
+        window.toggleModalActivo(false);
+      } catch (err) {
+        alert("Error al registrar activo: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Guardar Activo";
+      }
+    });
+
+    // 7. ELIMINAR ACTIVO
+    window.eliminarActivo = async function(id) {
+      if (confirm("¿Deseas eliminar este registro de activo?")) {
+        try {
+          await deleteDoc(doc(db, "fixed_assets", id));
+        } catch (err) {
+          alert("Error al eliminar: " + err.message);
+        }
+      }
+    };
+  </script>
+</body>
+</html>

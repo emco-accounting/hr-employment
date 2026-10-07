@@ -297,7 +297,7 @@
       </div>
 
       <p class="text-xs text-slate-300 leading-relaxed">
-        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini 2.5 Flash en la extracción inteligente de PDFs e imágenes.
+        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini 3.8 Flash en la extracción inteligente de facturas PDF e imágenes.
       </p>
 
       <div>
@@ -318,7 +318,7 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
           <h4 id="modal-invoice-title" class="text-base font-bold text-white">Procesar Factura con IA</h4>
-          <span class="text-[11px] text-slate-400 font-mono">CFDI XML nativo o PDF/Imagen con Gemini 2.5 Flash</span>
+          <span class="text-[11px] text-slate-400 font-mono">CFDI XML nativo o PDF/Imagen con Gemini 3.8 Flash</span>
         </div>
         <button onclick="closeInvoiceModal()" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
       </div>
@@ -629,7 +629,7 @@
             return;
           }
 
-          procText.innerText = "Extrayendo datos con Gemini 2.5 Flash...";
+          procText.innerText = "Extrayendo datos con Gemini 3.8 Flash...";
           const base64Data = await fileToBase64(file);
           await parseWithGeminiFlash(base64Data, file.type, geminiKey);
         }
@@ -637,7 +637,7 @@
         // Registrar nombre del documento para el registro
         document.getElementById('uploaded-doc-name').value = file.name;
 
-        // PASO 2: INTENTO DE SUBIDA A STORAGE AISLADO (Tolera CORS sin detener la extracción)
+        // PASO 2: INTENTO DE SUBIDA A STORAGE AISLADO (Tolera bloqueos de red o CORS)
         procText.innerText = "Sincronizando respaldo documental...";
         try {
           const folder = document.getElementById('invoice-type').value.toLowerCase();
@@ -702,15 +702,14 @@
       });
     }
 
-    // PROMPT ESPECIALIZADO EN CFDI MEXICANO Y GEMINI 2.5 FLASH
+    // PROMPT ESPECIALIZADO EN CFDI MEXICANO CON GEMINI 3.8 FLASH & CASCADA
     async function parseWithGeminiFlash(base64Data, mimeType, apiKey) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
       const isCxC = document.getElementById('invoice-type').value === 'CXC';
 
       const prompt = `Eres un auditor contable experto en comprobantes fiscales digitales de México (CFDI 4.0 y 3.3). 
 Analiza detalladamente este documento (factura/recibo) y extrae:
 1. "razon_social": ${isCxC ? 'Nombre/Razón Social del RECEPTOR o CLIENTE (a quien le facturan)' : 'Nombre/Razón Social del EMISOR o PROVEEDOR (quien expide la factura)'}.
-2. "folio": El Folio Fiscal o UUID completo de 36 caracteres (ej: 8DC5741F-0011-468A-93D2-7DEA17C9698A o 602B1C8B-D848-45E5-A3A3-55761463BCAB). Si no hay UUID, extrae el número de folio interno (ej: 6814).
+2. "folio": El Folio Fiscal o UUID completo de 36 caracteres (ej: 8DC5741F-0011-468A-93D2-7DEA17C9698A o 602B1C8B-D848-45E5-A3A3-55761463BCAB). Si no hay UUID, extrae el número de folio interno.
 3. "monto_total": El TOTAL NETO FINAL A PAGAR en número decimal. CUIDADO: Toma en cuenta retenciones si existen (Subtotal + IVA trasladado - IVA retenido - ISR retenido = Total). Debe ser exactamente el valor final de la casilla TOTAL.
 4. "fecha_emision": Fecha de emisión en formato YYYY-MM-DD.
 
@@ -722,33 +721,58 @@ Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
   "fecha_emision": "YYYY-MM-DD"
 }`;
 
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: prompt },
-              { inline_data: { mime_type: mimeType, data: base64Data } }
-            ]
-          }],
-          generationConfig: { response_mime_type: "application/json" }
-        })
-      });
+      // Cadena de modelos prioritarios
+      const candidateModels = [
+        "gemini-3.8-flash",
+        "gemini-1.5-flash"
+      ];
 
-      if (!response.ok) {
-        const errDetail = await response.json();
-        throw new Error(errDetail.error?.message || "Error al invocar Gemini API");
+      let lastError = null;
+
+      for (const modelName of candidateModels) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inline_data: { mime_type: mimeType, data: base64Data } }
+                ]
+              }],
+              generationConfig: { response_mime_type: "application/json" }
+            })
+          });
+
+          if (!response.ok) {
+            const errDetail = await response.json();
+            throw new Error(errDetail.error?.message || `Fallo en modelo ${modelName}`);
+          }
+
+          const resData = await response.json();
+          const rawJson = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawJson) throw new Error("Respuesta vacía del modelo de IA");
+
+          const parsed = JSON.parse(rawJson);
+
+          if (parsed.razon_social) document.getElementById('invoice-entity').value = parsed.razon_social;
+          if (parsed.folio) document.getElementById('invoice-folio').value = parsed.folio;
+          if (parsed.monto_total) document.getElementById('invoice-total').value = parsed.monto_total;
+          if (parsed.fecha_emision) document.getElementById('invoice-due-date').value = parsed.fecha_emision;
+
+          console.log(`%c✔ Extracción exitosa procesada por ${modelName}`, "color: #10b981; font-weight: bold;");
+          return;
+
+        } catch (err) {
+          console.warn(`Intento con ${modelName} falló:`, err.message);
+          lastError = err;
+        }
       }
 
-      const resData = await response.json();
-      const rawJson = resData.candidates[0].content.parts[0].text;
-      const parsed = JSON.parse(rawJson);
-
-      if (parsed.razon_social) document.getElementById('invoice-entity').value = parsed.razon_social;
-      if (parsed.folio) document.getElementById('invoice-folio').value = parsed.folio;
-      if (parsed.monto_total) document.getElementById('invoice-total').value = parsed.monto_total;
-      if (parsed.fecha_emision) document.getElementById('invoice-due-date').value = parsed.fecha_emision;
+      throw new Error(`Error en el motor de IA: ${lastError?.message || "No disponible"}`);
     }
 
     // REGISTRO DE FACTURA (CXC / CXP)

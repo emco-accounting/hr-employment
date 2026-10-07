@@ -4,10 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ContaCore EMCO | Executive Financial Intelligence</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <script>
@@ -598,7 +601,7 @@
       if (!show) document.getElementById('form-activo').reset();
     };
 
-    // PROCESAMIENTO HÍBRIDO DE ARCHIVOS
+    // PROCESAMIENTO HÍBRIDO DE ARCHIVOS (EXTRACCIÓN INMEDIATA EN MEMORIA)
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -611,16 +614,7 @@
       procBox.classList.remove('hidden');
 
       try {
-        procText.innerText = "Subiendo archivo a Firebase Storage...";
-        const folder = document.getElementById('invoice-type').value.toLowerCase();
-        const storagePath = `comprobantes/${folder}/${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, storagePath);
-        const uploadResult = await uploadBytes(storageRef, file);
-        const downloadUrl = await getDownloadURL(uploadResult.ref);
-
-        document.getElementById('uploaded-doc-url').value = downloadUrl;
-        document.getElementById('uploaded-doc-name').value = file.name;
-
+        // PASO 1: EXTRACCIÓN INMEDIATA EN CLIENTE
         if (file.name.toLowerCase().endsWith('.xml')) {
           procText.innerText = "Extrayendo CFDI vía XML nativo...";
           const text = await file.text();
@@ -630,18 +624,37 @@
           if (!geminiKey) {
             alert("No tienes configurada la API Key de Gemini. Haz clic en 'Configurar Gemini Key' en la barra superior para habilitar el análisis de PDFs.");
             window.toggleApiKeyModal(true);
+            idleBox.classList.remove('hidden');
+            procBox.classList.add('hidden');
             return;
           }
 
-          procText.innerText = "Extrayendo CFDI con Gemini 2.5 Flash...";
+          procText.innerText = "Extrayendo datos con Gemini 2.5 Flash...";
           const base64Data = await fileToBase64(file);
           await parseWithGeminiFlash(base64Data, file.type, geminiKey);
         }
 
+        // Registrar nombre del documento para el registro
+        document.getElementById('uploaded-doc-name').value = file.name;
+
+        // PASO 2: INTENTO DE SUBIDA A STORAGE AISLADO (Tolera CORS sin detener la extracción)
+        procText.innerText = "Sincronizando respaldo documental...";
+        try {
+          const folder = document.getElementById('invoice-type').value.toLowerCase();
+          const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const storagePath = `comprobantes/${folder}/${Date.now()}_${cleanName}`;
+          const storageRef = ref(storage, storagePath);
+          const uploadResult = await uploadBytes(storageRef, file);
+          const downloadUrl = await getDownloadURL(uploadResult.ref);
+          document.getElementById('uploaded-doc-url').value = downloadUrl;
+        } catch (storageErr) {
+          console.warn("Storage bloqueado por CORS o permisos. La extracción de datos continuó correctamente:", storageErr);
+        }
+
         procText.innerText = "¡Datos extraídos con éxito!";
       } catch (err) {
-        console.error("Fallo al procesar documento:", err);
-        alert("Aviso: " + err.message + ". Puedes completar los campos manualmente.");
+        console.error("Fallo durante el procesamiento:", err);
+        alert("Aviso: " + err.message + ". Puedes verificar o llenar los campos manualmente.");
       } finally {
         setTimeout(() => {
           idleBox.classList.remove('hidden');
@@ -689,7 +702,7 @@
       });
     }
 
-    // PROMPT REFINADO PARA CFDI MEXICANO Y GEMINI 2.5 FLASH
+    // PROMPT ESPECIALIZADO EN CFDI MEXICANO Y GEMINI 2.5 FLASH
     async function parseWithGeminiFlash(base64Data, mimeType, apiKey) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
       const isCxC = document.getElementById('invoice-type').value === 'CXC';
@@ -835,7 +848,7 @@ Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
 
           const docLink = item.document_url 
             ? `<a href="${item.document_url}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-mono border border-indigo-500/20 transition"><i class="ph ph-file-text"></i> Ver Doc</a>`
-            : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`;
+            : (item.document_filename ? `<span class="text-slate-500 text-xs font-mono" title="${item.document_filename}">Local: ${item.document_filename.substring(0,10)}...</span>` : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`);
 
           const statusBadge = isCollected 
             ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">COBRADA</span>`
@@ -883,7 +896,7 @@ Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
 
           const docLink = item.document_url 
             ? `<a href="${item.document_url}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-mono border border-indigo-500/20 transition"><i class="ph ph-file-text"></i> Ver Doc</a>`
-            : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`;
+            : (item.document_filename ? `<span class="text-slate-500 text-xs font-mono" title="${item.document_filename}">Local: ${item.document_filename.substring(0,10)}...</span>` : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`);
 
           const statusBadge = isPaid 
             ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PAGADA</span>`

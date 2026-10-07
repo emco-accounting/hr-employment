@@ -33,41 +33,38 @@
     </div>
 
     <div class="p-4 border-t border-slate-800">
-      <span class="text-xs text-slate-500 font-mono">Panel de Inyección Staff</span>
+      <span class="text-xs text-slate-500 font-mono">Base: emco-accounting</span>
     </div>
   </aside>
 
   <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-1 flex flex-col h-screen overflow-y-auto">
-    <!-- Topbar -->
     <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center shrink-0">
       <div>
-        <h2 class="text-xl font-bold text-slate-800">Directorio de Personal & Roles</h2>
-        <span class="text-xs text-slate-500">Inyección de credenciales y asignación de privilegios en Firestore</span>
+        <h2 class="text-xl font-bold text-slate-800">Directorio de Personal & Gobernanza</h2>
+        <span class="text-xs text-slate-500">Inyección directa en colección staff_users (emco-accounting)</span>
       </div>
       <div class="flex items-center gap-3">
-        <button onclick="toggleModalRole(true)" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition flex items-center gap-2">
-          <i class="ph-bold ph-shield-plus"></i> Nuevo Rol
+        <button onclick="sembrarUsuarioExistente()" class="border border-indigo-200 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-100 transition flex items-center gap-2">
+          <i class="ph-bold ph-user-check"></i> Vincular Superadmin Actual
         </button>
         <button onclick="toggleModalStaff(true)" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2">
-          <i class="ph-bold ph-user-plus"></i> Inyectar Colaborador
+          <i class="ph-bold ph-user-plus"></i> Inyectar Nuevo Colaborador
         </button>
       </div>
     </header>
 
     <div class="p-8 flex-1 space-y-6">
-      
-      <!-- TABLA DE STAFF -->
       <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Colaboradores Registrados</h3>
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Colaboradores en Firestore</h3>
           <span id="staff-count" class="text-xs font-mono font-medium bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full">0 Usuarios</span>
         </div>
         <table class="w-full text-left text-sm text-slate-600">
           <thead class="bg-slate-50 text-slate-700 font-medium border-b border-slate-200 text-xs uppercase">
             <tr>
               <th class="p-4">Colaborador</th>
-              <th class="p-4">Correo Corporativo</th>
+              <th class="p-4">Correo</th>
               <th class="p-4">UID Auth</th>
               <th class="p-4">Rol Asignado</th>
               <th class="p-4">Estatus</th>
@@ -75,11 +72,10 @@
             </tr>
           </thead>
           <tbody id="table-staff" class="divide-y divide-slate-100">
-            <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando directorio de personal...</td></tr>
+            <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando personal de emco-accounting...</td></tr>
           </tbody>
         </table>
       </div>
-
     </div>
   </main>
 
@@ -94,34 +90,31 @@
       <form id="form-staff" class="space-y-4 text-sm">
         <div>
           <label class="block font-medium text-slate-700 mb-1">Nombre Completo</label>
-          <input type="text" id="staff-name" placeholder="Ej: Tony Valladares" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          <input type="text" id="staff-name" placeholder="Ej: Juan Pérez" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
-
         <div>
           <label class="block font-medium text-slate-700 mb-1">Correo Corporativo</label>
-          <input type="email" id="staff-email" placeholder="usuario@emco.com" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          <input type="email" id="staff-email" placeholder="usuario@hremploy..." required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
-
         <div>
-          <label class="block font-medium text-slate-700 mb-1">Contraseña de Acceso Temporal</label>
-          <input type="password" id="staff-password" placeholder="Mínimo 6 caracteres" minlength="6" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+          <label class="block font-medium text-slate-700 mb-1">Contraseña Inicial</label>
+          <input type="password" id="staff-password" minlength="6" placeholder="Mínimo 6 caracteres" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
         </div>
-
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block font-medium text-slate-700 mb-1">Rol</label>
             <select id="staff-role" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-              <option value="SUPERADMIN">Superadmin</option>
-              <option value="CONTADOR">Contador General</option>
-              <option value="AUXILIAR">Auxiliar Contable</option>
-              <option value="AUDITOR">Auditor</option>
+              <option value="SUPERADMIN">SUPERADMIN</option>
+              <option value="CONTADOR">CONTADOR</option>
+              <option value="AUXILIAR">AUXILIAR</option>
+              <option value="AUDITOR">AUDITOR</option>
             </select>
           </div>
           <div>
-            <label class="block font-medium text-slate-700 mb-1">Estatus Inicial</label>
+            <label class="block font-medium text-slate-700 mb-1">Estatus</label>
             <select id="staff-status" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
-              <option value="ACTIVE">Activo</option>
-              <option value="SUSPENDED">Suspendido</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="SUSPENDED">SUSPENDED</option>
             </select>
           </div>
         </div>
@@ -134,34 +127,8 @@
     </div>
   </div>
 
-  <!-- MODAL: NUEVO ROL -->
-  <div id="modal-role" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 space-y-4">
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h4 class="text-lg font-bold text-slate-800">Crear Rol Dinámico</h4>
-        <button onclick="toggleModalRole(false)" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
-      </div>
-
-      <form id="form-role" class="space-y-4 text-sm">
-        <div>
-          <label class="block font-medium text-slate-700 mb-1">Identificador del Rol</label>
-          <input type="text" id="role-id" placeholder="Ej: TESORERO" required class="w-full px-3 py-2 border rounded-lg uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
-        </div>
-        <div>
-          <label class="block font-medium text-slate-700 mb-1">Descripción</label>
-          <input type="text" id="role-desc" placeholder="Control de dispersiones y bancos" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-        </div>
-        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
-          <button type="button" onclick="toggleModalRole(false)" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">Cancelar</button>
-          <button type="submit" id="btn-submit-role" class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition">Guardar Rol</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- SCRIPT LOGIC -->
   <script type="module">
-    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
       getFirestore, 
@@ -170,9 +137,7 @@
       setDoc, 
       updateDoc,
       onSnapshot, 
-      serverTimestamp, 
-      query, 
-      orderBy 
+      serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -185,45 +150,46 @@
       measurementId: "G-28RS9BPBYG"
     };
 
-    // App principal para Firestore
     const mainApp = initializeApp(firebaseConfig);
-    const db = getFirestore(mainApp);
+    // CONEXIÓN DIRECTA A emco-accounting
+    const db = getFirestore(mainApp, "emco-accounting");
 
-    // App secundaria para registrar usuarios en Auth sin desloguear al admin
     const secondaryApp = initializeApp(firebaseConfig, "SecondaryStaffApp");
     const secondaryAuth = getAuth(secondaryApp);
 
-    // CONTROL DE MODALES
     window.toggleModalStaff = (show) => {
       document.getElementById('modal-staff').classList.toggle('hidden', !show);
       if (!show) document.getElementById('form-staff').reset();
     };
-    window.toggleModalRole = (show) => {
-      document.getElementById('modal-role').classList.toggle('hidden', !show);
-      if (!show) document.getElementById('form-role').reset();
+
+    // BOTÓN AUXILIAR PARA VINCULAR AL USUARIO YA CREADO EN LA CAPTURA
+    window.sembrarUsuarioExistente = async () => {
+      const email = prompt("Ingresa el correo exacto del usuario creado en Firebase Auth:", "jvalladares@hremploy...");
+      if (!email) return;
+      const uid = prompt("Pega el UID del usuario (visible en la consola de Auth):", "");
+      if (!uid) return;
+
+      try {
+        await setDoc(doc(db, "staff_users", uid.trim()), {
+          full_name: "Administrador General",
+          email: email.trim().toLowerCase(),
+          role_id: "SUPERADMIN",
+          status: "ACTIVE",
+          created_at: serverTimestamp()
+        });
+        alert("Usuario vinculado exitosamente en Firestore emco-accounting.");
+      } catch (e) {
+        alert("Error al vincular: " + e.message);
+      }
     };
 
-    // CARGAR ROLES DINÁMICOS EN EL SELECT
-    onSnapshot(collection(db, "system_roles"), (snap) => {
-      const select = document.getElementById('staff-role');
-      if (!snap.empty) {
-        select.innerHTML = '';
-        snap.forEach(d => {
-          const opt = document.createElement('option');
-          opt.value = d.id;
-          opt.innerText = `${d.id} - ${d.data().description || ''}`;
-          select.appendChild(opt);
-        });
-      }
-    });
-
-    // LISTADO EN TIEMPO REAL DE STAFF
+    // LISTAR EN TIEMPO REAL
     onSnapshot(collection(db, "staff_users"), (snap) => {
       const tbody = document.getElementById('table-staff');
       document.getElementById('staff-count').innerText = `${snap.docs.length} Usuarios`;
 
       if (snap.empty) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay usuarios dados de alta en staff_users.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">Sin usuarios en staff_users. Haz clic en "Vincular Superadmin Actual" o "Inyectar Nuevo Colaborador".</td></tr>';
         return;
       }
 
@@ -255,23 +221,6 @@
       tbody.innerHTML = html;
     });
 
-    // GUARDAR ROL DINÁMICO
-    document.getElementById('form-role').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const roleId = document.getElementById('role-id').value.trim().toUpperCase();
-      const description = document.getElementById('role-desc').value.trim();
-
-      try {
-        await setDoc(doc(db, "system_roles", roleId), {
-          description,
-          created_at: serverTimestamp()
-        });
-        window.toggleModalRole(false);
-      } catch (err) {
-        alert("Error al guardar rol: " + err.message);
-      }
-    });
-
     // INYECTAR NUEVO USUARIO
     document.getElementById('form-staff').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -286,11 +235,9 @@
       const status = document.getElementById('staff-status').value;
 
       try {
-        // 1. Crear en Firebase Auth usando la app secundaria
         const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
         const newUid = cred.user.uid;
 
-        // 2. Inyectar en staff_users en Firestore con el UID exacto
         await setDoc(doc(db, "staff_users", newUid), {
           full_name: fullName,
           email: email,
@@ -299,23 +246,21 @@
           created_at: serverTimestamp()
         });
 
-        alert(`Usuario ${fullName} inyectado exitosamente.`);
+        alert(`Usuario ${fullName} inyectado con éxito.`);
         window.toggleModalStaff(false);
       } catch (err) {
-        console.error("Error al inyectar staff:", err);
-        alert("Error: " + err.message);
+        alert("Error al inyectar: " + err.message);
       } finally {
         btn.disabled = false;
         btn.innerText = "Crear & Inyectar";
       }
     });
 
-    // CAMBIAR ESTATUS
     window.cambiarEstado = async (uid, newStatus) => {
       try {
         await updateDoc(doc(db, "staff_users", uid), { status: newStatus });
       } catch (err) {
-        alert("Error al actualizar estado: " + err.message);
+        alert("Error: " + err.message);
       }
     };
   </script>

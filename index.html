@@ -33,7 +33,7 @@
             type="email" 
             id="email" 
             required 
-            placeholder="usuario@emco.com" 
+            placeholder="usuario@hremploy..." 
             class="w-full pl-10 pr-4 py-2.5 bg-slate-900/60 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
           >
         </div>
@@ -54,7 +54,6 @@
             type="button" 
             id="toggle-pwd" 
             class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-200 transition"
-            title="Mostrar/ocultar contraseña"
           >
             <i class="ph ph-eye" id="toggle-pwd-icon"></i>
           </button>
@@ -73,7 +72,7 @@
 
     <div class="mt-8 pt-4 border-t border-slate-700/60 text-center">
       <p class="text-[11px] text-slate-500 font-mono">
-        Sesión protegida bajo auditoría centralizada. Todas las operaciones quedan registradas.
+        Base de datos: emco-accounting | Sesión protegida
       </p>
     </div>
   </div>
@@ -106,7 +105,8 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    // CONEXIÓN DIRECTA A LA BASE NOMBRADA
+    const db = getFirestore(app, "emco-accounting");
 
     const alertBox = document.getElementById("alert-box");
     const alertMsg = document.getElementById("alert-msg");
@@ -138,21 +138,6 @@
       pwdIcon.className = isPassword ? "ph ph-eye-slash" : "ph ph-eye";
     });
 
-    async function logAuthAttempt(action, email, uid = null, details = {}) {
-      try {
-        await addDoc(collection(db, "audit_logs"), {
-          actor_uid: uid || "UNAUTHENTICATED",
-          actor_email: email,
-          action,
-          module: "GOVERNANCE",
-          details,
-          timestamp: serverTimestamp()
-        });
-      } catch (err) {
-        console.error("Fallo al escribir auditoría:", err);
-      }
-    }
-
     const form = document.getElementById("form-login");
     const btnLogin = document.getElementById("btn-login");
 
@@ -164,45 +149,41 @@
       const password = pwdInput.value;
 
       btnLogin.disabled = true;
-      btnLogin.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> <span>Verificando credenciales...</span>`;
+      btnLogin.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> <span>Verificando...</span>`;
 
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        // Comprobar documento en staff_users
         const staffRef = doc(db, "staff_users", user.uid);
         const staffDoc = await getDoc(staffRef);
 
         if (!staffDoc.exists()) {
-          await logAuthAttempt("LOGIN_BLOCKED_NOT_IN_STAFF", email, user.uid, { reason: "Sin perfil en staff_users" });
+          // Si el usuario existe en Authentication pero aún no fue inyectado en Firestore
           await signOut(auth);
-          showAlert("Acceso restringido: Esta cuenta no está dada de alta en el personal autorizado.", "error");
+          showAlert(`El usuario está creado en Auth pero aún no ha sido dado de alta en staff_users (UID: ${user.uid.substring(0,8)}...). Inyéctalo desde staff.html.`, "warning");
           return;
         }
 
         const staffData = staffDoc.data();
 
         if (staffData.status !== "ACTIVE") {
-          await logAuthAttempt("LOGIN_BLOCKED_INACTIVE", email, user.uid, { current_status: staffData.status });
           await signOut(auth);
-          showAlert(`Acceso denegado: Usuario en estado "${staffData.status || 'SUSPENDIDO'}".`, "warning");
+          showAlert(`Acceso denegado: El usuario se encuentra en estatus "${staffData.status}".`, "error");
           return;
         }
 
-        await logAuthAttempt("LOGIN_SUCCESS", email, user.uid, { role_id: staffData.role_id });
-        
         sessionStorage.setItem("active_user_name", staffData.full_name || user.email);
         sessionStorage.setItem("active_user_role", staffData.role_id || "GUEST");
 
-        // REDIRECCIÓN HACIA EL MÓDULO GENERAL
         window.location.href = "modulo_general.html";
 
       } catch (error) {
-        let errorMsg = "Ocurrió un error al intentar iniciar sesión.";
+        console.error("Error al iniciar sesión:", error);
+        let errorMsg = "Credenciales incorrectas o problema de comunicación con el servidor.";
         if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
-          errorMsg = "Credenciales incorrectas. Verifique correo y contraseña.";
-        } else if (error.code === "auth/too-many-requests") {
-          errorMsg = "Demasiados intentos fallidos. Intente nuevamente en unos minutos.";
+          errorMsg = "Correo o contraseña incorrectos.";
         }
         showAlert(errorMsg, "error");
       } finally {

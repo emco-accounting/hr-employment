@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Staff & Gobernanza | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex">
+
+  <!-- SIDEBAR NAVEGACIÓN -->
+  <aside class="w-64 bg-slate-900 text-slate-200 flex flex-col justify-between shrink-0">
+    <div>
+      <div class="p-6 border-b border-slate-800 flex items-center gap-3">
+        <i class="ph-bold ph-scales text-indigo-400 text-2xl"></i>
+        <div>
+          <h1 class="font-bold text-base tracking-wide text-white leading-tight">ContaCore EMCO</h1>
+          <span class="text-[11px] text-slate-400 font-mono">HR-EMCO System</span>
+        </div>
+      </div>
+
+      <nav class="p-4 space-y-1">
+        <a href="modulo_general.html" class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors text-slate-400 hover:text-white">
+          <i class="ph ph-arrow-left text-lg"></i> Volver al Sistema
+        </a>
+        <div class="pt-2 border-t border-slate-800 my-2"></div>
+        <div class="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Gobernanza</div>
+        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white bg-slate-800">
+          <i class="ph ph-users-three text-lg"></i> Personal (Staff)
+        </button>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800">
+      <span class="text-xs text-slate-500 font-mono">Panel de Inyección Staff</span>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+    <!-- Topbar -->
+    <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center shrink-0">
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">Directorio de Personal & Roles</h2>
+        <span class="text-xs text-slate-500">Inyección de credenciales y asignación de privilegios en Firestore</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="toggleModalRole(true)" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition flex items-center gap-2">
+          <i class="ph-bold ph-shield-plus"></i> Nuevo Rol
+        </button>
+        <button onclick="toggleModalStaff(true)" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-2">
+          <i class="ph-bold ph-user-plus"></i> Inyectar Colaborador
+        </button>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1 space-y-6">
+      
+      <!-- TABLA DE STAFF -->
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Colaboradores Registrados</h3>
+          <span id="staff-count" class="text-xs font-mono font-medium bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full">0 Usuarios</span>
+        </div>
+        <table class="w-full text-left text-sm text-slate-600">
+          <thead class="bg-slate-50 text-slate-700 font-medium border-b border-slate-200 text-xs uppercase">
+            <tr>
+              <th class="p-4">Colaborador</th>
+              <th class="p-4">Correo Corporativo</th>
+              <th class="p-4">UID Auth</th>
+              <th class="p-4">Rol Asignado</th>
+              <th class="p-4">Estatus</th>
+              <th class="p-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="table-staff" class="divide-y divide-slate-100">
+            <tr><td colspan="6" class="p-6 text-center text-slate-400">Cargando directorio de personal...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL: REGISTRAR STAFF -->
+  <div id="modal-staff" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h4 class="text-lg font-bold text-slate-800">Inyectar Nuevo Colaborador</h4>
+        <button onclick="toggleModalStaff(false)" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-staff" class="space-y-4 text-sm">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Nombre Completo</label>
+          <input type="text" id="staff-name" placeholder="Ej: Tony Valladares" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Correo Corporativo</label>
+          <input type="email" id="staff-email" placeholder="usuario@emco.com" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Contraseña de Acceso Temporal</label>
+          <input type="password" id="staff-password" placeholder="Mínimo 6 caracteres" minlength="6" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Rol</label>
+            <select id="staff-role" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+              <option value="SUPERADMIN">Superadmin</option>
+              <option value="CONTADOR">Contador General</option>
+              <option value="AUXILIAR">Auxiliar Contable</option>
+              <option value="AUDITOR">Auditor</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">Estatus Inicial</label>
+            <select id="staff-status" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+              <option value="ACTIVE">Activo</option>
+              <option value="SUSPENDED">Suspendido</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="toggleModalStaff(false)" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">Cancelar</button>
+          <button type="submit" id="btn-submit-staff" class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition">Crear & Inyectar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NUEVO ROL -->
+  <div id="modal-role" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h4 class="text-lg font-bold text-slate-800">Crear Rol Dinámico</h4>
+        <button onclick="toggleModalRole(false)" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-role" class="space-y-4 text-sm">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Identificador del Rol</label>
+          <input type="text" id="role-id" placeholder="Ej: TESORERO" required class="w-full px-3 py-2 border rounded-lg uppercase focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">Descripción</label>
+          <input type="text" id="role-desc" placeholder="Control de dispersiones y bancos" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+        </div>
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+          <button type="button" onclick="toggleModalRole(false)" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">Cancelar</button>
+          <button type="submit" id="btn-submit-role" class="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition">Guardar Rol</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script type="module">
+    import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      updateDoc,
+      onSnapshot, 
+      serverTimestamp, 
+      query, 
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    // App principal para Firestore
+    const mainApp = initializeApp(firebaseConfig);
+    const db = getFirestore(mainApp);
+
+    // App secundaria para registrar usuarios en Auth sin desloguear al admin
+    const secondaryApp = initializeApp(firebaseConfig, "SecondaryStaffApp");
+    const secondaryAuth = getAuth(secondaryApp);
+
+    // CONTROL DE MODALES
+    window.toggleModalStaff = (show) => {
+      document.getElementById('modal-staff').classList.toggle('hidden', !show);
+      if (!show) document.getElementById('form-staff').reset();
+    };
+    window.toggleModalRole = (show) => {
+      document.getElementById('modal-role').classList.toggle('hidden', !show);
+      if (!show) document.getElementById('form-role').reset();
+    };
+
+    // CARGAR ROLES DINÁMICOS EN EL SELECT
+    onSnapshot(collection(db, "system_roles"), (snap) => {
+      const select = document.getElementById('staff-role');
+      if (!snap.empty) {
+        select.innerHTML = '';
+        snap.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.innerText = `${d.id} - ${d.data().description || ''}`;
+          select.appendChild(opt);
+        });
+      }
+    });
+
+    // LISTADO EN TIEMPO REAL DE STAFF
+    onSnapshot(collection(db, "staff_users"), (snap) => {
+      const tbody = document.getElementById('table-staff');
+      document.getElementById('staff-count').innerText = `${snap.docs.length} Usuarios`;
+
+      if (snap.empty) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-400">No hay usuarios dados de alta en staff_users.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      snap.forEach(docSnap => {
+        const u = docSnap.data();
+        const uid = docSnap.id;
+        const isActive = u.status === "ACTIVE";
+
+        html += `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="p-4 font-semibold text-slate-800">${u.full_name || 'Sin nombre'}</td>
+            <td class="p-4 text-slate-600">${u.email}</td>
+            <td class="p-4 font-mono text-xs text-slate-400">${uid.substring(0, 10)}...</td>
+            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700">${u.role_id}</span></td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                ${isActive ? 'ACTIVO' : 'SUSPENDIDO'}
+              </span>
+            </td>
+            <td class="p-4 text-right">
+              <button onclick="window.cambiarEstado('${uid}', '${isActive ? 'SUSPENDED' : 'ACTIVE'}')" class="text-xs px-3 py-1.5 rounded-lg border ${isActive ? 'border-rose-200 text-rose-600 hover:bg-rose-50' : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'} transition">
+                ${isActive ? 'Suspender' : 'Activar'}
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    });
+
+    // GUARDAR ROL DINÁMICO
+    document.getElementById('form-role').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const roleId = document.getElementById('role-id').value.trim().toUpperCase();
+      const description = document.getElementById('role-desc').value.trim();
+
+      try {
+        await setDoc(doc(db, "system_roles", roleId), {
+          description,
+          created_at: serverTimestamp()
+        });
+        window.toggleModalRole(false);
+      } catch (err) {
+        alert("Error al guardar rol: " + err.message);
+      }
+    });
+
+    // INYECTAR NUEVO USUARIO
+    document.getElementById('form-staff').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-staff');
+      btn.disabled = true;
+      btn.innerText = "Inyectando...";
+
+      const email = document.getElementById('staff-email').value.trim().toLowerCase();
+      const password = document.getElementById('staff-password').value;
+      const fullName = document.getElementById('staff-name').value.trim();
+      const roleId = document.getElementById('staff-role').value;
+      const status = document.getElementById('staff-status').value;
+
+      try {
+        // 1. Crear en Firebase Auth usando la app secundaria
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const newUid = cred.user.uid;
+
+        // 2. Inyectar en staff_users en Firestore con el UID exacto
+        await setDoc(doc(db, "staff_users", newUid), {
+          full_name: fullName,
+          email: email,
+          role_id: roleId,
+          status: status,
+          created_at: serverTimestamp()
+        });
+
+        alert(`Usuario ${fullName} inyectado exitosamente.`);
+        window.toggleModalStaff(false);
+      } catch (err) {
+        console.error("Error al inyectar staff:", err);
+        alert("Error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Crear & Inyectar";
+      }
+    });
+
+    // CAMBIAR ESTATUS
+    window.cambiarEstado = async (uid, newStatus) => {
+      try {
+        await updateDoc(doc(db, "staff_users", uid), { status: newStatus });
+      } catch (err) {
+        alert("Error al actualizar estado: " + err.message);
+      }
+    };
+  </script>
+</body>
+</html>

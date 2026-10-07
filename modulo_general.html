@@ -297,7 +297,7 @@
       </div>
 
       <p class="text-xs text-slate-300 leading-relaxed">
-        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini 3.8 Flash en la extracción inteligente de facturas PDF e imágenes.
+        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini en la extracción ultra rápida de facturas PDF e imágenes.
       </p>
 
       <div>
@@ -318,7 +318,7 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
           <h4 id="modal-invoice-title" class="text-base font-bold text-white">Procesar Factura con IA</h4>
-          <span class="text-[11px] text-slate-400 font-mono">CFDI XML nativo o PDF/Imagen con Gemini 3.8 Flash</span>
+          <span class="text-[11px] text-slate-400 font-mono">CFDI XML nativo o PDF/Imagen con Gemini Flash Ultra-Fast</span>
         </div>
         <button onclick="closeInvoiceModal()" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
       </div>
@@ -329,7 +329,7 @@
         <div id="upload-idle" class="space-y-1">
           <i class="ph-bold ph-file-arrow-up text-2xl text-indigo-400 group-hover:scale-110 transition-transform inline-block"></i>
           <p class="text-xs font-semibold text-slate-200">Arrastra o selecciona el XML, PDF o Comprobante</p>
-          <p class="text-[10px] text-slate-400 font-mono">Detección automática de UUID, Retenciones, Emisor/Receptor y Total</p>
+          <p class="text-[10px] text-slate-400 font-mono">Extracción directa de UUID, Retenciones, Emisor/Receptor y Monto Neto</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
           <i class="ph ph-spinner animate-spin text-2xl text-indigo-400 inline-block"></i>
@@ -629,7 +629,7 @@
             return;
           }
 
-          procText.innerText = "Extrayendo datos con Gemini 3.8 Flash...";
+          procText.innerText = "Analizando documento con Gemini Flash...";
           const base64Data = await fileToBase64(file);
           await parseWithGeminiFlash(base64Data, file.type, geminiKey);
         }
@@ -637,8 +637,8 @@
         // Registrar nombre del documento para el registro
         document.getElementById('uploaded-doc-name').value = file.name;
 
-        // PASO 2: INTENTO DE SUBIDA A STORAGE AISLADO (Tolera bloqueos de red o CORS)
-        procText.innerText = "Sincronizando respaldo documental...";
+        // PASO 2: RESPALDO DOCUMENTAL EN STORAGE (Tolera bloqueos de red o CORS)
+        procText.innerText = "Guardando respaldo documental...";
         try {
           const folder = document.getElementById('invoice-type').value.toLowerCase();
           const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -648,7 +648,7 @@
           const downloadUrl = await getDownloadURL(uploadResult.ref);
           document.getElementById('uploaded-doc-url').value = downloadUrl;
         } catch (storageErr) {
-          console.warn("Storage bloqueado por CORS o permisos. La extracción de datos continuó correctamente:", storageErr);
+          console.warn("Storage no disponible o bloqueado por CORS. Se continuó con los datos extraídos:", storageErr);
         }
 
         procText.innerText = "¡Datos extraídos con éxito!";
@@ -702,18 +702,18 @@
       });
     }
 
-    // PROMPT ESPECIALIZADO EN CFDI MEXICANO CON GEMINI 3.8 FLASH & CASCADA
+    // MOTOR GEMINI OPTIMIZADO: MODELOS EN CASCADA Y CERO THINKING LATENCY
     async function parseWithGeminiFlash(base64Data, mimeType, apiKey) {
       const isCxC = document.getElementById('invoice-type').value === 'CXC';
 
-      const prompt = `Eres un auditor contable experto en comprobantes fiscales digitales de México (CFDI 4.0 y 3.3). 
-Analiza detalladamente este documento (factura/recibo) y extrae:
-1. "razon_social": ${isCxC ? 'Nombre/Razón Social del RECEPTOR o CLIENTE (a quien le facturan)' : 'Nombre/Razón Social del EMISOR o PROVEEDOR (quien expide la factura)'}.
-2. "folio": El Folio Fiscal o UUID completo de 36 caracteres (ej: 8DC5741F-0011-468A-93D2-7DEA17C9698A o 602B1C8B-D848-45E5-A3A3-55761463BCAB). Si no hay UUID, extrae el número de folio interno.
-3. "monto_total": El TOTAL NETO FINAL A PAGAR en número decimal. CUIDADO: Toma en cuenta retenciones si existen (Subtotal + IVA trasladado - IVA retenido - ISR retenido = Total). Debe ser exactamente el valor final de la casilla TOTAL.
+      const prompt = `Eres un auditor contable experto en comprobantes fiscales de México (CFDI). 
+Analiza este comprobante (PDF o imagen) y extrae:
+1. "razon_social": ${isCxC ? 'Nombre o Razón Social del RECEPTOR / CLIENTE' : 'Nombre o Razón Social del EMISOR / PROVEEDOR'}.
+2. "folio": Folio Fiscal o UUID de 36 caracteres (ej: 8DC5741F-0011-468A-93D2-7DEA17C9698A). Si no cuenta con UUID, extrae el número de folio interno.
+3. "monto_total": TOTAL NETO FINAL exacto a pagar en formato numérico decimal (considerando retenciones si existen).
 4. "fecha_emision": Fecha de emisión en formato YYYY-MM-DD.
 
-Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
+Responde ÚNICAMENTE un objeto JSON válido con esta estructura:
 {
   "razon_social": "STRING",
   "folio": "STRING",
@@ -721,10 +721,11 @@ Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
   "fecha_emision": "YYYY-MM-DD"
 }`;
 
-      // Cadena de modelos prioritarios
+      // Cadena de modelos prioritarios por velocidad y compatibilidad de cuota
       const candidateModels = [
-        "gemini-3.8-flash",
-        "gemini-1.5-flash"
+        "gemini-3.5-flash-lite", // Máxima velocidad y respuesta inmediata
+        "gemini-3.8-flash",      // Alta precisión en documentos escaneados o complejos
+        "gemini-2.5-flash"       // Fallback estable de alto rendimiento
       ];
 
       let lastError = null;
@@ -743,13 +744,19 @@ Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
                   { inline_data: { mime_type: mimeType, data: base64Data } }
                 ]
               }],
-              generationConfig: { response_mime_type: "application/json" }
+              generationConfig: { 
+                response_mime_type: "application/json",
+                temperature: 0.1,
+                thinking_config: {
+                  thinking_budget: 0 // Remueve tiempos de razonamiento innecesarios para extracción
+                }
+              }
             })
           });
 
           if (!response.ok) {
             const errDetail = await response.json();
-            throw new Error(errDetail.error?.message || `Fallo en modelo ${modelName}`);
+            throw new Error(errDetail.error?.message || `HTTP ${response.status} en ${modelName}`);
           }
 
           const resData = await response.json();
@@ -767,7 +774,7 @@ Responde EXCLUSIVAMENTE con un objeto JSON con este formato exacto:
           return;
 
         } catch (err) {
-          console.warn(`Intento con ${modelName} falló:`, err.message);
+          console.warn(`Intento con modelo ${modelName} falló:`, err.message);
           lastError = err;
         }
       }

@@ -12,6 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- SheetJS (Excel Export) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- PDF.js para renderizado e inspección de comprobantes PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -23,12 +27,15 @@
           }
         }
       }
+    };
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
   </script>
 </head>
 <body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- OVERLAY DE CARGA Y AUTORIZACIÓN DINÁMICA -->
+  <!-- OVERLAY DE CARGA Y AUTORIZACIÓN RBAC -->
   <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
     <div class="relative flex items-center justify-center">
       <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
@@ -126,7 +133,7 @@
     <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
       <div>
         <h2 id="view-title" class="text-xl font-bold text-white tracking-tight">Resumen Ejecutivo</h2>
-        <span class="text-xs text-slate-400 font-mono">EMCO Governance Core | Base: <span class="text-indigo-400 font-semibold">emco-accounting</span></span>
+        <span class="text-xs text-slate-400 font-mono">EMCO Governance Core | DB: <span class="text-indigo-400 font-semibold">emco-accounting</span></span>
       </div>
 
       <div class="flex items-center gap-3">
@@ -188,13 +195,44 @@
 
       <!-- VISTA: CUENTAS POR COBRAR (CxC) -->
       <section id="view-cxc" class="view-panel hidden space-y-4">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 class="text-lg font-bold text-white">Cuentas por Cobrar (Clientes)</h3>
-            <p class="text-xs text-slate-400">Facturación emitida, comprobantes y validación de cobros recibidos</p>
+            <p class="text-xs text-slate-400">Facturación emitida, fiscalización CFDI y conciliación bancaria</p>
           </div>
-          <button onclick="openInvoiceModal('CXC')" data-action-perm="cxc.write" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-            <i class="ph-bold ph-plus text-sm"></i> + Emitir Factura / CxC
+          <div class="flex items-center gap-2">
+            <button onclick="exportToExcel('cxc')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+              <i class="ph-bold ph-microsoft-excel-logo text-base"></i> Exportar a Excel
+            </button>
+            <button onclick="openInvoiceModal('CXC')" data-action-perm="cxc.write" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+              <i class="ph-bold ph-plus text-sm"></i> + Emitir Factura / CxC
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros CxC -->
+        <div class="bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+              <i class="ph ph-magnifying-glass text-slate-400"></i>
+              <input type="text" id="filter-cxc-search" oninput="applyFilters('cxc')" placeholder="Buscar por cliente, folio..." class="bg-transparent text-white focus:outline-none text-xs w-44">
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-slate-400 text-[11px] font-mono">Desde:</span>
+              <input type="date" id="filter-cxc-start" onchange="applyFilters('cxc')" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-300 text-xs">
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-slate-400 text-[11px] font-mono">Hasta:</span>
+              <input type="date" id="filter-cxc-end" onchange="applyFilters('cxc')" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-300 text-xs">
+            </div>
+            <select id="filter-cxc-status" onchange="applyFilters('cxc')" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-slate-300 text-xs">
+              <option value="ALL">Todos los Estados</option>
+              <option value="PENDING">Pendientes / Por Cobrar</option>
+              <option value="COLLECTED">Cobradas / Liquidadas</option>
+            </select>
+          </div>
+          <button onclick="resetFilters('cxc')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-mono">
+            <i class="ph ph-arrow-counter-clockwise"></i> Limpiar filtros
           </button>
         </div>
 
@@ -203,12 +241,12 @@
             <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
               <tr>
                 <th class="p-4">Folio / UUID</th>
-                <th class="p-4">Cliente</th>
+                <th class="p-4">Cliente / Receptor</th>
                 <th class="p-4">Emisión / Venc.</th>
                 <th class="p-4">Monto Total</th>
                 <th class="p-4">Comprobante</th>
                 <th class="p-4">Estado Cobro</th>
-                <th class="p-4 text-right">Acción</th>
+                <th class="p-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody id="table-cxc" class="divide-y divide-slate-800/60 font-sans">
@@ -220,13 +258,44 @@
 
       <!-- VISTA: CUENTAS POR PAGAR (CxP) -->
       <section id="view-cxp" class="view-panel hidden space-y-4">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 class="text-lg font-bold text-white">Cuentas por Pagar (Proveedores)</h3>
-            <p class="text-xs text-slate-400">Obligaciones fiscales, comprobantes de gastos y dispersión de pagos</p>
+            <p class="text-xs text-slate-400">Pasivos exigibles, verificación CFDI y dispersiones</p>
           </div>
-          <button onclick="openInvoiceModal('CXP')" data-action-perm="cxp.write" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-            <i class="ph-bold ph-plus text-sm"></i> + Cargar Factura Proveedor / CxP
+          <div class="flex items-center gap-2">
+            <button onclick="exportToExcel('cxp')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+              <i class="ph-bold ph-microsoft-excel-logo text-base"></i> Exportar a Excel
+            </button>
+            <button onclick="openInvoiceModal('CXP')" data-action-perm="cxp.write" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+              <i class="ph-bold ph-plus text-sm"></i> + Cargar Factura Proveedor / CxP
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros CxP -->
+        <div class="bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+              <i class="ph ph-magnifying-glass text-slate-400"></i>
+              <input type="text" id="filter-cxp-search" oninput="applyFilters('cxp')" placeholder="Buscar por proveedor, folio..." class="bg-transparent text-white focus:outline-none text-xs w-44">
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-slate-400 text-[11px] font-mono">Desde:</span>
+              <input type="date" id="filter-cxp-start" onchange="applyFilters('cxp')" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-300 text-xs">
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-slate-400 text-[11px] font-mono">Hasta:</span>
+              <input type="date" id="filter-cxp-end" onchange="applyFilters('cxp')" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-300 text-xs">
+            </div>
+            <select id="filter-cxp-status" onchange="applyFilters('cxp')" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-slate-300 text-xs">
+              <option value="ALL">Todos los Estados</option>
+              <option value="PENDING">Pendientes / Por Pagar</option>
+              <option value="PAID">Pagadas / Liquidadas</option>
+            </select>
+          </div>
+          <button onclick="resetFilters('cxp')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-mono">
+            <i class="ph ph-arrow-counter-clockwise"></i> Limpiar filtros
           </button>
         </div>
 
@@ -235,12 +304,12 @@
             <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
               <tr>
                 <th class="p-4">Folio / UUID</th>
-                <th class="p-4">Proveedor</th>
+                <th class="p-4">Proveedor / Emisor</th>
                 <th class="p-4">Emisión / Venc.</th>
                 <th class="p-4">Monto Total</th>
                 <th class="p-4">Comprobante</th>
                 <th class="p-4">Estado Pago</th>
-                <th class="p-4 text-right">Acción</th>
+                <th class="p-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody id="table-cxp" class="divide-y divide-slate-800/60 font-sans">
@@ -252,13 +321,37 @@
 
       <!-- VISTA: ACTIVOS FIJOS -->
       <section id="view-activos" class="view-panel hidden space-y-4">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 class="text-lg font-bold text-white">Inventario de Hardware y Telecomunicaciones</h3>
-            <p class="text-xs text-slate-400">Control físico de laptops, módems móviles y licencias</p>
+            <p class="text-xs text-slate-400">Control físico, números de serie y resguardo corporativo</p>
           </div>
-          <button onclick="toggleModalActivo(true)" data-action-perm="assets.write" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-            <i class="ph-bold ph-plus text-sm"></i> Registrar Equipo / Activo
+          <div class="flex items-center gap-2">
+            <button onclick="exportToExcel('activos')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+              <i class="ph-bold ph-microsoft-excel-logo text-base"></i> Exportar a Excel
+            </button>
+            <button onclick="toggleModalActivo(true)" data-action-perm="assets.write" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+              <i class="ph-bold ph-plus text-sm"></i> Registrar Equipo / Activo
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros Activos -->
+        <div class="bg-slate-900/60 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+              <i class="ph ph-magnifying-glass text-slate-400"></i>
+              <input type="text" id="filter-activos-search" oninput="applyFilters('activos')" placeholder="Buscar por serie, modelo, asignado..." class="bg-transparent text-white focus:outline-none text-xs w-56">
+            </div>
+            <select id="filter-activos-category" onchange="applyFilters('activos')" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1 text-slate-300 text-xs">
+              <option value="ALL">Todas las Categorías</option>
+              <option value="TANGIBLE_HARDWARE">Hardware (Laptop / PC)</option>
+              <option value="TANGIBLE_NETWORK">Red (Módem Móvil)</option>
+              <option value="INTANGIBLE_SOFTWARE">Software / Licencias</option>
+            </select>
+          </div>
+          <button onclick="resetFilters('activos')" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-mono">
+            <i class="ph ph-arrow-counter-clockwise"></i> Limpiar filtros
           </button>
         </div>
 
@@ -297,7 +390,7 @@
       </div>
 
       <p class="text-xs text-slate-300 leading-relaxed">
-        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini en la extracción ultra rápida de facturas PDF e imágenes.
+        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini Flash en el procesamiento autónomo de facturas PDF e imágenes.
       </p>
 
       <div>
@@ -312,13 +405,44 @@
     </div>
   </div>
 
-  <!-- MODAL INTELIGENTE: ELEVAR Y PROCESAR FACTURAS (CXC Y CXP) -->
+  <!-- MODAL VISOR DOCUMENTAL ("ELEVAR UNA SALVA") -->
+  <div id="modal-doc-viewer" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex flex-col p-4 sm:p-6 z-50">
+    <div class="bg-slate-900 rounded-2xl w-full h-full flex flex-col border border-slate-700/80 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
+            <i class="ph-bold ph-file-text text-xl"></i>
+          </div>
+          <div>
+            <h4 id="viewer-title" class="text-sm font-bold text-white">Comprobante Fiscal</h4>
+            <span id="viewer-subtitle" class="text-[11px] text-slate-400 font-mono">Salva documental y auditoría</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <a id="viewer-download-btn" href="#" target="_blank" download class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+            <i class="ph-bold ph-download-simple"></i> Descargar Salva
+          </a>
+          <button onclick="closeDocViewer()" class="text-slate-400 hover:text-white text-2xl font-bold p-1">&times;</button>
+        </div>
+      </div>
+      <div class="flex-1 bg-slate-950 relative flex items-center justify-center p-2 overflow-auto">
+        <iframe id="viewer-frame" class="w-full h-full rounded-lg border-0 hidden"></iframe>
+        <img id="viewer-image" src="" alt="Comprobante" class="max-h-full max-w-full object-contain rounded-lg hidden shadow-2xl" />
+        <div id="viewer-empty" class="text-center text-slate-500 font-mono text-xs">
+          <i class="ph ph-warning-circle text-3xl mb-2 text-amber-400 inline-block"></i>
+          <p>No se pudo renderizar la vista previa directa.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRAR Y ELEVAR FACTURA (CXC / CXP) -->
   <div id="modal-invoice" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
           <h4 id="modal-invoice-title" class="text-base font-bold text-white">Procesar Factura con IA</h4>
-          <span class="text-[11px] text-slate-400 font-mono">CFDI XML nativo o PDF/Imagen con Gemini Flash Ultra-Fast</span>
+          <span class="text-[11px] text-slate-400 font-mono">CFDI XML nativo o PDF/Imagen con Gemini 2.5 Flash</span>
         </div>
         <button onclick="closeInvoiceModal()" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
       </div>
@@ -329,7 +453,7 @@
         <div id="upload-idle" class="space-y-1">
           <i class="ph-bold ph-file-arrow-up text-2xl text-indigo-400 group-hover:scale-110 transition-transform inline-block"></i>
           <p class="text-xs font-semibold text-slate-200">Arrastra o selecciona el XML, PDF o Comprobante</p>
-          <p class="text-[10px] text-slate-400 font-mono">Extracción directa de UUID, Retenciones, Emisor/Receptor y Monto Neto</p>
+          <p class="text-[10px] text-slate-400 font-mono">Lectura inteligente de Folio/UUID, RFC emisor/receptor y Neto</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
           <i class="ph ph-spinner animate-spin text-2xl text-indigo-400 inline-block"></i>
@@ -456,7 +580,12 @@
     let currentStaff = null;
     let currentPermissions = [];
 
-    // GESTIÓN DE LA API KEY DE GEMINI EN LOCALSTORAGE
+    // Almacenes de datos en memoria para filtrado y exportación reactiva
+    let rawDataCxC = [];
+    let rawDataCxP = [];
+    let rawDataActivos = [];
+
+    // GESTIÓN DE LA API KEY DE GEMINI
     window.toggleApiKeyModal = (show) => {
       document.getElementById('modal-api-key').classList.toggle('hidden', !show);
       if (show) {
@@ -467,13 +596,13 @@
     window.saveGeminiApiKey = () => {
       const key = document.getElementById('input-gemini-key').value.trim();
       if (!key) {
-        alert("Por favor introduce una API Key válida.");
+        alert("Introduce una API Key válida.");
         return;
       }
       localStorage.setItem('GEMINI_API_KEY', key);
       updateApiKeyIndicator();
       window.toggleApiKeyModal(false);
-      alert("API Key de Gemini configurada con éxito.");
+      alert("API Key de Gemini guardada correctamente.");
     };
 
     function updateApiKeyIndicator() {
@@ -489,7 +618,7 @@
     }
     updateApiKeyIndicator();
 
-    // RBAC DINÁMICO
+    // GOBERNANZA Y RBAC DINÁMICO
     function enforceDynamicRBAC() {
       const isSuperAdmin = currentStaff?.role_id === "SUPERADMIN";
       document.querySelectorAll("[data-perm]").forEach(el => {
@@ -545,12 +674,12 @@
         shield.classList.add("opacity-0", "pointer-events-none");
         setTimeout(() => shield.classList.add("hidden"), 300);
       } catch (err) {
-        console.error("Error en sesión:", err);
+        console.error("Error en sesión y RBAC:", err);
       }
     });
 
     window.logoutSession = async () => {
-      if (confirm("¿Finalizar sesión segura?")) {
+      if (confirm("¿Finalizar sesión segura en ContaCore?")) {
         await signOut(auth);
         window.location.replace("index.html");
       }
@@ -579,6 +708,45 @@
       }
     };
 
+    // MODAL DE VISUALIZACIÓN DE SALVAS (COMPROBANTES)
+    window.openDocViewer = (url, title = "Comprobante Fiscal") => {
+      if (!url) {
+        alert("Este registro no tiene comprobante digital enlazado.");
+        return;
+      }
+      const modal = document.getElementById('modal-doc-viewer');
+      const frame = document.getElementById('viewer-frame');
+      const img = document.getElementById('viewer-image');
+      const empty = document.getElementById('viewer-empty');
+      const titleEl = document.getElementById('viewer-title');
+      const downloadBtn = document.getElementById('viewer-download-btn');
+
+      titleEl.innerText = title;
+      downloadBtn.href = url;
+
+      frame.classList.add('hidden');
+      img.classList.add('hidden');
+      empty.classList.add('hidden');
+
+      const isImage = /\.(jpeg|jpg|png|webp)($|\?)/i.test(url);
+      if (isImage) {
+        img.src = url;
+        img.classList.remove('hidden');
+      } else {
+        frame.src = url;
+        frame.classList.remove('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    };
+
+    window.closeDocViewer = () => {
+      const modal = document.getElementById('modal-doc-viewer');
+      document.getElementById('viewer-frame').src = "";
+      document.getElementById('viewer-image').src = "";
+      modal.classList.add('hidden');
+    };
+
     window.openInvoiceModal = (type) => {
       document.getElementById('invoice-type').value = type;
       const isCxC = type === 'CXC';
@@ -601,7 +769,30 @@
       if (!show) document.getElementById('form-activo').reset();
     };
 
-    // PROCESAMIENTO HÍBRIDO DE ARCHIVOS (EXTRACCIÓN INMEDIATA EN MEMORIA)
+    // CONVERSIÓN DE PDF A IMAGEN EN CLIENTE MEDIANTE PDF.JS
+    async function convertPdfToImageBase64(file) {
+      if (!window.pdfjsLib) {
+        throw new Error("Librería de procesamiento PDF no cargada.");
+      }
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const page = await pdf.getPage(1); // Renderizado de la carátula fiscal principal
+      const viewport = page.getViewport({ scale: 2.0 });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      return {
+        base64: dataUrl.split(',')[1],
+        mimeType: 'image/jpeg'
+      };
+    }
+
+    // PROCESAMIENTO HÍBRIDO DE ARCHIVOS (CFDI XML NATIVO O PDF/IMAGEN CON GEMINI)
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -614,31 +805,40 @@
       procBox.classList.remove('hidden');
 
       try {
-        // PASO 1: EXTRACCIÓN INMEDIATA EN CLIENTE
         if (file.name.toLowerCase().endsWith('.xml')) {
-          procText.innerText = "Extrayendo CFDI vía XML nativo...";
+          procText.innerText = "Extrayendo comprobante XML fiscal nativo...";
           const text = await file.text();
           parseXMLInvoice(text);
         } else {
           const geminiKey = localStorage.getItem('GEMINI_API_KEY');
           if (!geminiKey) {
-            alert("No tienes configurada la API Key de Gemini. Haz clic en 'Configurar Gemini Key' en la barra superior para habilitar el análisis de PDFs.");
+            alert("No tienes configurada la API Key de Gemini. Pulsa 'Configurar Gemini Key' en la barra superior para procesar facturas automáticamente.");
             window.toggleApiKeyModal(true);
             idleBox.classList.remove('hidden');
             procBox.classList.add('hidden');
             return;
           }
 
-          procText.innerText = "Analizando documento con Gemini Flash...";
-          const base64Data = await fileToBase64(file);
-          await parseWithGeminiFlash(base64Data, file.type, geminiKey);
+          let base64Data = "";
+          let mime = file.type;
+
+          if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+            procText.innerText = "Renderizando carátula de factura PDF...";
+            const conv = await convertPdfToImageBase64(file);
+            base64Data = conv.base64;
+            mime = conv.mimeType;
+          } else {
+            base64Data = await fileToBase64(file);
+          }
+
+          procText.innerText = "Analizando comprobante con Gemini 2.5 Flash...";
+          await parseWithGemini(base64Data, mime, geminiKey);
         }
 
-        // Registrar nombre del documento para el registro
         document.getElementById('uploaded-doc-name').value = file.name;
 
-        // PASO 2: RESPALDO DOCUMENTAL EN STORAGE (Tolera bloqueos de red o CORS)
-        procText.innerText = "Guardando respaldo documental...";
+        // Respaldo en Storage para elevar la salva documental
+        procText.innerText = "Almacenando salva digital en bóveda segura...";
         try {
           const folder = document.getElementById('invoice-type').value.toLowerCase();
           const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -648,13 +848,13 @@
           const downloadUrl = await getDownloadURL(uploadResult.ref);
           document.getElementById('uploaded-doc-url').value = downloadUrl;
         } catch (storageErr) {
-          console.warn("Storage no disponible o bloqueado por CORS. Se continuó con los datos extraídos:", storageErr);
+          console.warn("Storage con advertencia de red/CORS. Los datos extraídos se mantienen:", storageErr);
         }
 
         procText.innerText = "¡Datos extraídos con éxito!";
       } catch (err) {
-        console.error("Fallo durante el procesamiento:", err);
-        alert("Aviso: " + err.message + ". Puedes verificar o llenar los campos manualmente.");
+        console.error("Fallo durante el análisis:", err);
+        alert("Detalle: " + err.message + ". Puedes verificar o capturar manualmente.");
       } finally {
         setTimeout(() => {
           idleBox.classList.remove('hidden');
@@ -702,18 +902,18 @@
       });
     }
 
-    // MOTOR GEMINI OPTIMIZADO: MODELOS EN CASCADA Y CERO THINKING LATENCY
-    async function parseWithGeminiFlash(base64Data, mimeType, apiKey) {
+    // MOTOR GEMINI 2.5 FLASH ULTRA-FAST
+    async function parseWithGemini(base64Data, mimeType, apiKey) {
       const isCxC = document.getElementById('invoice-type').value === 'CXC';
 
-      const prompt = `Eres un auditor contable experto en comprobantes fiscales de México (CFDI). 
-Analiza este comprobante (PDF o imagen) y extrae:
+      const prompt = `Actúa como un auditor fiscal contable de alta precisión para facturas y CFDI en México.
+Analiza la imagen de este comprobante y extrae:
 1. "razon_social": ${isCxC ? 'Nombre o Razón Social del RECEPTOR / CLIENTE' : 'Nombre o Razón Social del EMISOR / PROVEEDOR'}.
-2. "folio": Folio Fiscal o UUID de 36 caracteres (ej: 8DC5741F-0011-468A-93D2-7DEA17C9698A). Si no cuenta con UUID, extrae el número de folio interno.
-3. "monto_total": TOTAL NETO FINAL exacto a pagar en formato numérico decimal (considerando retenciones si existen).
-4. "fecha_emision": Fecha de emisión en formato YYYY-MM-DD.
+2. "folio": UUID / Folio Fiscal de 36 caracteres con guiones. Si no cuenta con UUID, extrae el número de folio interno.
+3. "monto_total": MONTO TOTAL NETO FINAL exacto a pagar como número decimal (ejemplo: 12500.50).
+4. "fecha_emision": Fecha del comprobante en formato estricto YYYY-MM-DD.
 
-Responde ÚNICAMENTE un objeto JSON válido con esta estructura:
+Devuelve EXCLUSIVAMENTE un JSON válido con la siguiente estructura:
 {
   "razon_social": "STRING",
   "folio": "STRING",
@@ -721,68 +921,43 @@ Responde ÚNICAMENTE un objeto JSON válido con esta estructura:
   "fecha_emision": "YYYY-MM-DD"
 }`;
 
-      // Cadena de modelos prioritarios por velocidad y compatibilidad de cuota
-      const candidateModels = [
-        "gemini-3.5-flash-lite", // Máxima velocidad y respuesta inmediata
-        "gemini-3.8-flash",      // Alta precisión en documentos escaneados o complejos
-        "gemini-2.5-flash"       // Fallback estable de alto rendimiento
-      ];
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-      let lastError = null;
-
-      for (const modelName of candidateModels) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  { inline_data: { mime_type: mimeType, data: base64Data } }
-                ]
-              }],
-              generationConfig: { 
-                response_mime_type: "application/json",
-                temperature: 0.1,
-                thinking_config: {
-                  thinking_budget: 0 // Remueve tiempos de razonamiento innecesarios para extracción
-                }
-              }
-            })
-          });
-
-          if (!response.ok) {
-            const errDetail = await response.json();
-            throw new Error(errDetail.error?.message || `HTTP ${response.status} en ${modelName}`);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mimeType, data: base64Data } }
+            ]
+          }],
+          generationConfig: { 
+            response_mime_type: "application/json",
+            temperature: 0.1
           }
+        })
+      });
 
-          const resData = await response.json();
-          const rawJson = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!rawJson) throw new Error("Respuesta vacía del modelo de IA");
-
-          const parsed = JSON.parse(rawJson);
-
-          if (parsed.razon_social) document.getElementById('invoice-entity').value = parsed.razon_social;
-          if (parsed.folio) document.getElementById('invoice-folio').value = parsed.folio;
-          if (parsed.monto_total) document.getElementById('invoice-total').value = parsed.monto_total;
-          if (parsed.fecha_emision) document.getElementById('invoice-due-date').value = parsed.fecha_emision;
-
-          console.log(`%c✔ Extracción exitosa procesada por ${modelName}`, "color: #10b981; font-weight: bold;");
-          return;
-
-        } catch (err) {
-          console.warn(`Intento con modelo ${modelName} falló:`, err.message);
-          lastError = err;
-        }
+      if (!response.ok) {
+        const errDetail = await response.json();
+        throw new Error(errDetail.error?.message || `HTTP ${response.status} en Gemini`);
       }
 
-      throw new Error(`Error en el motor de IA: ${lastError?.message || "No disponible"}`);
+      const resData = await response.json();
+      const rawJson = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawJson) throw new Error("Respuesta vacía del motor de IA");
+
+      const parsed = JSON.parse(rawJson);
+
+      if (parsed.razon_social) document.getElementById('invoice-entity').value = parsed.razon_social;
+      if (parsed.folio) document.getElementById('invoice-folio').value = parsed.folio;
+      if (parsed.monto_total) document.getElementById('invoice-total').value = parsed.monto_total;
+      if (parsed.fecha_emision) document.getElementById('invoice-due-date').value = parsed.fecha_emision;
     }
 
-    // REGISTRO DE FACTURA (CXC / CXP)
+    // REGISTRO DE FACTURA EN FIRESTORE
     document.getElementById('form-invoice').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-invoice');
@@ -809,16 +984,16 @@ Responde ÚNICAMENTE un objeto JSON válido con esta estructura:
 
         closeInvoiceModal();
       } catch (err) {
-        alert("Error al guardar factura: " + err.message);
+        alert("Error al registrar factura: " + err.message);
       } finally {
         btn.disabled = false;
         btn.innerText = "Registrar Factura";
       }
     });
 
-    // MARCAR COMO COBRADA (1-CLIC)
+    // ACCIONES DE CONCILIACIÓN
     window.marcarCobrada = async (id) => {
-      if (confirm("¿Confirmar recepción de pago total de esta cuenta por cobrar?")) {
+      if (confirm("¿Confirmar cobro total y liquidación de esta factura?")) {
         try {
           await updateDoc(doc(db, "accounts_receivable", id), {
             status: "COLLECTED",
@@ -832,7 +1007,6 @@ Responde ÚNICAMENTE un objeto JSON válido con esta estructura:
       }
     };
 
-    // MARCAR COMO PAGADA (1-CLIC)
     window.marcarPagada = async (id) => {
       if (confirm("¿Confirmar dispersión de pago liquidada a proveedor?")) {
         try {
@@ -849,7 +1023,7 @@ Responde ÚNICAMENTE un objeto JSON válido con esta estructura:
     };
 
     window.eliminarItem = async (colName, id) => {
-      if (confirm("¿Deseas eliminar este registro contable?")) {
+      if (confirm("¿Deseas eliminar este registro contable permanentemente?")) {
         try {
           await deleteDoc(doc(db, colName, id));
         } catch (err) {
@@ -858,152 +1032,301 @@ Responde ÚNICAMENTE un objeto JSON válido con esta estructura:
       }
     };
 
-    // RECALCULO DE MÉTRICAS Y TABLAS EN TIEMPO REAL
-    function initLiveMetrics() {
-      // 1. Cuentas por Cobrar (CxC)
-      onSnapshot(query(collection(db, "accounts_receivable"), orderBy("created_at", "desc")), (snap) => {
-        const tbody = document.getElementById('table-cxc');
-        let pendingTotal = 0;
+    // MOTOR DE FILTRADO Y RENDERIZADO DINÁMICO
+    window.applyFilters = (module) => {
+      if (module === 'cxc') renderCxCTable();
+      if (module === 'cxp') renderCxPTable();
+      if (module === 'activos') renderActivosTable();
+    };
 
-        if (snap.empty) {
-          tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin facturas por cobrar emitidas.</td></tr>';
-          document.getElementById('kpi-cxc').innerText = '$0.00';
-          return;
+    window.resetFilters = (module) => {
+      if (module === 'cxc') {
+        document.getElementById('filter-cxc-search').value = '';
+        document.getElementById('filter-cxc-start').value = '';
+        document.getElementById('filter-cxc-end').value = '';
+        document.getElementById('filter-cxc-status').value = 'ALL';
+        renderCxCTable();
+      } else if (module === 'cxp') {
+        document.getElementById('filter-cxp-search').value = '';
+        document.getElementById('filter-cxp-start').value = '';
+        document.getElementById('filter-cxp-end').value = '';
+        document.getElementById('filter-cxp-status').value = 'ALL';
+        renderCxPTable();
+      } else if (module === 'activos') {
+        document.getElementById('filter-activos-search').value = '';
+        document.getElementById('filter-activos-category').value = 'ALL';
+        renderActivosTable();
+      }
+    };
+
+    function renderCxCTable() {
+      const search = document.getElementById('filter-cxc-search').value.toLowerCase().trim();
+      const start = document.getElementById('filter-cxc-start').value;
+      const end = document.getElementById('filter-cxc-end').value;
+      const statusFilter = document.getElementById('filter-cxc-status').value;
+
+      const filtered = rawDataCxC.filter(item => {
+        if (statusFilter !== 'ALL' && item.status !== statusFilter) return false;
+        if (start && item.due_date && item.due_date < start) return false;
+        if (end && item.due_date && item.due_date > end) return false;
+        if (search) {
+          const matchFolio = (item.folio || '').toLowerCase().includes(search);
+          const matchEntity = (item.entity_name || '').toLowerCase().includes(search);
+          if (!matchFolio && !matchEntity) return false;
         }
-
-        let html = '';
-        snap.forEach(d => {
-          const item = d.data();
-          const isCollected = item.status === "COLLECTED";
-          if (!isCollected) pendingTotal += Number(item.balance || item.total_amount || 0);
-
-          const docLink = item.document_url 
-            ? `<a href="${item.document_url}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-mono border border-indigo-500/20 transition"><i class="ph ph-file-text"></i> Ver Doc</a>`
-            : (item.document_filename ? `<span class="text-slate-500 text-xs font-mono" title="${item.document_filename}">Local: ${item.document_filename.substring(0,10)}...</span>` : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`);
-
-          const statusBadge = isCollected 
-            ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">COBRADA</span>`
-            : `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">POR COBRAR</span>`;
-
-          const actionBtn = isCollected 
-            ? `<button disabled class="text-xs px-2.5 py-1 rounded-lg border border-slate-800 text-slate-500 font-mono">Liquidada</button>`
-            : `<button onclick="marcarCobrada('${d.id}')" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition font-medium">Marcar Cobrada</button>`;
-
-          html += `
-            <tr class="hover:bg-slate-800/40 transition">
-              <td class="p-4 font-mono font-bold text-xs text-white max-w-[150px] truncate" title="${item.folio}">${item.folio}</td>
-              <td class="p-4 font-medium text-slate-200">${item.entity_name}</td>
-              <td class="p-4 font-mono text-xs text-slate-400">${item.due_date || 'S/F'}</td>
-              <td class="p-4 font-mono text-white font-semibold">$${Number(item.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-              <td class="p-4">${docLink}</td>
-              <td class="p-4">${statusBadge}</td>
-              <td class="p-4 text-right space-x-2">
-                ${actionBtn}
-                <button onclick="eliminarItem('accounts_receivable', '${d.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="ph ph-trash text-base"></i></button>
-              </td>
-            </tr>
-          `;
-        });
-        tbody.innerHTML = html;
-        document.getElementById('kpi-cxc').innerText = `$${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        return true;
       });
 
-      // 2. Cuentas por Pagar (CxP)
-      onSnapshot(query(collection(db, "accounts_payable"), orderBy("created_at", "desc")), (snap) => {
-        const tbody = document.getElementById('table-cxp');
-        let pendingTotal = 0;
+      const tbody = document.getElementById('table-cxc');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">No hay cuentas por cobrar con los filtros seleccionados.</td></tr>';
+        return;
+      }
 
-        if (snap.empty) {
-          tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin facturas de proveedores registradas.</td></tr>';
-          document.getElementById('kpi-cxp').innerText = '$0.00';
-          return;
+      let html = '';
+      filtered.forEach(item => {
+        const isCollected = item.status === "COLLECTED";
+        const docBtn = item.document_url 
+          ? `<button onclick="openDocViewer('${item.document_url}', 'CxC: ${item.folio}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-mono border border-indigo-500/20 transition"><i class="ph-bold ph-eye"></i> Salva</button>`
+          : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`;
+
+        const statusBadge = isCollected 
+          ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">COBRADA</span>`
+          : `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">POR COBRAR</span>`;
+
+        const actionBtn = isCollected 
+          ? `<button disabled class="text-xs px-2.5 py-1 rounded-lg border border-slate-800 text-slate-500 font-mono">Liquidada</button>`
+          : `<button onclick="marcarCobrada('${item.id}')" data-action-perm="cxc.write" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition font-medium">Cobrada</button>`;
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-mono font-bold text-xs text-white max-w-[150px] truncate" title="${item.folio}">${item.folio}</td>
+            <td class="p-4 font-medium text-slate-200">${item.entity_name}</td>
+            <td class="p-4 font-mono text-xs text-slate-400">${item.due_date || 'S/F'}</td>
+            <td class="p-4 font-mono text-white font-semibold">$${Number(item.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4">${docBtn}</td>
+            <td class="p-4">${statusBadge}</td>
+            <td class="p-4 text-right space-x-2">
+              ${actionBtn}
+              <button onclick="eliminarItem('accounts_receivable', '${item.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="ph ph-trash text-base"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+      enforceDynamicRBAC();
+    }
+
+    function renderCxPTable() {
+      const search = document.getElementById('filter-cxp-search').value.toLowerCase().trim();
+      const start = document.getElementById('filter-cxp-start').value;
+      const end = document.getElementById('filter-cxp-end').value;
+      const statusFilter = document.getElementById('filter-cxp-status').value;
+
+      const filtered = rawDataCxP.filter(item => {
+        if (statusFilter !== 'ALL' && item.status !== statusFilter) return false;
+        if (start && item.due_date && item.due_date < start) return false;
+        if (end && item.due_date && item.due_date > end) return false;
+        if (search) {
+          const matchFolio = (item.folio || '').toLowerCase().includes(search);
+          const matchEntity = (item.entity_name || '').toLowerCase().includes(search);
+          if (!matchFolio && !matchEntity) return false;
+        }
+        return true;
+      });
+
+      const tbody = document.getElementById('table-cxp');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">No hay cuentas por pagar con los filtros seleccionados.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(item => {
+        const isPaid = item.status === "PAID";
+        const docBtn = item.document_url 
+          ? `<button onclick="openDocViewer('${item.document_url}', 'CxP: ${item.folio}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-mono border border-indigo-500/20 transition"><i class="ph-bold ph-eye"></i> Salva</button>`
+          : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`;
+
+        const statusBadge = isPaid 
+          ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PAGADA</span>`
+          : `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">POR PAGAR</span>`;
+
+        const actionBtn = isPaid 
+          ? `<button disabled class="text-xs px-2.5 py-1 rounded-lg border border-slate-800 text-slate-500 font-mono">Liquidada</button>`
+          : `<button onclick="marcarPagada('${item.id}')" data-action-perm="cxp.write" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition font-medium">Pagada</button>`;
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-mono font-bold text-xs text-white max-w-[150px] truncate" title="${item.folio}">${item.folio}</td>
+            <td class="p-4 font-medium text-slate-200">${item.entity_name}</td>
+            <td class="p-4 font-mono text-xs text-slate-400">${item.due_date || 'S/F'}</td>
+            <td class="p-4 font-mono text-white font-semibold">$${Number(item.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4">${docBtn}</td>
+            <td class="p-4">${statusBadge}</td>
+            <td class="p-4 text-right space-x-2">
+              ${actionBtn}
+              <button onclick="eliminarItem('accounts_payable', '${item.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="ph ph-trash text-base"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+      enforceDynamicRBAC();
+    }
+
+    function renderActivosTable() {
+      const search = document.getElementById('filter-activos-search').value.toLowerCase().trim();
+      const categoryFilter = document.getElementById('filter-activos-category').value;
+
+      const filtered = rawDataActivos.filter(item => {
+        if (categoryFilter !== 'ALL' && item.category !== categoryFilter) return false;
+        if (search) {
+          const matchCode = (item.asset_code || '').toLowerCase().includes(search);
+          const matchName = (item.name || '').toLowerCase().includes(search);
+          const matchSerial = (item.serial_number || '').toLowerCase().includes(search);
+          const matchAssigned = (item.assigned_to || '').toLowerCase().includes(search);
+          if (!matchCode && !matchName && !matchSerial && !matchAssigned) return false;
+        }
+        return true;
+      });
+
+      const tbody = document.getElementById('table-activos');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin activos coincidentes con los filtros.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(item => {
+        const cost = Number(item.purchase_cost || 0);
+        let badge = "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
+        let label = "Hardware";
+        if (item.category === "TANGIBLE_NETWORK") {
+          badge = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+          label = "Red / Módem";
+        } else if (item.category === "INTANGIBLE_SOFTWARE") {
+          badge = "bg-purple-500/10 text-purple-400 border border-purple-500/20";
+          label = "Licencia Software";
         }
 
-        let html = '';
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-mono font-bold text-xs text-white">${item.asset_code || 'S/N'}</td>
+            <td class="p-4 font-medium text-slate-200">${item.name}</td>
+            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium ${badge}">${label}</span></td>
+            <td class="p-4 font-mono text-xs text-slate-400">${item.serial_number}</td>
+            <td class="p-4 text-slate-300 font-medium">${item.assigned_to || '<span class="text-slate-500 italic">Sin asignar</span>'}</td>
+            <td class="p-4 font-mono text-white font-semibold">$${cost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4 text-right">
+              <button onclick="eliminarItem('fixed_assets', '${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar registro">
+                <i class="ph ph-trash text-base"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    // EXPORTACIÓN A EXCEL CORPORATIVO CON SHEETJS
+    window.exportToExcel = (module) => {
+      let data = [];
+      let filename = `ContaCore_${module.toUpperCase()}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+      if (module === 'cxc') {
+        data = rawDataCxC.map(item => ({
+          "Folio/UUID": item.folio || '',
+          "Cliente": item.entity_name || '',
+          "Vencimiento": item.due_date || '',
+          "Monto Total MXN": Number(item.total_amount || 0),
+          "Estado": item.status === 'COLLECTED' ? 'COBRADA' : 'POR COBRAR',
+          "Comprobante Adjunto": item.document_url ? 'SÍ' : 'NO',
+          "Registrado Por": item.registered_by || ''
+        }));
+      } else if (module === 'cxp') {
+        data = rawDataCxP.map(item => ({
+          "Folio/UUID": item.folio || '',
+          "Proveedor": item.entity_name || '',
+          "Vencimiento": item.due_date || '',
+          "Monto Total MXN": Number(item.total_amount || 0),
+          "Estado": item.status === 'PAID' ? 'PAGADA' : 'POR PAGAR',
+          "Comprobante Adjunto": item.document_url ? 'SÍ' : 'NO',
+          "Registrado Por": item.registered_by || ''
+        }));
+      } else if (module === 'activos') {
+        data = rawDataActivos.map(item => ({
+          "Código": item.asset_code || '',
+          "Nombre / Modelo": item.name || '',
+          "Categoría": item.category || '',
+          "Serie / IMEI": item.serial_number || '',
+          "Resguardo": item.assigned_to || '',
+          "Costo MXN": Number(item.purchase_cost || 0),
+          "Estado": item.status || 'AVAILABLE'
+        }));
+      }
+
+      if (data.length === 0) {
+        alert("No hay información disponible para exportar.");
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, module.toUpperCase());
+      XLSX.writeFile(wb, filename);
+    };
+
+    // SINCRONIZACIÓN REACTIVA CON FIRESTORE
+    function initLiveMetrics() {
+      // 1. Cuentas por Cobrar
+      onSnapshot(query(collection(db, "accounts_receivable"), orderBy("created_at", "desc")), (snap) => {
+        rawDataCxC = [];
+        let pendingTotal = 0;
+
         snap.forEach(d => {
-          const item = d.data();
-          const isPaid = item.status === "PAID";
-          if (!isPaid) pendingTotal += Number(item.balance || item.total_amount || 0);
-
-          const docLink = item.document_url 
-            ? `<a href="${item.document_url}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 text-xs font-mono border border-indigo-500/20 transition"><i class="ph ph-file-text"></i> Ver Doc</a>`
-            : (item.document_filename ? `<span class="text-slate-500 text-xs font-mono" title="${item.document_filename}">Local: ${item.document_filename.substring(0,10)}...</span>` : `<span class="text-slate-600 text-xs font-mono">Sin adjunto</span>`);
-
-          const statusBadge = isPaid 
-            ? `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PAGADA</span>`
-            : `<span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">POR PAGAR</span>`;
-
-          const actionBtn = isPaid 
-            ? `<button disabled class="text-xs px-2.5 py-1 rounded-lg border border-slate-800 text-slate-500 font-mono">Liquidada</button>`
-            : `<button onclick="marcarPagada('${d.id}')" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white transition font-medium">Marcar Pagada</button>`;
-
-          html += `
-            <tr class="hover:bg-slate-800/40 transition">
-              <td class="p-4 font-mono font-bold text-xs text-white max-w-[150px] truncate" title="${item.folio}">${item.folio}</td>
-              <td class="p-4 font-medium text-slate-200">${item.entity_name}</td>
-              <td class="p-4 font-mono text-xs text-slate-400">${item.due_date || 'S/F'}</td>
-              <td class="p-4 font-mono text-white font-semibold">$${Number(item.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-              <td class="p-4">${docLink}</td>
-              <td class="p-4">${statusBadge}</td>
-              <td class="p-4 text-right space-x-2">
-                ${actionBtn}
-                <button onclick="eliminarItem('accounts_payable', '${d.id}')" class="text-slate-500 hover:text-rose-400 transition"><i class="ph ph-trash text-base"></i></button>
-              </td>
-            </tr>
-          `;
+          const item = { id: d.id, ...d.data() };
+          rawDataCxC.push(item);
+          if (item.status !== "COLLECTED") {
+            pendingTotal += Number(item.balance || item.total_amount || 0);
+          }
         });
-        tbody.innerHTML = html;
+
+        document.getElementById('kpi-cxc').innerText = `$${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        renderCxCTable();
+      });
+
+      // 2. Cuentas por Pagar
+      onSnapshot(query(collection(db, "accounts_payable"), orderBy("created_at", "desc")), (snap) => {
+        rawDataCxP = [];
+        let pendingTotal = 0;
+
+        snap.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          rawDataCxP.push(item);
+          if (item.status !== "PAID") {
+            pendingTotal += Number(item.balance || item.total_amount || 0);
+          }
+        });
+
         document.getElementById('kpi-cxp').innerText = `$${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        renderCxPTable();
       });
 
       // 3. Activos Fijos
       onSnapshot(query(collection(db, "fixed_assets"), orderBy("created_at", "desc")), (snap) => {
-        const tbody = document.getElementById('table-activos');
+        rawDataActivos = [];
         let totalCost = 0;
-        let totalCount = snap.docs.length;
 
-        if (snap.empty) {
-          tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin activos registrados en emco-accounting.</td></tr>';
-          document.getElementById('kpi-activos').innerText = '0';
-          document.getElementById('kpi-valor-libros').innerText = '$0.00';
-          return;
-        }
-
-        let html = '';
         snap.forEach(d => {
-          const item = d.data();
-          const cost = Number(item.purchase_cost || 0);
-          totalCost += cost;
-
-          let badge = "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
-          let label = "Laptop / PC";
-          if (item.category === "TANGIBLE_NETWORK") {
-            badge = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
-            label = "Módem / Red";
-          } else if (item.category === "INTANGIBLE_SOFTWARE") {
-            badge = "bg-purple-500/10 text-purple-400 border border-purple-500/20";
-            label = "Software / Lic.";
-          }
-
-          html += `
-            <tr class="hover:bg-slate-800/40 transition">
-              <td class="p-4 font-mono font-bold text-xs text-white">${item.asset_code || 'S/N'}</td>
-              <td class="p-4 font-medium text-slate-200">${item.name}</td>
-              <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium ${badge}">${label}</span></td>
-              <td class="p-4 font-mono text-xs text-slate-400">${item.serial_number}</td>
-              <td class="p-4 text-slate-300 font-medium">${item.assigned_to || '<span class="text-slate-500 italic">Sin asignar</span>'}</td>
-              <td class="p-4 font-mono text-white font-semibold">$${cost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-              <td class="p-4 text-right">
-                <button onclick="eliminarItem('fixed_assets', '${d.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar registro">
-                  <i class="ph ph-trash text-base"></i>
-                </button>
-              </td>
-            </tr>
-          `;
+          const item = { id: d.id, ...d.data() };
+          rawDataActivos.push(item);
+          totalCost += Number(item.purchase_cost || 0);
         });
-        tbody.innerHTML = html;
-        document.getElementById('kpi-activos').innerText = totalCount;
+
+        document.getElementById('kpi-activos').innerText = rawDataActivos.length;
         document.getElementById('kpi-valor-libros').innerText = `$${totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        renderActivosTable();
       });
     }
 

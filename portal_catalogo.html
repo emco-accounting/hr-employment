@@ -129,47 +129,47 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <a id="link-cxc" href="cg_cxc.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
-          <div class="space-y-3">
+        <div id="card-cxc" onclick="abrirModuloNativo('cxc')" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between cursor-pointer">
+          <div class="space-y-3 pointer-events-none">
             <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
               <i class="ph-bold ph-hand-coins"></i>
             </div>
             <h4 class="text-lg font-bold text-white">Cuentas por Cobrar (CxC)</h4>
             <p class="text-xs text-slate-400 leading-relaxed">Emisión, control de folios fiscales CFDI, dispersión y liquidación de cobros.</p>
           </div>
-          <div class="mt-6 flex items-center justify-between text-xs font-mono text-emerald-400">
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-emerald-400 pointer-events-none">
             <span>Acceder al Módulo</span>
             <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
-        </a>
+        </div>
 
-        <a id="link-cxp" href="cg_cxp.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-rose-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
-          <div class="space-y-3">
+        <div id="card-cxp" onclick="abrirModuloNativo('cxp')" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-rose-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between cursor-pointer">
+          <div class="space-y-3 pointer-events-none">
             <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
               <i class="ph-bold ph-receipt"></i>
             </div>
             <h4 class="text-lg font-bold text-white">Cuentas por Pagar (CxP)</h4>
             <p class="text-xs text-slate-400 leading-relaxed">Pasivos exigibles, verificación fiscal de proveedores y dispersiones bancarias.</p>
           </div>
-          <div class="mt-6 flex items-center justify-between text-xs font-mono text-rose-400">
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-rose-400 pointer-events-none">
             <span>Acceder al Módulo</span>
             <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
-        </a>
+        </div>
 
-        <a id="link-activos" href="cg_activos.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
-          <div class="space-y-3">
+        <div id="card-activos" onclick="abrirModuloNativo('activos')" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between cursor-pointer">
+          <div class="space-y-3 pointer-events-none">
             <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
               <i class="ph-bold ph-device-mobile-camera"></i>
             </div>
             <h4 class="text-lg font-bold text-white">Inventario de Hardware</h4>
             <p class="text-xs text-slate-400 leading-relaxed">Control patrimonial, números de serie, resguardo de colaboradores y valor en libros.</p>
           </div>
-          <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400">
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400 pointer-events-none">
             <span>Acceder al Módulo</span>
             <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
-        </a>
+        </div>
       </div>
     </div>
 
@@ -196,8 +196,8 @@
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- ACCESO ROBUSTO AL TABLERO GERENCIAL -->
-        <div onclick="navegarRutaSegura('modulo_gerencial.html')" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 transition flex items-center gap-4 group shadow-lg cursor-pointer">
+        <!-- BOTÓN TABLERO GERENCIAL (RESOLUCIÓN PROGRAMÁTICA UNIVERSAL) -->
+        <div onclick="abrirModuloUniversal('modulo_gerencial')" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 transition flex items-center gap-4 group shadow-lg cursor-pointer">
           <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-purple-500/20 pointer-events-none">
             <i class="ph-bold ph-chart-polar"></i>
           </div>
@@ -290,9 +290,25 @@
     let liveUnsubs = [];
     let cachedModules = [];
 
-    // Manejador programático de navegación inmune a extensiones de redirección
+    // NAVEGACIÓN PROGRAMÁTICA PURA (Elimina interferencias de scripts y extensiones)
     window.navegarRutaSegura = (url) => {
       window.location.assign(url);
+    };
+
+    // APERTURA DE MÓDULOS NATIVOS POR EMPRESA
+    window.abrirModuloNativo = (moduloKey) => {
+      const info = EMPRESAS[activeCompanyId];
+      if (!info) return;
+
+      if (moduloKey === 'cxc') window.location.assign(info.cxcLink);
+      else if (moduloKey === 'cxp') window.location.assign(info.cxpLink);
+      else if (moduloKey === 'activos') window.location.assign(info.activosLink);
+    };
+
+    // ENRUTAMIENTO DINÁMICO UNIVERSAL (Carga de Firestore vía modulo_dinamico sin 404s)
+    window.abrirModuloUniversal = (slug) => {
+      const targetUrl = `modulo_dinamico.html?slug=${encodeURIComponent(slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
+      window.location.assign(targetUrl);
     };
 
     async function logAudit(action, details = {}) {
@@ -383,10 +399,6 @@
         brandIcon.className = "w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 transition-all duration-300";
       }
 
-      document.getElementById('link-cxc').href = info.cxcLink;
-      document.getElementById('link-cxp').href = info.cxpLink;
-      document.getElementById('link-activos').href = info.activosLink;
-
       initLiveCompanyMetrics();
     }
 
@@ -452,7 +464,7 @@
       });
     }
 
-    // RESOLUCIÓN INMUNE A 404 Y REDIRECCIÓN
+    // RENDERIZADO REACTIVO DINÁMICO (CERO 404s)
     function renderDynamicCards() {
       const grid = document.getElementById('dynamic-modules-grid');
       grid.innerHTML = '';
@@ -468,13 +480,10 @@
 
       cachedModules.forEach(mod => {
         const card = document.createElement('div');
-        const targetUrl = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
-        
         card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between cursor-pointer";
         
-        // Manejador programático
         card.onclick = () => {
-          window.location.assign(targetUrl);
+          abrirModuloUniversal(mod.slug);
         };
 
         card.innerHTML = `

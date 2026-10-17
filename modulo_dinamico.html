@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visor de Módulo Especializado | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- OVERLAY DE CARGA Y AUTORIZACIÓN RBAC -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="relative flex items-center justify-center">
+      <div id="shield-icon-box" class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
+        <i id="shield-icon" class="ph-bold ph-cube text-indigo-400 text-3xl"></i>
+      </div>
+      <div class="absolute -inset-1 rounded-2xl bg-indigo-500/20 blur-lg -z-10 animate-pulse"></div>
+    </div>
+    <div class="text-center space-y-1">
+      <h3 class="text-base font-semibold text-white tracking-wide" id="shield-title">Visor de Módulo Dinámico</h3>
+      <p id="shield-status" class="text-xs text-slate-400 font-mono">Cargando esquema y directivas de seguridad...</p>
+    </div>
+  </div>
+
+  <!-- ENCABEZADO SUPERIOR -->
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+        <i class="ph-bold ph-arrow-left text-lg"></i>
+      </a>
+      <div>
+        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <i id="header-mod-icon" class="ph-bold ph-cube text-indigo-400"></i>
+          <span id="header-mod-title">Cargando Módulo...</span>
+          <span id="header-tenant-badge" class="px-2 py-0.5 rounded text-[10px] font-mono border">--</span>
+        </h2>
+        <span class="text-xs text-slate-400 font-mono">
+          Razón Social: <strong id="header-company-name" class="text-slate-200">--</strong> | Colección: <code id="header-collection-slug" class="text-indigo-400">--</code>
+        </span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="exportarExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-emerald-600/10">
+        <i class="ph-bold ph-microsoft-excel-logo text-base"></i> Exportar
+      </button>
+      <button onclick="toggleModalCaptura(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+        <i class="ph-bold ph-plus text-sm"></i> + Nuevo Registro
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
+
+    <!-- FILA DE KPIS Y SUMATORIAS DINÁMICAS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="dynamic-kpis-container">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total de Registros</span>
+          <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-rows text-lg"></i></span>
+        </div>
+        <p id="kpi-total-rows" class="text-2xl font-bold font-mono text-white mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-total-desc">Registros activos en esta razón social</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5" id="kpi-numeric-card-1">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold" id="kpi-numeric-label-1">Monto Acumulado</span>
+          <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-calculator text-lg"></i></span>
+        </div>
+        <p id="kpi-numeric-val-1" class="text-2xl font-bold font-mono text-emerald-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Sumatoria en moneda nacional</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5" id="kpi-numeric-card-2">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold" id="kpi-numeric-label-2">Promedio Operativo</span>
+          <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="ph-bold ph-chart-line-up text-lg"></i></span>
+        </div>
+        <p id="kpi-numeric-val-2" class="text-2xl font-bold font-mono text-amber-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Media aritmética por captura</span>
+      </div>
+    </div>
+
+    <!-- BARRA DE BÚSQUEDA Y CONTROL -->
+    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
+      <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+        <i class="ph ph-magnifying-glass text-slate-400"></i>
+        <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar en todas las columnas..." class="bg-transparent text-white focus:outline-none text-xs w-72 font-sans">
+      </div>
+
+      <span id="counter-records" class="font-mono text-slate-500 text-xs">0 registros listados</span>
+    </div>
+
+    <!-- TABLA DE DATOS DINÁMICA -->
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+            <tr id="table-headers-row">
+              <th class="p-4">Cargando definición de columnas...</th>
+            </tr>
+          </thead>
+          <tbody id="table-records-body" class="divide-y divide-slate-800/60 font-sans text-xs">
+            <tr><td colspan="10" class="p-8 text-center text-slate-500 font-mono">Sincronizando registros con la base de datos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DINÁMICO DE CAPTURA Y REGISTRO -->
+  <div id="modal-captura" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
+        <div>
+          <h4 id="modal-form-title" class="text-base font-bold text-white">Nuevo Registro</h4>
+          <span class="text-[11px] font-mono text-slate-400">Razón Social: <strong id="modal-company-tag" class="text-indigo-400">--</strong></span>
+        </div>
+        <button onclick="toggleModalCaptura(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="overflow-y-auto flex-1 space-y-4 pr-1">
+        <form id="form-dynamic-record" class="space-y-4 text-xs font-medium text-slate-300">
+          <div id="form-inputs-container" class="space-y-3">
+            <!-- Inyección de inputs según el esquema de fields -->
+          </div>
+
+          <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+            <button type="button" onclick="toggleModalCaptura(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold transition">Cancelar</button>
+            <button type="submit" id="btn-submit-record" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold transition shadow-lg shadow-indigo-600/20">Guardar Registro</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, addDoc, deleteDoc, doc, getDoc, getDocs, 
+      query, where, orderBy, onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const EMPRESAS = {
+      "cesar_gonzalez": {
+        name: "César Giovanni González Contreras",
+        short: "CÉSAR GIOVANNI",
+        badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20"
+      },
+      "hr_employment": {
+        name: "HR Employment",
+        short: "HR EMPLOYMENT",
+        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+      }
+    };
+
+    // Parámetros de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const slug = urlParams.get('slug');
+    let empresaId = urlParams.get('empresa') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
+
+    let schema = null;
+    let currentUser = null;
+    let rawRecords = [];
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: currentUser?.email || "anonimo",
+          company_id: empresaId,
+          company_name: EMPRESAS[empresaId]?.name || empresaId,
+          action: action,
+          details: details,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        console.warn("Fallo log auditoría:", e);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+
+      try {
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        if (!staffSnap.exists() || staffSnap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        currentUser = staffSnap.data();
+        const allowed = currentUser.allowed_companies || ["*"];
+        const isSuper = currentUser.role_id === "SUPERADMIN";
+
+        // Validación de permisos para la empresa solicitada
+        if (!isSuper && !allowed.includes("*") && !allowed.includes(empresaId)) {
+          alert("Acceso denegado: Tu perfil no cuenta con permisos para ver este módulo en la razón social solicitada.");
+          window.location.replace("portal_catalogo.html");
+          return;
+        }
+
+        if (!slug) {
+          alert("Error: No se especificó el módulo a consultar.");
+          window.location.replace("portal_catalogo.html");
+          return;
+        }
+
+        await loadModuleSchema();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error al autenticar módulo dinámico:", err);
+      }
+    });
+
+    async function loadModuleSchema() {
+      const q = query(collection(db, "system_modules"), where("slug", "==", slug));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        alert(`El módulo con clave "${slug}" no existe o fue eliminado del sistema.`);
+        window.location.replace("portal_catalogo.html");
+        return;
+      }
+
+      schema = snap.docs[0].data();
+
+      // Configurar Encabezados e Identidad Visual
+      const empInfo = EMPRESAS[empresaId] || { name: empresaId, short: empresaId, badgeColor: "bg-slate-800 text-slate-300" };
+      document.title = `${schema.title} | ${empInfo.name}`;
+      document.getElementById('header-mod-title').innerText = schema.title;
+      document.getElementById('header-company-name').innerText = empInfo.name;
+      document.getElementById('header-collection-slug').innerText = slug;
+      document.getElementById('modal-company-tag').innerText = empInfo.name;
+
+      const badge = document.getElementById('header-tenant-badge');
+      badge.innerText = empInfo.short;
+      badge.className = `px-2 py-0.5 rounded text-[10px] font-mono border ${empInfo.badgeColor}`;
+
+      const iconEl = document.getElementById('header-mod-icon');
+      iconEl.className = `ph-bold ${schema.icon || 'ph-cube'} text-indigo-400`;
+
+      buildTableHeaders();
+      buildFormInputs();
+      initLiveRecordsStream();
+    }
+
+    function buildTableHeaders() {
+      const tr = document.getElementById('table-headers-row');
+      let html = '';
+
+      (schema.fields || []).forEach(f => {
+        html += `<th class="p-4">${f.label}</th>`;
+      });
+
+      html += `
+        <th class="p-4">Registrado Por</th>
+        <th class="p-4">Fecha Alta</th>
+        <th class="p-4 text-right">Acción</th>
+      `;
+      tr.innerHTML = html;
+    }
+
+    function buildFormInputs() {
+      const container = document.getElementById('form-inputs-container');
+      container.innerHTML = '';
+      document.getElementById('modal-form-title').innerText = `Nuevo Registro: ${schema.title}`;
+
+      (schema.fields || []).forEach(f => {
+        const div = document.createElement('div');
+        let inputMarkup = '';
+
+        if (f.type === 'number') {
+          inputMarkup = `
+            <input type="number" step="0.01" id="dyn_input_${f.key}" ${f.required ? 'required' : ''} placeholder="0.00" 
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono text-xs">
+          `;
+        } else if (f.type === 'date') {
+          inputMarkup = `
+            <input type="date" id="dyn_input_${f.key}" ${f.required ? 'required' : ''} 
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono text-xs">
+          `;
+        } else if (f.type === 'textarea') {
+          inputMarkup = `
+            <textarea id="dyn_input_${f.key}" rows="3" ${f.required ? 'required' : ''} placeholder="${f.label}" 
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 text-xs"></textarea>
+          `;
+        } else {
+          inputMarkup = `
+            <input type="text" id="dyn_input_${f.key}" ${f.required ? 'required' : ''} placeholder="${f.label}" 
+              class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 text-xs">
+          `;
+        }
+
+        div.innerHTML = `
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">
+            ${f.label} ${f.required ? '<span class="text-rose-400 font-bold">*</span>' : ''}
+          </label>
+          ${inputMarkup}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function initLiveRecordsStream() {
+      const q = query(
+        collection(db, slug),
+        where("company_id", "==", empresaId),
+        orderBy("created_at", "desc")
+      );
+
+      onSnapshot(q, (snap) => {
+        rawRecords = [];
+        let numField = (schema.fields || []).find(f => f.type === 'number');
+        let totalSum = 0;
+
+        snap.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          rawRecords.push(item);
+
+          if (numField) {
+            totalSum += Number(item[numField.key] || 0);
+          }
+        });
+
+        // Actualizar Tarjetas KPI
+        const count = rawRecords.length;
+        document.getElementById('kpi-total-rows').innerText = count;
+
+        if (numField) {
+          document.getElementById('kpi-numeric-card-1').classList.remove('hidden');
+          document.getElementById('kpi-numeric-card-2').classList.remove('hidden');
+
+          document.getElementById('kpi-numeric-label-1').innerText = `Total ${numField.label}`;
+          document.getElementById('kpi-numeric-val-1').innerText = `$${totalSum.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+
+          const avg = count > 0 ? (totalSum / count) : 0;
+          document.getElementById('kpi-numeric-label-2').innerText = `Promedio ${numField.label}`;
+          document.getElementById('kpi-numeric-val-2').innerText = `$${avg.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        } else {
+          document.getElementById('kpi-numeric-card-1').classList.add('hidden');
+          document.getElementById('kpi-numeric-card-2').classList.add('hidden');
+        }
+
+        renderTable();
+      }, (err) => {
+        console.warn(`Query reactivo en colección ${slug} requiere índice o está esperando:`, err);
+      });
+    }
+
+    window.renderTable = () => {
+      const search = (document.getElementById('filter-search')?.value || '').toLowerCase().trim();
+      const tbody = document.getElementById('table-records-body');
+
+      const filtered = rawRecords.filter(item => {
+        if (!search) return true;
+        return (schema.fields || []).some(f => {
+          const val = String(item[f.key] || '').toLowerCase();
+          return val.includes(search);
+        }) || (item.registered_by || '').toLowerCase().includes(search);
+      });
+
+      document.getElementById('counter-records').innerText = `${filtered.length} registros listados`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${(schema.fields?.length || 0) + 3}" class="p-8 text-center text-slate-500 font-mono text-xs">Sin registros capturados para ${EMPRESAS[empresaId]?.name}.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(item => {
+        let cells = (schema.fields || []).map(f => {
+          const val = item[f.key] !== undefined && item[f.key] !== null ? item[f.key] : '-';
+          if (f.type === 'number') {
+            return `<td class="p-4 font-mono font-semibold text-white">$${Number(val).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>`;
+          }
+          if (f.type === 'date') {
+            return `<td class="p-4 font-mono text-slate-400 text-xs">${val}</td>`;
+          }
+          return `<td class="p-4 text-slate-200 font-medium">${val}</td>`;
+        }).join('');
+
+        const fechaReg = item.created_at?.toDate ? item.created_at.toDate().toLocaleDateString('es-MX') : 'Reciente';
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            ${cells}
+            <td class="p-4 font-mono text-xs text-slate-400">${item.registered_by || 'admin'}</td>
+            <td class="p-4 font-mono text-xs text-slate-500">${fechaReg}</td>
+            <td class="p-4 text-right">
+              <button onclick="eliminarRegistro('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar Registro">
+                <i class="ph ph-trash text-base"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    };
+
+    window.toggleModalCaptura = (show) => {
+      document.getElementById('modal-captura').classList.toggle('hidden', !show);
+      if (!show) document.getElementById('form-dynamic-record').reset();
+    };
+
+    document.getElementById('form-dynamic-record').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-record');
+      btn.disabled = true;
+      btn.innerText = "Guardando...";
+
+      const payload = {
+        company_id: empresaId,
+        company_name: EMPRESAS[empresaId]?.name,
+        registered_by: currentUser?.email || 'admin',
+        created_at: serverTimestamp()
+      };
+
+      (schema.fields || []).forEach(f => {
+        const input = document.getElementById(`dyn_input_${f.key}`);
+        if (input) {
+          payload[f.key] = f.type === 'number' ? (parseFloat(input.value) || 0) : input.value.trim();
+        }
+      });
+
+      try {
+        const docRef = await addDoc(collection(db, slug), payload);
+        await logAudit("DYNAMIC_RECORD_CREATED", { module_slug: slug, doc_id: docRef.id, payload });
+        toggleModalCaptura(false);
+      } catch (err) {
+        alert("Error al guardar registro: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Guardar Registro";
+      }
+    });
+
+    window.eliminarRegistro = async (id) => {
+      if (confirm(`¿Confirmas la eliminación permanente de este registro en ${schema.title}?`)) {
+        try {
+          await deleteDoc(doc(db, slug, id));
+          await logAudit("DYNAMIC_RECORD_DELETED", { module_slug: slug, doc_id: id });
+        } catch (err) {
+          alert("Error al eliminar: " + err.message);
+        }
+      }
+    };
+
+    window.exportarExcel = () => {
+      if (rawRecords.length === 0) {
+        alert("No hay registros disponibles para exportar.");
+        return;
+      }
+
+      const rows = rawRecords.map(item => {
+        const rowObj = {
+          "Razón Social": EMPRESAS[empresaId]?.name || empresaId
+        };
+        (schema.fields || []).forEach(f => {
+          rowObj[f.label] = f.type === 'number' ? Number(item[f.key] || 0) : (item[f.key] || '');
+        });
+        rowObj["Registrado Por"] = item.registered_by || '';
+        rowObj["Fecha Registro"] = item.created_at?.toDate ? item.created_at.toDate().toISOString() : '';
+        return rowObj;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      const sheetName = slug.substring(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      XLSX.writeFile(wb, `${slug}_${empresaId}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+  </script>
+</body>
+</html>

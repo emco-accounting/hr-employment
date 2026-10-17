@@ -71,6 +71,10 @@
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
         <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Administración</div>
 
+        <a href="modulo_gerencial.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-chart-polar text-lg text-purple-400"></i>
+          <span>Tablero Gerencial</span>
+        </a>
         <a href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
           <span>Consola de Auditoría</span>
@@ -121,6 +125,7 @@
           <select id="ide-file-selector" onchange="cargarArchivoEnEditor(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 outline-none focus:border-indigo-500">
             <optgroup label="Módulos Fijos del Sistema">
               <option value="portal_catalogo.html">portal_catalogo.html (Catálogo Maestro)</option>
+              <option value="modulo_gerencial.html">modulo_gerencial.html (Tablero Gerencial)</option>
               <option value="cg_cxc.html">cg_cxc.html (CxC César Giovanni)</option>
               <option value="hr_cxc.html">hr_cxc.html (CxC HR Employment)</option>
               <option value="cg_cxp.html">cg_cxp.html (CxP César Giovanni)</option>
@@ -245,8 +250,6 @@
 
       <div class="overflow-y-auto flex-1 space-y-4 pr-1">
         <form id="form-import" class="space-y-4 text-xs font-medium text-slate-300">
-          
-          <!-- Selector de Modo de Importación -->
           <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-950 rounded-xl border border-slate-800">
             <button type="button" onclick="setImportMode('html')" id="btn-mode-html" class="py-2 px-3 rounded-lg font-bold transition bg-indigo-600 text-white">
               Archivo HTML Autónomo
@@ -278,7 +281,6 @@
             </div>
           </div>
 
-          <!-- Zona de Carga de Archivo -->
           <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-4 text-center bg-slate-950/50 cursor-pointer relative group transition">
             <input type="file" id="import-file-input" accept=".html, .json, .txt" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="leerArchivoExterno(event)">
             <i class="ph-bold ph-upload-simple text-2xl text-indigo-400 group-hover:scale-110 transition-transform inline-block mb-1"></i>
@@ -286,7 +288,6 @@
             <p class="text-[10px] text-slate-500 font-mono">El contenido se cargará automáticamente en el editor de abajo</p>
           </div>
 
-          <!-- Editor / Contenedor del Código Importado -->
           <div>
             <div class="flex justify-between items-center mb-1">
               <label class="block uppercase tracking-wider text-slate-400 font-mono text-[10px]" id="import-payload-label">Código Fuente HTML / JS del Módulo</label>
@@ -331,7 +332,7 @@
     let currentUser = null;
     let modulesCache = {};
     let currentFileName = "portal_catalogo.html";
-    let currentImportMode = "html"; // 'html' o 'json'
+    let currentImportMode = "html";
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -375,9 +376,6 @@
       }
     };
 
-    // ==========================================
-    // 1. GESTOR DE ESQUEMAS NO-CODE
-    // ==========================================
     window.toggleModal = (show) => {
       document.getElementById('modal-module').classList.toggle('hidden', !show);
       if (!show) {
@@ -454,10 +452,13 @@
             ? `<span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">HTML Autónomo</span>`
             : `<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Bilateral Activo</span>`;
 
-          const targetUrlBase = mod.is_standalone ? `${mod.slug}.html` : 'modulo_dinamico.html';
-
           const card = document.createElement('div');
           card.className = "bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-slate-700 transition";
+          
+          // RESOLUCIÓN: Siempre apuntar a modulo_dinamico.html para cargar código desde Firestore
+          const urlCesar = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=cesar_gonzalez`;
+          const urlHr = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=hr_employment`;
+
           card.innerHTML = `
             <div class="space-y-4">
               <div class="flex justify-between items-start">
@@ -486,12 +487,12 @@
               </div>
             </div>
 
-            <!-- ENLACES DE ACCESO DIRECTO BILATERAL -->
+            <!-- ENLACES DE ACCESO DIRECTO BILATERAL (REPARADOS) -->
             <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
-              <a href="${targetUrlBase}?slug=${mod.slug}&empresa=cesar_gonzalez" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+              <a href="${urlCesar}" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
                 <i class="ph-bold ph-briefcase"></i> César G.
               </a>
-              <a href="${targetUrlBase}?slug=${mod.slug}&empresa=hr_employment" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+              <a href="${urlHr}" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition flex items-center justify-center gap-1">
                 <i class="ph-bold ph-buildings"></i> HR Empl.
               </a>
             </div>
@@ -505,7 +506,6 @@
       const readPerm = `${slug}.read`;
       const writePerm = `${slug}.write`;
 
-      // Rol CONTADOR
       const contadorRef = doc(db, "system_roles", "CONTADOR");
       const contadorSnap = await getDoc(contadorRef);
       if (contadorSnap.exists()) {
@@ -515,7 +515,6 @@
         await updateDoc(contadorRef, { permissions: perms });
       }
 
-      // Rol AUDITOR
       const auditorRef = doc(db, "system_roles", "AUDITOR");
       const auditorSnap = await getDoc(auditorRef);
       if (auditorSnap.exists()) {
@@ -624,9 +623,6 @@
       }
     };
 
-    // ==========================================
-    // 2. MOTOR DE IMPORTACIÓN DE MÓDULOS EXTERNOS
-    // ==========================================
     window.toggleModalImport = (show) => {
       document.getElementById('modal-import').classList.toggle('hidden', !show);
       if (!show) {
@@ -671,7 +667,6 @@
         document.getElementById('import-file-label').innerText = `Archivo cargado: ${file.name}`;
         document.getElementById('import-size-badge').innerText = `${(file.size / 1024).toFixed(1)} KB`;
 
-        // Sugerir slug y título basados en el nombre del archivo
         const baseName = file.name.replace(/\.[^/.]+$/, "");
         if (!document.getElementById('import-slug').value) {
           document.getElementById('import-slug').value = baseName.toLowerCase().replace(/[^a-z0-9_]/g, '_');
@@ -683,7 +678,6 @@
       reader.readAsText(file);
     };
 
-    // PROCESAMIENTO E INYECCIÓN ATÓMICA DE MÓDULO EXTERNO
     document.getElementById('form-import').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-import');
@@ -707,7 +701,6 @@
         let isStandalone = (currentImportMode === 'html');
         let fieldsArray = [];
 
-        // Si es JSON, validar sintaxis y extraer campos
         if (currentImportMode === 'json') {
           try {
             const parsed = JSON.parse(payloadContent);
@@ -718,7 +711,6 @@
           }
         }
 
-        // 1. Guardar código fuente en system_module_sources si es HTML autónomo
         if (isStandalone) {
           const sourceFileName = `${slug}.html`;
           await setDoc(doc(db, "system_module_sources", sourceFileName), {
@@ -731,7 +723,6 @@
           });
         }
 
-        // 2. Inyectar definición en system_modules
         const moduleDoc = {
           slug: slug,
           title: title,
@@ -748,11 +739,8 @@
         };
 
         await addDoc(collection(db, "system_modules"), moduleDoc);
-
-        // 3. Auto-inyección de permisos en system_roles
         await inyectarPermisosEnRoles(slug);
 
-        // 4. Auditoría forense
         await logAudit("MODULE_EXTERNAL_IMPORTED", {
           slug,
           title,
@@ -772,9 +760,6 @@
       }
     });
 
-    // ==========================================
-    // 3. CONSOLA DE CÓDIGO (IDE / STUDIO)
-    // ==========================================
     window.cargarArchivoEnEditor = async (fileKey) => {
       currentFileName = fileKey;
       const statusTag = document.getElementById('ide-status-tag');

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CxC Clientes | César Giovanni González Contreras</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- OVERLAY AUTORIZACIÓN -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
+      <i class="ph-bold ph-hand-coins text-indigo-400 text-3xl"></i>
+    </div>
+    <p class="text-xs text-slate-400 font-mono">Conectando a cartera de César Giovanni...</p>
+  </div>
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+        <i class="ph-bold ph-arrow-left text-lg"></i>
+      </a>
+      <div>
+        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <span>Cuentas por Cobrar (CxC)</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CÉSAR GIOVANNI</span>
+        </h2>
+        <span class="text-xs text-slate-400 font-mono">Emisor: <strong class="text-slate-200">César Giovanni González Contreras</strong> | BD: emco-accounting</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="toggleApiKeyModal(true)" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-mono text-slate-300 transition">
+        <i class="ph-bold ph-key text-indigo-400"></i>
+        <span id="api-key-indicator">Gemini Key</span>
+      </button>
+      <button onclick="exportarExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+        <i class="ph-bold ph-microsoft-excel-logo"></i> Exportar
+      </button>
+      <button onclick="openModalFactura()" data-perm="cxc.write" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+        <i class="ph-bold ph-file-arrow-up"></i> + Factura Emitida
+      </button>
+    </div>
+  </header>
+
+  <!-- CUERPO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
+
+    <!-- KPI ROW -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total Pendiente de Cobro</span>
+        <p id="kpi-pendiente" class="text-2xl font-bold font-mono text-amber-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-pendiente-sub">0 facturas por cobrar</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Cobrado / Liquidado</span>
+        <p id="kpi-cobrado" class="text-2xl font-bold font-mono text-emerald-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-cobrado-sub">0 facturas liquidadas</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Facturación Bruta Registrada</span>
+        <p id="kpi-total" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">César Giovanni González Contreras</span>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          <i class="ph ph-magnifying-glass text-slate-400"></i>
+          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar cliente, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-64">
+        </div>
+
+        <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs">
+          <option value="ALL">Todos los Estados</option>
+          <option value="PENDING">Pendientes / Por Cobrar</option>
+          <option value="COLLECTED">Cobradas / Liquidadas</option>
+        </select>
+      </div>
+
+      <span id="counter-records" class="font-mono text-slate-500 text-xs">0 facturas</span>
+    </div>
+
+    <!-- TABLA DE DOCUMENTOS -->
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+      <table class="w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+          <tr>
+            <th class="p-4">Folio / UUID</th>
+            <th class="p-4">Cliente / Receptor</th>
+            <th class="p-4">Vencimiento</th>
+            <th class="p-4">Importe Neto</th>
+            <th class="p-4">Comprobante</th>
+            <th class="p-4">Estado</th>
+            <th class="p-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="table-cxc" class="divide-y divide-slate-800/60 font-sans text-xs">
+          <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Cargando cuentas por cobrar de César Giovanni...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- MODAL: IMPORTAR / REGISTRAR FACTURA -->
+  <div id="modal-invoice" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white">Importar Factura de Cliente (CxC)</h4>
+          <span class="text-[11px] font-mono text-indigo-400">Emisor: César Giovanni González Contreras</span>
+        </div>
+        <button onclick="toggleModalInvoice(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-4 text-center bg-slate-950/50 cursor-pointer relative group transition" id="drop-zone">
+        <input type="file" id="invoice-file" accept=".xml, .pdf, .jpg, .jpeg, .png" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="handleFileUpload(event)">
+        <div id="upload-idle" class="space-y-1">
+          <i class="ph-bold ph-file-arrow-up text-2xl text-indigo-400 inline-block"></i>
+          <p class="text-xs font-semibold text-slate-200">Arrastra comprobante PDF o CFDI XML</p>
+          <p class="text-[10px] text-slate-500 font-mono">Extracción asistida por Gemini 3.8 Flash</p>
+        </div>
+        <div id="upload-processing" class="hidden space-y-2 py-2">
+          <i class="ph ph-spinner animate-spin text-2xl text-indigo-400 inline-block"></i>
+          <p id="processing-text" class="text-xs font-mono text-indigo-300">Extrayendo datos fiscales...</p>
+        </div>
+      </div>
+
+      <form id="form-invoice" class="space-y-4 text-xs font-medium text-slate-300">
+        <input type="hidden" id="uploaded-doc-url" value="">
+        <input type="hidden" id="uploaded-doc-name" value="">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Cliente / Razón Social</label>
+            <input type="text" id="invoice-entity" placeholder="Nombre o Razón Social" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Folio o UUID Fiscal</label>
+            <input type="text" id="invoice-folio" placeholder="602B1C8B-..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono uppercase">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Monto Total ($ MXN)</label>
+            <input type="number" step="0.01" id="invoice-total" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha Vencimiento</label>
+            <input type="date" id="invoice-date" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-3 border-t border-slate-800">
+          <span id="doc-status-msg" class="text-[11px] font-mono text-slate-400">Sin archivo seleccionado</span>
+          <div class="flex gap-2">
+            <button type="button" onclick="toggleModalInvoice(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+            <button type="submit" id="btn-submit-invoice" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold transition shadow-lg shadow-indigo-600/20">Registrar en Cartera</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL VISOR COMPROBANTE -->
+  <div id="modal-viewer" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex flex-col p-4 sm:p-6 z-50">
+    <div class="bg-slate-900 rounded-2xl w-full h-full flex flex-col border border-slate-700/80 shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50 shrink-0">
+        <h4 id="viewer-title" class="text-sm font-bold text-white">Comprobante Fiscal</h4>
+        <div class="flex items-center gap-3">
+          <a id="viewer-download" href="#" target="_blank" download class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition">Descargar Salva</a>
+          <button onclick="toggleModalViewer(false)" class="text-slate-400 hover:text-white text-2xl font-bold p-1">&times;</button>
+        </div>
+      </div>
+      <div class="flex-1 bg-slate-950 relative flex items-center justify-center p-2 overflow-auto">
+        <iframe id="viewer-frame" class="w-full h-full rounded-lg border-0 hidden"></iframe>
+        <img id="viewer-img" src="" alt="Comprobante" class="max-h-full max-w-full object-contain rounded-lg hidden shadow-2xl" />
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL API KEY -->
+  <div id="modal-api-key" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
+      <h4 class="text-base font-bold text-white">Gemini API Key</h4>
+      <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-xs outline-none focus:border-indigo-500">
+      <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+        <button onclick="toggleApiKeyModal(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 text-xs">Cerrar</button>
+        <button onclick="saveApiKey()" class="px-5 py-2 bg-indigo-600 text-white rounded-xl text-xs font-semibold">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, 
+      query, where, orderBy, onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+    const storage = getStorage(app);
+
+    const COMPANY_ID = "cesar_gonzalez";
+    const COMPANY_NAME = "César Giovanni González Contreras";
+
+    let currentUser = null;
+    let rawData = [];
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: currentUser?.email || "anonimo",
+          company_id: COMPANY_ID,
+          company_name: COMPANY_NAME,
+          action: action,
+          details: details,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        console.warn("Fallo log:", e);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+
+      try {
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        if (!staffSnap.exists() || staffSnap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        currentUser = staffSnap.data();
+        const allowed = currentUser.allowed_companies || ["*"];
+        const isSuper = currentUser.role_id === "SUPERADMIN";
+
+        if (!isSuper && !allowed.includes("*") && !allowed.includes(COMPANY_ID)) {
+          alert("Acceso denegado: No tienes autorización para la razón social de César Giovanni.");
+          window.location.replace("portal_catalogo.html");
+          return;
+        }
+
+        initLiveStream();
+        updateApiKeyUI();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error en sesión:", err);
+      }
+    });
+
+    function initLiveStream() {
+      const q = query(
+        collection(db, "accounts_receivable"),
+        where("company_id", "==", COMPANY_ID),
+        orderBy("created_at", "desc")
+      );
+
+      onSnapshot(q, (snap) => {
+        rawData = [];
+        let pendTotal = 0, pendCount = 0;
+        let cobTotal = 0, cobCount = 0;
+        let grossTotal = 0;
+
+        snap.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          rawData.push(item);
+
+          const amt = Number(item.total_amount || 0);
+          grossTotal += amt;
+
+          if (item.status === "COLLECTED") {
+            cobTotal += amt;
+            cobCount++;
+          } else {
+            pendTotal += Number(item.balance || amt);
+            pendCount++;
+          }
+        });
+
+        document.getElementById('kpi-pendiente').innerText = `$${pendTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        document.getElementById('kpi-pendiente-sub').innerText = `${pendCount} facturas por cobrar`;
+
+        document.getElementById('kpi-cobrado').innerText = `$${cobTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        document.getElementById('kpi-cobrado-sub').innerText = `${cobCount} facturas liquidadas`;
+
+        document.getElementById('kpi-total').innerText = `$${grossTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+
+        renderTable();
+      });
+    }
+
+    window.renderTable = () => {
+      const search = (document.getElementById('filter-search')?.value || '').toLowerCase().trim();
+      const st = document.getElementById('filter-status')?.value || 'ALL';
+
+      const filtered = rawData.filter(i => {
+        if (st !== 'ALL' && i.status !== st) return false;
+        if (search) {
+          const f = (i.folio || '').toLowerCase().includes(search);
+          const e = (i.entity_name || '').toLowerCase().includes(search);
+          if (!f && !e) return false;
+        }
+        return true;
+      });
+
+      document.getElementById('counter-records').innerText = `${filtered.length} facturas`;
+      const tbody = document.getElementById('table-cxc');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin registros de CxC con los criterios seleccionados.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(i => {
+        const isCol = i.status === "COLLECTED";
+        const docBtn = i.document_url
+          ? `<button onclick="verDocumento('${i.document_url}', 'CxC: ${i.folio}')" class="px-2 py-1 rounded bg-indigo-500/10 text-indigo-400 font-mono text-xs border border-indigo-500/20"><i class="ph ph-eye"></i> Salva</button>`
+          : `<span class="text-slate-600 font-mono text-xs">Sin archivo</span>`;
+
+        const statusBadge = isCol 
+          ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">COBRADA</span>`
+          : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20">POR COBRAR</span>`;
+
+        const actionBtn = isCol 
+          ? `<span class="text-slate-500 text-xs font-mono">Liquidada</span>`
+          : `<button onclick="marcarCobrada('${i.id}')" class="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded text-xs font-medium border border-emerald-500/30 hover:bg-emerald-600 hover:text-white transition">Cobrar</button>`;
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-mono font-bold text-white text-xs max-w-[150px] truncate" title="${i.folio}">${i.folio}</td>
+            <td class="p-4 text-slate-200 font-medium">${i.entity_name}</td>
+            <td class="p-4 font-mono text-xs text-slate-400">${i.due_date || 'S/F'}</td>
+            <td class="p-4 font-mono text-white font-semibold">$${Number(i.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4">${docBtn}</td>
+            <td class="p-4">${statusBadge}</td>
+            <td class="p-4 text-right space-x-2">
+              ${actionBtn}
+              <button onclick="eliminarFactura('${i.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i class="ph ph-trash text-base"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    };
+
+    window.openModalFactura = () => {
+      document.getElementById('form-invoice').reset();
+      document.getElementById('uploaded-doc-url').value = '';
+      document.getElementById('uploaded-doc-name').value = '';
+      document.getElementById('doc-status-msg').innerText = 'Sin archivo seleccionado';
+      document.getElementById('invoice-date').value = new Date().toISOString().split('T')[0];
+      toggleModalInvoice(true);
+    };
+
+    window.toggleModalInvoice = (show) => {
+      document.getElementById('modal-invoice').classList.toggle('hidden', !show);
+    };
+
+    window.verDocumento = (url, title) => {
+      const modal = document.getElementById('modal-viewer');
+      const frame = document.getElementById('viewer-frame');
+      const img = document.getElementById('viewer-img');
+      document.getElementById('viewer-title').innerText = title;
+      document.getElementById('viewer-download').href = url;
+
+      frame.classList.add('hidden');
+      img.classList.add('hidden');
+
+      if (/\.(jpeg|jpg|png|webp)($|\?)/i.test(url)) {
+        img.src = url;
+        img.classList.remove('hidden');
+      } else {
+        frame.src = url;
+        frame.classList.remove('hidden');
+      }
+      modal.classList.remove('hidden');
+    };
+
+    window.toggleModalViewer = (show) => {
+      document.getElementById('modal-viewer').classList.toggle('hidden', !show);
+      if (!show) {
+        document.getElementById('viewer-frame').src = "";
+        document.getElementById('viewer-img').src = "";
+      }
+    };
+
+    // PROCESAMIENTO GEMINI Y STORAGE
+    window.handleFileUpload = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const idle = document.getElementById('upload-idle');
+      const proc = document.getElementById('upload-processing');
+      const procTxt = document.getElementById('processing-text');
+      idle.classList.add('hidden');
+      proc.classList.remove('hidden');
+
+      try {
+        if (file.name.toLowerCase().endsWith('.xml')) {
+          procTxt.innerText = "Extrayendo CFDI XML...";
+          const text = await file.text();
+          parseXML(text);
+        } else {
+          const key = localStorage.getItem('GEMINI_API_KEY');
+          if (!key) {
+            alert("Configura tu API Key de Gemini en la barra superior.");
+            toggleApiKeyModal(true);
+            return;
+          }
+          procTxt.innerText = "Analizando con Gemini 3.8 Flash...";
+          const b64 = await fileToBase64(file);
+          await parseWithGemini(b64, file.type, key);
+        }
+
+        document.getElementById('uploaded-doc-name').value = file.name;
+        document.getElementById('doc-status-msg').innerText = `Cargado: ${file.name}`;
+
+        // Subir a Storage particionado
+        procTxt.innerText = "Guardando en Storage de César Giovanni...";
+        const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxc/${Date.now()}_${cleanName}`);
+        const upRes = await uploadBytes(sRef, file);
+        document.getElementById('uploaded-doc-url').value = await getDownloadURL(upRes.ref);
+
+      } catch (err) {
+        alert("Aviso: " + err.message);
+      } finally {
+        setTimeout(() => {
+          idle.classList.remove('hidden');
+          proc.classList.add('hidden');
+        }, 800);
+      }
+    };
+
+    function parseXML(xmlString) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlString, "text/xml");
+      const comp = doc.getElementsByTagName("cfdi:Comprobante")[0] || doc.getElementsByTagName("Comprobante")[0];
+      const timbre = doc.getElementsByTagName("tfd:TimbreFiscalDigital")[0] || doc.getElementsByTagName("TimbreFiscalDigital")[0];
+      const receptor = doc.getElementsByTagName("cfdi:Receptor")[0] || doc.getElementsByTagName("Receptor")[0];
+
+      if (comp) document.getElementById('invoice-total').value = comp.getAttribute("Total") || '';
+      if (timbre) document.getElementById('invoice-folio').value = timbre.getAttribute("UUID") || '';
+      if (receptor) document.getElementById('invoice-entity').value = receptor.getAttribute("Nombre") || receptor.getAttribute("Rfc") || '';
+      if (comp?.getAttribute("Fecha")) document.getElementById('invoice-date').value = comp.getAttribute("Fecha").split('T')[0];
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.readAsDataURL(file);
+        r.onload = () => resolve(r.result.split(',')[1]);
+        r.onerror = reject;
+      });
+    }
+
+    async function parseWithGemini(base64Data, mimeType, apiKey) {
+      const prompt = `Analiza la factura de CLIENTE emitida. Extrae en formato JSON:
+      {"razon_social":"Nombre del Receptor o Cliente","folio":"UUID fiscal de 36 caracteres o folio","monto_total":0.00,"fecha_emision":"YYYY-MM-DD"}`;
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64Data } }] }],
+          generationConfig: { response_mime_type: "application/json" }
+        })
+      });
+
+      if (!resp.ok) throw new Error("Fallo al comunicarse con Gemini");
+      const d = await resp.json();
+      const p = JSON.parse(d.candidates[0].content.parts[0].text);
+      if (p.razon_social) document.getElementById('invoice-entity').value = p.razon_social;
+      if (p.folio) document.getElementById('invoice-folio').value = p.folio;
+      if (p.monto_total) document.getElementById('invoice-total').value = p.monto_total;
+      if (p.fecha_emision) document.getElementById('invoice-date').value = p.fecha_emision;
+    }
+
+    // REGISTRO DE FACTURA
+    document.getElementById('form-invoice').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-invoice');
+      btn.disabled = true;
+      btn.innerText = "Registrando...";
+
+      const total = parseFloat(document.getElementById('invoice-total').value) || 0;
+      const folio = document.getElementById('invoice-folio').value.trim();
+      const entity = document.getElementById('invoice-entity').value.trim();
+
+      try {
+        const docRef = await addDoc(collection(db, "accounts_receivable"), {
+          company_id: COMPANY_ID,
+          company_name: COMPANY_NAME,
+          entity_name: entity,
+          folio: folio,
+          total_amount: total,
+          balance: total,
+          due_date: document.getElementById('invoice-date').value,
+          status: "PENDING",
+          document_url: document.getElementById('uploaded-doc-url').value,
+          document_filename: document.getElementById('uploaded-doc-name').value,
+          registered_by: auth.currentUser?.email || 'admin',
+          created_at: serverTimestamp()
+        });
+
+        await logAudit("INVOICE_CXC_CREATED", { doc_id: docRef.id, folio, entity, total });
+        toggleModalInvoice(false);
+      } catch (err) {
+        alert("Error al guardar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Registrar en Cartera";
+      }
+    });
+
+    window.marcarCobrada = async (id) => {
+      if (confirm("¿Confirmar cobro y liquidación total?")) {
+        try {
+          await updateDoc(doc(db, "accounts_receivable", id), {
+            status: "COLLECTED",
+            balance: 0.0,
+            collected_at: serverTimestamp(),
+            collected_by: auth.currentUser?.email
+          });
+          await logAudit("INVOICE_CXC_COLLECTED", { doc_id: id });
+        } catch (e) { alert(e.message); }
+      }
+    };
+
+    window.eliminarFactura = async (id) => {
+      if (confirm("¿Eliminar este registro contable permanentemente?")) {
+        try {
+          await deleteDoc(doc(db, "accounts_receivable", id));
+          await logAudit("INVOICE_CXC_DELETED", { doc_id: id });
+        } catch (e) { alert(e.message); }
+      }
+    };
+
+    window.exportarExcel = () => {
+      if (rawData.length === 0) return alert("Sin registros para exportar.");
+      const rows = rawData.map(i => ({
+        "Folio/UUID": i.folio || '',
+        "Cliente": i.entity_name || '',
+        "Vencimiento": i.due_date || '',
+        "Monto Total MXN": Number(i.total_amount || 0),
+        "Estado": i.status === 'COLLECTED' ? 'COBRADA' : 'POR COBRAR',
+        "Comprobante": i.document_url ? 'SÍ' : 'NO',
+        "Registrado Por": i.registered_by || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "CxC_Cesar_Giovanni");
+      XLSX.writeFile(wb, `CxC_Cesar_Giovanni_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+
+    window.toggleApiKeyModal = (show) => {
+      document.getElementById('modal-api-key').classList.toggle('hidden', !show);
+      if (show) document.getElementById('input-gemini-key').value = localStorage.getItem('GEMINI_API_KEY') || '';
+    };
+
+    window.saveApiKey = () => {
+      const k = document.getElementById('input-gemini-key').value.trim();
+      if (!k) return alert("Ingresa una clave válida.");
+      localStorage.setItem('GEMINI_API_KEY', k);
+      updateApiKeyUI();
+      toggleApiKeyModal(false);
+      alert("Clave guardada con éxito.");
+    };
+
+    function updateApiKeyUI() {
+      const k = localStorage.getItem('GEMINI_API_KEY');
+      const ind = document.getElementById('api-key-indicator');
+      ind.innerText = k ? "Gemini Activa" : "Configurar Key";
+      ind.className = k ? "text-emerald-400 font-semibold" : "text-amber-400";
+    }
+  </script>
+</body>
+</html>

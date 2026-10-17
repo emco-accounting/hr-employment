@@ -173,7 +173,7 @@
       </div>
     </div>
 
-    <!-- SECCIÓN: MÓDULOS DINÁMICOS E IMPORTADOS (ENRUTAMIENTO RESUELTO) -->
+    <!-- SECCIÓN: MÓDULOS DINÁMICOS E IMPORTADOS -->
     <div class="space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
@@ -196,49 +196,49 @@
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- ACCESO AL TABLERO GERENCIAL -->
-        <a href="modulo_gerencial.html" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 transition flex items-center gap-4 group shadow-lg">
-          <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-purple-500/20">
+        <!-- ACCESO ROBUSTO AL TABLERO GERENCIAL -->
+        <div onclick="navegarRutaSegura('modulo_gerencial.html')" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 transition flex items-center gap-4 group shadow-lg cursor-pointer">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-purple-500/20 pointer-events-none">
             <i class="ph-bold ph-chart-polar"></i>
           </div>
-          <div>
+          <div class="pointer-events-none">
             <h4 class="text-sm font-bold text-white">Tablero Gerencial</h4>
             <p class="text-[11px] text-slate-400 mt-0.5">Liquidez, otros ingresos, margen real y depreciación.</p>
           </div>
-        </a>
+        </div>
 
         <!-- CREADOR & STUDIO -->
-        <a href="modulo_creador.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
-          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-indigo-500/20">
+        <div onclick="navegarRutaSegura('modulo_creador.html')" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition flex items-center gap-4 group cursor-pointer">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-indigo-500/20 pointer-events-none">
             <i class="ph-bold ph-terminal-window"></i>
           </div>
-          <div>
+          <div class="pointer-events-none">
             <h4 class="text-sm font-bold text-white">ContaCore Studio</h4>
             <p class="text-[11px] text-slate-400 mt-0.5">Diseña esquemas e importa módulos externos.</p>
           </div>
-        </a>
+        </div>
 
         <!-- AUDITORÍA FORENSE -->
-        <a href="modulo_logs.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
-          <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-amber-500/20">
+        <div onclick="navegarRutaSegura('modulo_logs.html')" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 transition flex items-center gap-4 group cursor-pointer">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-amber-500/20 pointer-events-none">
             <i class="ph-bold ph-shield-warning"></i>
           </div>
-          <div>
+          <div class="pointer-events-none">
             <h4 class="text-sm font-bold text-white">Consola Auditoría</h4>
             <p class="text-[11px] text-slate-400 mt-0.5">Pista forense de inserciones, mutaciones y accesos.</p>
           </div>
-        </a>
+        </div>
 
         <!-- STAFF & RBAC -->
-        <a href="staff.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
-          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-emerald-500/20">
+        <div onclick="navegarRutaSegura('staff.html')" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition flex items-center gap-4 group cursor-pointer">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-emerald-500/20 pointer-events-none">
             <i class="ph-bold ph-users-three"></i>
           </div>
-          <div>
+          <div class="pointer-events-none">
             <h4 class="text-sm font-bold text-white">Staff & Gobernanza</h4>
             <p class="text-[11px] text-slate-400 mt-0.5">Directorio de colaboradores, roles y empresas.</p>
           </div>
-        </a>
+        </div>
       </div>
     </div>
 
@@ -289,6 +289,11 @@
     let currentUserData = null;
     let liveUnsubs = [];
     let cachedModules = [];
+
+    // Manejador programático de navegación inmune a extensiones de redirección
+    window.navegarRutaSegura = (url) => {
+      window.location.assign(url);
+    };
 
     async function logAudit(action, details = {}) {
       try {
@@ -447,7 +452,7 @@
       });
     }
 
-    // RESOLUCIÓN DE ENRUTAMIENTO UNIVERSAL
+    // RESOLUCIÓN INMUNE A 404 Y REDIRECCIÓN
     function renderDynamicCards() {
       const grid = document.getElementById('dynamic-modules-grid');
       grid.innerHTML = '';
@@ -462,22 +467,25 @@
       }
 
       cachedModules.forEach(mod => {
-        const card = document.createElement('a');
+        const card = document.createElement('div');
+        const targetUrl = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
         
-        // Todos los módulos (esquemas e importados autónomos) abren mediante modulo_dinamico.html
-        // para que el visor cargue su esquema o su código HTML autónomo guardado en Firestore.
-        card.href = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
+        card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between cursor-pointer";
         
-        card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between";
+        // Manejador programático
+        card.onclick = () => {
+          window.location.assign(targetUrl);
+        };
+
         card.innerHTML = `
-          <div class="space-y-3">
+          <div class="space-y-3 pointer-events-none">
             <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
               <i class="ph-bold ${mod.icon || 'ph-squares-four'}"></i>
             </div>
             <h4 class="text-lg font-bold text-white">${mod.title}</h4>
             <p class="text-xs text-slate-400 leading-relaxed">${mod.description || 'Módulo activo en producción'}</p>
           </div>
-          <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400">
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400 pointer-events-none">
             <span>Abrir para ${EMPRESAS[activeCompanyId]?.short || activeCompanyId}</span>
             <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>

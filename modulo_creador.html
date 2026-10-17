@@ -71,10 +71,12 @@
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
         <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Administración</div>
 
-        <a href="modulo_gerencial.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <!-- BOTÓN TABLERO GERENCIAL REPARADO (ABRE VÍA MODULO_DINAMICO) -->
+        <button onclick="abrirTableroGerencialSidebar()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 text-left">
           <i class="ph-bold ph-chart-polar text-lg text-purple-400"></i>
           <span>Tablero Gerencial</span>
-        </a>
+        </button>
+
         <a href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
           <span>Consola de Auditoría</span>
@@ -125,7 +127,6 @@
           <select id="ide-file-selector" onchange="cargarArchivoEnEditor(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 outline-none focus:border-indigo-500">
             <optgroup label="Módulos Fijos del Sistema">
               <option value="portal_catalogo.html">portal_catalogo.html (Catálogo Maestro)</option>
-              <option value="modulo_gerencial.html">modulo_gerencial.html (Tablero Gerencial)</option>
               <option value="cg_cxc.html">cg_cxc.html (CxC César Giovanni)</option>
               <option value="hr_cxc.html">hr_cxc.html (CxC HR Employment)</option>
               <option value="cg_cxp.html">cg_cxp.html (CxP César Giovanni)</option>
@@ -334,6 +335,12 @@
     let currentFileName = "portal_catalogo.html";
     let currentImportMode = "html";
 
+    // Navegación hacia el Tablero Gerencial vía modulo_dinamico
+    window.abrirTableroGerencialSidebar = () => {
+      const activeCo = sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
+      window.location.assign(`modulo_dinamico.html?slug=modulo_gerencial&empresa=${encodeURIComponent(activeCo)}`);
+    };
+
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.replace("index.html");
@@ -443,7 +450,7 @@
           modulesCache[docId] = { ...mod, docId };
 
           const opt = document.createElement('option');
-          opt.value = mod.is_standalone ? `${mod.slug}.html` : `dynamic:${mod.slug}`;
+          opt.value = `dynamic:${mod.slug}`;
           opt.innerText = `[${mod.is_standalone ? 'Autónomo' : 'Dinámico'}] ${mod.title} (${mod.slug})`;
           optgroup.appendChild(opt);
 
@@ -455,7 +462,7 @@
           const card = document.createElement('div');
           card.className = "bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-slate-700 transition";
           
-          // RESOLUCIÓN: Siempre apuntar a modulo_dinamico.html para cargar código desde Firestore
+          // RESOLUCIÓN UNIVERSAL: Enlazar siempre a modulo_dinamico para cargar desde Firestore
           const urlCesar = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=cesar_gonzalez`;
           const urlHr = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=hr_employment`;
 
@@ -487,7 +494,7 @@
               </div>
             </div>
 
-            <!-- ENLACES DE ACCESO DIRECTO BILATERAL (REPARADOS) -->
+            <!-- ENLACES BILATERALES REPARADOS (ABREN VÍA MODULO_DINAMICO) -->
             <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
               <a href="${urlCesar}" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
                 <i class="ph-bold ph-briefcase"></i> César G.

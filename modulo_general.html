@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ContaCore EMCO | Executive Financial Intelligence</title>
+  <title>ContaCore EMCO | Multi-Tenant Modular Platform</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <!-- SheetJS (Excel Export) -->
+  <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <!-- PDF.js Engine -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -35,7 +35,7 @@
 </head>
 <body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- OVERLAY DE CARGA Y AUTORIZACIÓN RBAC -->
+  <!-- OVERLAY DE CARGA Y GOBERNANZA RBAC -->
   <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
     <div class="relative flex items-center justify-center">
       <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
@@ -44,27 +44,45 @@
       <div class="absolute -inset-1 rounded-2xl bg-indigo-500/20 blur-lg -z-10 animate-pulse"></div>
     </div>
     <div class="text-center space-y-1">
-      <h3 class="text-base font-semibold text-white tracking-wide">ContaCore Executive Engine</h3>
-      <p id="shield-status" class="text-xs text-slate-400 font-mono">Autenticando credenciales y gobernanza RBAC...</p>
+      <h3 class="text-base font-semibold text-white tracking-wide">ContaCore Multi-Tenant Core</h3>
+      <p id="shield-status" class="text-xs text-slate-400 font-mono">Autenticando credenciales, permisos y módulos...</p>
     </div>
   </div>
 
   <!-- SIDEBAR NAVEGACIÓN -->
-  <aside class="w-72 bg-slate-900/90 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl z-20">
-    <div>
+  <aside class="w-72 bg-slate-900/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl z-20">
+    <div class="overflow-y-auto">
       <div class="p-6 border-b border-slate-800/60 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div id="brand-badge" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg transition-all duration-300">
             <i class="ph-bold ph-scales text-white text-xl"></i>
           </div>
           <div>
             <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
-            <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">Financial & AI Suite</span>
+            <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">Enterprise Multi-Tenant</span>
           </div>
         </div>
       </div>
 
+      <!-- SELECTOR DINÁMICO DE RAZÓN SOCIAL / TENANT -->
+      <div class="p-4 border-b border-slate-800/60 bg-slate-950/40">
+        <label class="block text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1.5">
+          <i class="ph-bold ph-buildings text-indigo-400"></i> Razón Social Activa:
+        </label>
+        <select id="tenant-selector" onchange="switchCompany(this.value)" class="w-full px-3 py-2 bg-slate-900 border border-slate-700/80 rounded-xl text-xs font-semibold text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
+          <option value="cesar_gonzalez">César Giovanni González Contreras</option>
+          <option value="hr_employment">HR Employment</option>
+        </select>
+        <div class="mt-2 flex items-center gap-2">
+          <span id="tenant-indicator-dot" class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span id="tenant-indicator-text" class="text-[10px] font-mono text-indigo-300 truncate">César Giovanni Glez.</span>
+        </div>
+      </div>
+
+      <!-- MENÚ DE NAVEGACIÓN -->
       <nav class="p-4 space-y-1 text-sm font-medium">
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Módulos Core</div>
+
         <button onclick="navigate('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
           <i class="ph-bold ph-chart-polar text-lg text-indigo-400"></i>
           <span>Resumen Ejecutivo</span>
@@ -94,12 +112,34 @@
           <span class="text-[10px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md font-mono">TI</span>
         </button>
 
+        <!-- SECCIÓN DINÁMICA: MÓDULOS CREADOS POR EL USUARIO -->
         <div class="pt-3 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500 flex items-center justify-between">
+          <span>Módulos Dinámicos</span>
+          <button onclick="toggleModalModuleCreator(true)" data-perm="modules.create" class="text-indigo-400 hover:text-white transition" title="Crear nuevo módulo contable">
+            <i class="ph-bold ph-plus-circle text-sm"></i>
+          </button>
+        </div>
+        <div id="dynamic-nav-container" class="space-y-1">
+          <!-- Inyección en caliente desde Firestore sys_modules -->
+        </div>
+
+        <!-- SECCIÓN GOBERNANZA & AUDITORÍA -->
+        <div class="pt-3 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Gobernanza</div>
+
+        <button onclick="navigate('audit')" id="nav-audit" data-perm="audit.read" class="nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph ph-shield-warning text-lg text-amber-400"></i>
+            <span>Logs de Auditoría</span>
+          </div>
+          <span class="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-md font-mono">LOG</span>
+        </button>
 
         <a href="staff.html" id="nav-staff" data-perm="staff.manage" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <div class="flex items-center gap-3">
-            <i class="ph ph-shield-check text-lg text-emerald-400"></i>
-            <span>Staff & Gobernanza</span>
+            <i class="ph ph-users-three text-lg text-emerald-400"></i>
+            <span>Staff & Permisos</span>
           </div>
           <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-md font-mono">RBAC</span>
         </a>
@@ -107,13 +147,13 @@
     </div>
 
     <!-- Perfil del Usuario & Sesión Activa -->
-    <div class="p-4 border-t border-slate-800/60 bg-slate-950/40 space-y-3">
+    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60 space-y-3">
       <div class="flex items-center gap-3 px-2">
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-slate-700 to-slate-800 border border-slate-700 flex items-center justify-center font-bold text-white text-sm shrink-0" id="user-avatar">
           --
         </div>
         <div class="overflow-hidden">
-          <p id="user-display-name" class="text-xs font-semibold text-white truncate leading-snug">Cargando perfil...</p>
+          <p id="user-display-name" class="text-xs font-semibold text-white truncate leading-snug">Cargando...</p>
           <div class="flex items-center gap-1.5 mt-0.5">
             <span id="user-role-badge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">GUEST</span>
           </div>
@@ -133,7 +173,9 @@
     <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
       <div>
         <h2 id="view-title" class="text-xl font-bold text-white tracking-tight">Resumen Ejecutivo</h2>
-        <span class="text-xs text-slate-400 font-mono">EMCO Governance Core | DB: <span class="text-indigo-400 font-semibold">emco-accounting</span></span>
+        <span class="text-xs text-slate-400 font-mono">
+          Razón Social: <span id="header-company-name" class="text-indigo-400 font-semibold">César Giovanni González Contreras</span> | DB: <span class="text-slate-300 font-semibold">emco-accounting</span>
+        </span>
       </div>
 
       <div class="flex items-center gap-3">
@@ -144,7 +186,7 @@
 
         <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono font-medium">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Transaccional ACID</span>
+          <span>Multi-Tenant Seguro</span>
         </div>
       </div>
     </header>
@@ -154,40 +196,40 @@
       <!-- DASHBOARD EJECUTIVO -->
       <section id="view-dashboard" class="view-panel space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
-          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden group hover:border-slate-700 transition">
+          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="flex justify-between items-start mb-3">
               <span class="text-xs text-slate-400 font-mono tracking-wider uppercase font-semibold">Por Cobrar (CxC)</span>
               <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-hand-coins"></i></span>
             </div>
             <p id="kpi-cxc" class="text-3xl font-extrabold text-white font-mono tracking-tight">$0.00</p>
-            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Facturas pendientes de cobro</span>
+            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Saldo de la entidad seleccionada</span>
           </div>
 
-          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden group hover:border-slate-700 transition">
+          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="flex justify-between items-start mb-3">
               <span class="text-xs text-slate-400 font-mono tracking-wider uppercase font-semibold">Por Pagar (CxP)</span>
               <span class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="ph-bold ph-receipt"></i></span>
             </div>
             <p id="kpi-cxp" class="text-3xl font-extrabold text-white font-mono tracking-tight">$0.00</p>
-            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Pasivos operativos exigibles</span>
+            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Pasivos exigibles de la entidad</span>
           </div>
 
-          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden group hover:border-slate-700 transition">
+          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="flex justify-between items-start mb-3">
-              <span class="text-xs text-slate-400 font-mono tracking-wider uppercase font-semibold">Parque de Hardware</span>
+              <span class="text-xs text-slate-400 font-mono tracking-wider uppercase font-semibold">Activos Fijos</span>
               <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-laptop"></i></span>
             </div>
             <p id="kpi-activos" class="text-3xl font-extrabold text-white font-mono tracking-tight">0</p>
-            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Laptops, Módems & Licencias</span>
+            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Equipos asignados a este tenant</span>
           </div>
 
-          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden group hover:border-slate-700 transition">
+          <div class="bg-gradient-to-br from-slate-900/90 to-slate-900/40 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="flex justify-between items-start mb-3">
-              <span class="text-xs text-slate-400 font-mono tracking-wider uppercase font-semibold">Valor Activos Fijos</span>
+              <span class="text-xs text-slate-400 font-mono tracking-wider uppercase font-semibold">Patrimonio en Libros</span>
               <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="ph-bold ph-vault"></i></span>
             </div>
             <p id="kpi-valor-libros" class="text-3xl font-extrabold text-white font-mono tracking-tight">$0.00</p>
-            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Valor patrimonial en libros</span>
+            <span class="text-[11px] text-slate-500 font-medium mt-1 block">Valor neto de hardware</span>
           </div>
         </div>
       </section>
@@ -197,7 +239,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 class="text-lg font-bold text-white">Cuentas por Cobrar (Clientes)</h3>
-            <p class="text-xs text-slate-400">Facturación emitida, fiscalización CFDI y dispersión de cobros</p>
+            <p class="text-xs text-slate-400">Facturación emitida para <span class="active-tenant-tag font-semibold text-indigo-400"></span></p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="exportToExcel('cxc')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
@@ -217,7 +259,7 @@
               <input type="text" id="filter-cxc-search" oninput="applyFilters('cxc')" placeholder="Buscar por cliente, folio..." class="bg-transparent text-white focus:outline-none text-xs w-48">
             </div>
 
-            <!-- Selectores de Fecha Inicial -->
+            <!-- Selectores de Fecha -->
             <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-800">
               <span class="text-slate-400 text-[10px] font-mono mr-1">Desde:</span>
               <select id="filter-cxc-start-day" onchange="applyFilters('cxc')" class="bg-slate-900 text-slate-200 border-0 rounded px-1.5 py-1 text-xs outline-none"></select>
@@ -225,7 +267,6 @@
               <select id="filter-cxc-start-year" onchange="applyFilters('cxc')" class="bg-slate-900 text-slate-200 border-0 rounded px-1.5 py-1 text-xs outline-none"></select>
             </div>
 
-            <!-- Selectores de Fecha Final -->
             <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-800">
               <span class="text-slate-400 text-[10px] font-mono mr-1">Hasta:</span>
               <select id="filter-cxc-end-day" onchange="applyFilters('cxc')" class="bg-slate-900 text-slate-200 border-0 rounded px-1.5 py-1 text-xs outline-none"></select>
@@ -270,7 +311,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 class="text-lg font-bold text-white">Cuentas por Pagar (Proveedores)</h3>
-            <p class="text-xs text-slate-400">Pasivos exigibles, verificación CFDI y dispersiones bancarias</p>
+            <p class="text-xs text-slate-400">Pasivos exigibles de <span class="active-tenant-tag font-semibold text-indigo-400"></span></p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="exportToExcel('cxp')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
@@ -290,7 +331,6 @@
               <input type="text" id="filter-cxp-search" oninput="applyFilters('cxp')" placeholder="Buscar por proveedor, folio..." class="bg-transparent text-white focus:outline-none text-xs w-48">
             </div>
 
-            <!-- Selectores de Fecha Inicial -->
             <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-800">
               <span class="text-slate-400 text-[10px] font-mono mr-1">Desde:</span>
               <select id="filter-cxp-start-day" onchange="applyFilters('cxp')" class="bg-slate-900 text-slate-200 border-0 rounded px-1.5 py-1 text-xs outline-none"></select>
@@ -298,7 +338,6 @@
               <select id="filter-cxp-start-year" onchange="applyFilters('cxp')" class="bg-slate-900 text-slate-200 border-0 rounded px-1.5 py-1 text-xs outline-none"></select>
             </div>
 
-            <!-- Selectores de Fecha Final -->
             <div class="flex items-center gap-1 bg-slate-950/80 px-2 py-1 rounded-xl border border-slate-800">
               <span class="text-slate-400 text-[10px] font-mono mr-1">Hasta:</span>
               <select id="filter-cxp-end-day" onchange="applyFilters('cxp')" class="bg-slate-900 text-slate-200 border-0 rounded px-1.5 py-1 text-xs outline-none"></select>
@@ -343,7 +382,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 class="text-lg font-bold text-white">Inventario de Hardware y Telecomunicaciones</h3>
-            <p class="text-xs text-slate-400">Control patrimonial, números de serie y resguardo asignado</p>
+            <p class="text-xs text-slate-400">Patrimonio correspondiente a <span class="active-tenant-tag font-semibold text-indigo-400"></span></p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="exportToExcel('activos')" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
@@ -388,14 +427,94 @@
               </tr>
             </thead>
             <tbody id="table-activos" class="divide-y divide-slate-800/60 font-sans">
-              <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Sincronizando registros desde emco-accounting...</td></tr>
+              <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Sincronizando registros del tenant activo...</td></tr>
             </tbody>
           </table>
         </div>
       </section>
 
+      <!-- VISTA AUDITORÍA DE EVENTOS (LOGS) -->
+      <section id="view-audit" class="view-panel hidden space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <h3 class="text-lg font-bold text-white">Pista de Auditoría & Trazabilidad Transaccional</h3>
+            <p class="text-xs text-slate-400">Registro inmutable de actividades contables, inserciones y mutaciones</p>
+          </div>
+          <button onclick="exportAuditLogs()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+            <i class="ph-bold ph-download-simple"></i> Exportar Auditoría
+          </button>
+        </div>
+
+        <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+              <tr>
+                <th class="p-4">Timestamp</th>
+                <th class="p-4">Usuario</th>
+                <th class="p-4">Acción</th>
+                <th class="p-4">Razón Social</th>
+                <th class="p-4">Detalle / Payload</th>
+              </tr>
+            </thead>
+            <tbody id="table-audit" class="divide-y divide-slate-800/60 font-sans text-xs">
+              <tr><td colspan="5" class="p-8 text-center text-slate-500 font-mono">Cargando pistas de auditoría...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CONTENEDOR PARA LAS VISTAS DE MÓDULOS DINÁMICOS -->
+      <div id="dynamic-views-container"></div>
+
     </div>
   </main>
+
+  <!-- MODAL: CREADOR DE MÓDULOS DINÁMICOS -->
+  <div id="modal-module-creator" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-cube text-indigo-400 text-lg"></i>
+          <h4 class="text-base font-bold text-white">Creador de Módulo Contable Dinámico</h4>
+        </div>
+        <button onclick="toggleModalModuleCreator(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Define un nuevo catálogo o módulo para ambas razones sociales sin tocar el código fuente.
+      </p>
+
+      <form id="form-create-module" class="space-y-4 text-xs font-medium text-slate-300">
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre del Módulo</label>
+          <input type="text" id="module-title" placeholder="Ej: Declaraciones SAT / Conciliaciones" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">ID Clave (Colección Firestore)</label>
+            <input type="text" id="module-slug" placeholder="ej: mod_sat_taxes" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Ícono Phosphor</label>
+            <input type="text" id="module-icon" placeholder="ph-bank, ph-wallet..." value="ph-squares-four" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción de Alcance</label>
+          <input type="text" id="module-desc" placeholder="Objetivo y controles de este módulo" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="toggleModalModuleCreator(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-submit-module" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold transition shadow-lg shadow-indigo-600/20 flex items-center gap-1.5">
+            <i class="ph-bold ph-plus"></i> Desplegar Módulo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODAL: GESTOR DE API KEY GEMINI -->
   <div id="modal-api-key" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
@@ -409,7 +528,7 @@
       </div>
 
       <p class="text-xs text-slate-300 leading-relaxed">
-        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini 3.8 Flash en el procesamiento autónomo de facturas PDF e imágenes.
+        Ingresa tu API Key de <strong>Google AI Studio</strong> para habilitar el motor Gemini en el procesamiento autónomo de facturas PDF e imágenes.
       </p>
 
       <div>
@@ -424,7 +543,7 @@
     </div>
   </div>
 
-  <!-- MODAL VISOR DOCUMENTAL ("ELEVAR SALVA") -->
+  <!-- MODAL VISOR DOCUMENTAL -->
   <div id="modal-doc-viewer" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex flex-col p-4 sm:p-6 z-50">
     <div class="bg-slate-900 rounded-2xl w-full h-full flex flex-col border border-slate-700/80 shadow-2xl overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50 shrink-0">
@@ -460,8 +579,10 @@
     <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
-          <h4 id="modal-invoice-title" class="text-base font-bold text-white">Importar Factura a Base de Datos</h4>
-          <span class="text-[11px] text-slate-400 font-mono">Lectura inteligente con Gemini 3.8 Flash y sincronización directa</span>
+          <h4 id="modal-invoice-title" class="text-base font-bold text-white">Importar Factura</h4>
+          <span class="text-[11px] text-slate-400 font-mono">
+            Razón Social: <span id="modal-invoice-tenant" class="text-indigo-400 font-semibold"></span>
+          </span>
         </div>
         <button onclick="closeInvoiceModal()" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
       </div>
@@ -472,11 +593,11 @@
         <div id="upload-idle" class="space-y-1">
           <i class="ph-bold ph-file-arrow-up text-2xl text-indigo-400 group-hover:scale-110 transition-transform inline-block"></i>
           <p class="text-xs font-semibold text-slate-200">Arrastra o selecciona el PDF, XML o Comprobante</p>
-          <p class="text-[10px] text-slate-400 font-mono">Extracción automática de Folio/UUID, Razón Social, Monto y Fechas</p>
+          <p class="text-[10px] text-slate-400 font-mono">Extracción y asignación al tenant actual</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
           <i class="ph ph-spinner animate-spin text-2xl text-indigo-400 inline-block"></i>
-          <p id="processing-text" class="text-xs font-mono text-indigo-300">Procesando factura...</p>
+          <p id="processing-text" class="text-xs font-mono text-indigo-300">Procesando comprobante...</p>
         </div>
       </div>
 
@@ -502,7 +623,6 @@
             <input type="number" step="0.01" id="invoice-total" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
           </div>
 
-          <!-- Selector de Fecha de Vencimiento / Emisión (Día / Mes / Año) -->
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha Emisión / Vencimiento</label>
             <div class="grid grid-cols-3 gap-1.5">
@@ -518,7 +638,7 @@
           <div class="flex gap-2">
             <button type="button" onclick="closeInvoiceModal()" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold transition">Cancelar</button>
             <button type="submit" id="btn-submit-invoice" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold transition shadow-lg shadow-indigo-600/20 flex items-center gap-1.5">
-              <i class="ph-bold ph-cloud-arrow-up text-base"></i> Importar a Base de Datos
+              <i class="ph-bold ph-cloud-arrow-up text-base"></i> Registrar en este Tenant
             </button>
           </div>
         </div>
@@ -532,7 +652,7 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
           <h4 class="text-base font-bold text-white">Alta de Activo / Equipo</h4>
-          <span class="text-[11px] text-slate-400 font-mono">Registro y resguardo patrimonial</span>
+          <span class="text-[11px] text-slate-400 font-mono">Patrimonio de: <span class="active-tenant-tag text-indigo-400"></span></span>
         </div>
         <button onclick="toggleModalActivo(false)" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
       </div>
@@ -541,7 +661,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Código de Activo</label>
-            <input type="text" id="asset-code" placeholder="Ej: LAP-EMCO-01" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 uppercase font-mono">
+            <input type="text" id="asset-code" placeholder="Ej: LAP-CG-01" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 uppercase font-mono">
           </div>
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Categoría</label>
@@ -555,13 +675,13 @@
 
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción / Modelo</label>
-          <input type="text" id="asset-name" placeholder="Ej: Dell Latitude 5440 / Módem ZTE 4G" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+          <input type="text" id="asset-name" placeholder="Ej: Lenovo ThinkPad / Mac Mini" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Serie / MAC / IMEI</label>
-            <input type="text" id="asset-serial" placeholder="Serie o IMEI físico" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+            <input type="text" id="asset-serial" placeholder="Serie o identificador único" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
           </div>
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Costo ($ MXN)</label>
@@ -571,7 +691,7 @@
 
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Colaborador Asignado (Resguardo)</label>
-          <input type="text" id="asset-assigned" placeholder="Nombre completo del titular que recibe" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+          <input type="text" id="asset-assigned" placeholder="Nombre del colaborador resguardatario" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
         </div>
 
         <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
@@ -582,13 +702,13 @@
     </div>
   </div>
 
-  <!-- SCRIPT ENGINE -->
+  <!-- SCRIPT ENGINE PRINCIPAL -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
       getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, 
-      onSnapshot, serverTimestamp, query, orderBy 
+      onSnapshot, serverTimestamp, query, where, orderBy, limit 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
@@ -607,12 +727,31 @@
     const db = getFirestore(app, "emco-accounting");
     const storage = getStorage(app);
 
+    // CONFIGURACIÓN DE EMPRESAS / TENANTS
+    const COMPANIES = {
+      "cesar_gonzalez": {
+        name: "César Giovanni González Contreras",
+        short: "César Giovanni Glez.",
+        colorClass: "indigo",
+        gradient: "from-indigo-600 to-indigo-400"
+      },
+      "hr_employment": {
+        name: "HR Employment",
+        short: "HR Employment",
+        colorClass: "emerald",
+        gradient: "from-emerald-600 to-emerald-400"
+      }
+    };
+
+    let currentCompanyId = sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
     let currentStaff = null;
     let currentPermissions = [];
 
     let rawDataCxC = [];
     let rawDataCxP = [];
     let rawDataActivos = [];
+    let rawDataAudit = [];
+    let unsubs = [];
 
     const MONTHS = [
       { num: "01", name: "Ene" }, { num: "02", name: "Feb" }, { num: "03", name: "Mar" },
@@ -621,9 +760,8 @@
       { num: "10", name: "Oct" }, { num: "11", name: "Nov" }, { num: "12", name: "Dic" }
     ];
 
-    // INICIALIZACIÓN DE SELECTORES DE DÍA, MES Y AÑO
+    // INICIALIZACIÓN DE DROPDOWNS DE FECHAS
     function populateDateDropdowns() {
-      // 1. Selector en Formulario de Factura
       const daySel = document.getElementById('invoice-day');
       const monSel = document.getElementById('invoice-month');
       const yearSel = document.getElementById('invoice-year');
@@ -640,10 +778,8 @@
         return `<option value="${y}" ${y === currYear ? 'selected' : ''}>${y}</option>`;
       }).join('');
 
-      // Preseleccionar fecha de hoy
       setDropdownDate(new Date().toISOString().split('T')[0]);
 
-      // 2. Selectores en Filtros CxC y CxP
       ['cxc', 'cxp'].forEach(mod => {
         ['start', 'end'].forEach(type => {
           const dEl = document.getElementById(`filter-${mod}-${type}-day`);
@@ -688,38 +824,64 @@
       return { year: y, month: m, day: d };
     }
 
-    // GESTIÓN DE API KEY DE GEMINI
-    window.toggleApiKeyModal = (show) => {
-      document.getElementById('modal-api-key').classList.toggle('hidden', !show);
-      if (show) {
-        document.getElementById('input-gemini-key').value = localStorage.getItem('GEMINI_API_KEY') || '';
-      }
-    };
-
-    window.saveGeminiApiKey = () => {
-      const key = document.getElementById('input-gemini-key').value.trim();
-      if (!key) {
-        alert("Introduce una API Key válida.");
-        return;
-      }
-      localStorage.setItem('GEMINI_API_KEY', key);
-      updateApiKeyIndicator();
-      window.toggleApiKeyModal(false);
-      alert("API Key guardada con éxito.");
-    };
-
-    function updateApiKeyIndicator() {
-      const key = localStorage.getItem('GEMINI_API_KEY');
-      const ind = document.getElementById('api-key-indicator');
-      if (key) {
-        ind.innerText = "Gemini Key Activa";
-        ind.className = "text-emerald-400 font-semibold";
-      } else {
-        ind.innerText = "Configurar Gemini Key";
-        ind.className = "text-amber-400 font-medium";
+    // AUDITORÍA CENTRALIZADA (LOGS)
+    async function logAuditEvent(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: auth.currentUser?.email || "anon",
+          user_name: currentStaff?.full_name || "Desconocido",
+          role_id: currentStaff?.role_id || "GUEST",
+          company_id: currentCompanyId,
+          company_name: COMPANIES[currentCompanyId]?.name || currentCompanyId,
+          action: action,
+          details: details,
+          user_agent: navigator.userAgent
+        });
+      } catch (err) {
+        console.warn("Fallo al escribir audit log:", err);
       }
     }
-    updateApiKeyIndicator();
+
+    // GESTIÓN DEL SWITCHER MULTIEMPRESA
+    window.switchCompany = (companyId) => {
+      // Verificar si el usuario tiene permiso para este tenant
+      const allowed = currentStaff?.allowed_companies || ["*"];
+      const isSuper = currentStaff?.role_id === "SUPERADMIN";
+
+      if (!isSuper && !allowed.includes("*") && !allowed.includes(companyId)) {
+        alert("Acceso denegado: Tu perfil no cuenta con autorización para esta razón social.");
+        document.getElementById('tenant-selector').value = currentCompanyId;
+        return;
+      }
+
+      currentCompanyId = companyId;
+      sessionStorage.setItem("active_company_id", currentCompanyId);
+      updateTenantUI();
+      logAuditEvent("SWITCH_COMPANY", { target_company: companyId });
+      initLiveMetrics(); // Reinicia listeners reactivos filtrados por el nuevo tenant
+    };
+
+    function updateTenantUI() {
+      const info = COMPANIES[currentCompanyId] || COMPANIES["cesar_gonzalez"];
+      document.getElementById('tenant-selector').value = currentCompanyId;
+      document.getElementById('header-company-name').innerText = info.name;
+      document.getElementById('tenant-indicator-text').innerText = info.short;
+      document.querySelectorAll('.active-tenant-tag').forEach(el => el.innerText = info.name);
+      if (document.getElementById('modal-invoice-tenant')) {
+        document.getElementById('modal-invoice-tenant').innerText = info.name;
+      }
+
+      const badge = document.getElementById('brand-badge');
+      const dot = document.getElementById('tenant-indicator-dot');
+      if (currentCompanyId === "cesar_gonzalez") {
+        badge.className = "w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20";
+        dot.className = "w-2 h-2 rounded-full bg-indigo-400 animate-pulse";
+      } else {
+        badge.className = "w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20";
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
+      }
+    }
 
     // GOBERNANZA RBAC DINÁMICA
     function enforceDynamicRBAC() {
@@ -744,7 +906,7 @@
       });
     }
 
-    // GUARDA DE SESIÓN
+    // AUTENTICACIÓN Y SESIÓN
     onAuthStateChanged(auth, async (user) => {
       const shield = document.getElementById("auth-shield");
       if (!user) {
@@ -761,9 +923,13 @@
         }
 
         currentStaff = staffSnap.data();
+        
+        // Roles dinámicos
         const roleSnap = await getDoc(doc(db, "system_roles", currentStaff.role_id));
         if (roleSnap.exists()) {
           currentPermissions = roleSnap.data().permissions || [];
+        } else if (currentStaff.role_id === "SUPERADMIN") {
+          currentPermissions = ["*"];
         }
 
         const fullName = currentStaff.full_name || user.email.split('@')[0];
@@ -771,8 +937,13 @@
         document.getElementById("user-avatar").innerText = fullName.substring(0, 2).toUpperCase();
         document.getElementById("user-role-badge").innerText = currentStaff.role_id;
 
+        updateTenantUI();
         enforceDynamicRBAC();
+        loadDynamicModules();
         initLiveMetrics();
+        initAuditLogStream();
+
+        logAuditEvent("SESSION_START", { method: "EMAIL_AUTH" });
 
         shield.classList.add("opacity-0", "pointer-events-none");
         setTimeout(() => shield.classList.add("hidden"), 300);
@@ -783,8 +954,120 @@
 
     window.logoutSession = async () => {
       if (confirm("¿Finalizar sesión segura en ContaCore?")) {
+        await logAuditEvent("SESSION_END", {});
         await signOut(auth);
         window.location.replace("index.html");
+      }
+    };
+
+    // GESTOR DE MÓDULOS DINÁMICOS
+    window.toggleModalModuleCreator = (show) => {
+      document.getElementById('modal-module-creator').classList.toggle('hidden', !show);
+      if (!show) document.getElementById('form-create-module').reset();
+    };
+
+    document.getElementById('form-create-module').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-module');
+      btn.disabled = true;
+      btn.innerText = "Desplegando...";
+
+      const slug = document.getElementById('module-slug').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const title = document.getElementById('module-title').value.trim();
+      const icon = document.getElementById('module-icon').value.trim();
+      const desc = document.getElementById('module-desc').value.trim();
+
+      try {
+        await addDoc(collection(db, "system_modules"), {
+          slug: slug,
+          title: title,
+          icon: icon,
+          description: desc,
+          created_by: auth.currentUser?.email,
+          created_at: serverTimestamp()
+        });
+
+        await logAuditEvent("MODULE_CREATED", { slug, title });
+        toggleModalModuleCreator(false);
+        alert(`Módulo "${title}" creado exitosamente.`);
+      } catch (err) {
+        alert("Error al crear módulo: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph-bold ph-plus"></i> Desplegar Módulo`;
+      }
+    });
+
+    function loadDynamicModules() {
+      onSnapshot(collection(db, "system_modules"), (snap) => {
+        const navContainer = document.getElementById('dynamic-nav-container');
+        const viewsContainer = document.getElementById('dynamic-views-container');
+        navContainer.innerHTML = '';
+        viewsContainer.innerHTML = '';
+
+        if (snap.empty) {
+          navContainer.innerHTML = `<span class="text-[11px] font-mono text-slate-600 px-3 italic">Sin módulos extra</span>`;
+          return;
+        }
+
+        snap.forEach(docSnap => {
+          const mod = docSnap.data();
+          const modId = docSnap.id;
+
+          // Inyectar en Sidebar
+          const btn = document.createElement('button');
+          btn.onclick = () => navigate(`dyn_${mod.slug}`);
+          btn.id = `nav-dyn_${mod.slug}`;
+          btn.className = "nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+          btn.innerHTML = `
+            <div class="flex items-center gap-3">
+              <i class="ph ${mod.icon || 'ph-squares-four'} text-lg"></i>
+              <span>${mod.title}</span>
+            </div>
+            <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-md font-mono border border-slate-700/60">DYN</span>
+          `;
+          navContainer.appendChild(btn);
+
+          // Inyectar Vista Dinámica
+          const viewSection = document.createElement('section');
+          viewSection.id = `view-dyn_${mod.slug}`;
+          viewSection.className = "view-panel hidden space-y-4";
+          viewSection.innerHTML = `
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div>
+                <h3 class="text-lg font-bold text-white">${mod.title}</h3>
+                <p class="text-xs text-slate-400">${mod.description || 'Módulo dinámico activo'} | Razón Social: <span class="active-tenant-tag font-semibold text-indigo-400"></span></p>
+              </div>
+              <button onclick="registerDynamicRecord('${mod.slug}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+                <i class="ph-bold ph-plus"></i> + Nuevo Registro
+              </button>
+            </div>
+            <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 text-center text-slate-500 font-mono text-xs shadow-2xl">
+              Colección Firestore vinculada: <span class="text-indigo-400 font-semibold">${mod.slug}</span> (Particionada por company_id: <span class="text-white">${currentCompanyId}</span>)
+            </div>
+          `;
+          viewsContainer.appendChild(viewSection);
+        });
+      });
+    }
+
+    window.registerDynamicRecord = async (slug) => {
+      const concept = prompt("Concepto o nombre del registro:", "");
+      if (!concept) return;
+      const amount = prompt("Monto opcional ($):", "0.00");
+
+      try {
+        await addDoc(collection(db, slug), {
+          company_id: currentCompanyId,
+          concept: concept.trim(),
+          amount: parseFloat(amount) || 0,
+          registered_by: auth.currentUser?.email,
+          created_at: serverTimestamp()
+        });
+        await logAuditEvent("DYNAMIC_RECORD_CREATED", { module: slug, concept });
+        alert("Registro guardado con éxito.");
+      } catch (err) {
+        alert("Error: " + err.message);
       }
     };
 
@@ -798,9 +1081,10 @@
         dashboard: "Resumen Ejecutivo",
         cxc: "Cuentas por Cobrar (CxC)",
         cxp: "Cuentas por Pagar (CxP)",
-        activos: "Inventario de Activos & Hardware"
+        activos: "Inventario de Activos & Hardware",
+        audit: "Logs de Auditoría & Trazabilidad"
       };
-      document.getElementById('view-title').innerText = titles[viewId] || "Módulo";
+      document.getElementById('view-title').innerText = titles[viewId] || "Módulo Especializado";
 
       document.querySelectorAll('.nav-btn').forEach(b => {
         b.className = "nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
@@ -811,7 +1095,7 @@
       }
     };
 
-    // VISOR DOCUMENTAL ("ELEVAR SALVA")
+    // VISOR DOCUMENTAL
     window.openDocViewer = (url, title = "Comprobante Fiscal") => {
       if (!url) {
         alert("Este registro no tiene comprobante digital enlazado.");
@@ -844,21 +1128,21 @@
     };
 
     window.closeDocViewer = () => {
-      const modal = document.getElementById('modal-doc-viewer');
+      document.getElementById('modal-doc-viewer').classList.add('hidden');
       document.getElementById('viewer-frame').src = "";
       document.getElementById('viewer-image').src = "";
-      modal.classList.add('hidden');
     };
 
     window.openInvoiceModal = (type) => {
       document.getElementById('invoice-type').value = type;
       const isCxC = type === 'CXC';
-      document.getElementById('modal-invoice-title').innerText = isCxC ? "Importar Factura por Cobrar a Base de Datos (CxC)" : "Importar Factura de Proveedor a Base de Datos (CxP)";
+      document.getElementById('modal-invoice-title').innerText = isCxC ? "Importar Factura por Cobrar (CxC)" : "Importar Factura de Proveedor (CxP)";
       document.getElementById('label-entity').innerText = isCxC ? "Cliente / Receptor" : "Proveedor / Emisor";
       document.getElementById('form-invoice').reset();
       document.getElementById('uploaded-doc-url').value = '';
       document.getElementById('uploaded-doc-name').value = '';
       document.getElementById('doc-status-msg').innerText = "Sin archivo seleccionado";
+      document.getElementById('modal-invoice-tenant').innerText = COMPANIES[currentCompanyId]?.name;
       setDropdownDate(new Date().toISOString().split('T')[0]);
       document.getElementById('upload-idle').classList.remove('hidden');
       document.getElementById('upload-processing').classList.add('hidden');
@@ -874,7 +1158,7 @@
       if (!show) document.getElementById('form-activo').reset();
     };
 
-    // RENDERIZADO DE PDF A IMAGEN CON PDF.JS
+    // PROCESAMIENTO CON GEMINI Y ARCHIVOS
     async function convertPdfToImageBase64(file) {
       if (!window.pdfjsLib) throw new Error("Motor PDF.js no cargado en memoria.");
       const arrayBuffer = await file.arrayBuffer();
@@ -895,7 +1179,6 @@
       };
     }
 
-    // PROCESADOR DE COMPROBANTES Y SALVAS
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -910,7 +1193,7 @@
 
       try {
         if (file.name.toLowerCase().endsWith('.xml')) {
-          procText.innerText = "Leyendo CFDI vía XML nativo...";
+          procText.innerText = "Leyendo CFDI vía XML...";
           const text = await file.text();
           parseXMLInvoice(text);
         } else {
@@ -935,30 +1218,29 @@
             base64Data = await fileToBase64(file);
           }
 
-          procText.innerText = "Extrayendo datos con Gemini 3.8 Flash...";
+          procText.innerText = "Extrayendo con Gemini 3.8 Flash...";
           await parseWithGemini(base64Data, mime, geminiKey);
         }
 
         document.getElementById('uploaded-doc-name').value = file.name;
         docStatus.innerText = `Archivo cargado: ${file.name}`;
 
-        // Almacenar salva en Firebase Storage
-        procText.innerText = "Guardando salva documental en Storage...";
+        // Almacenar salva particionada por Tenant
+        procText.innerText = "Guardando comprobante en Storage...";
         try {
           const folder = document.getElementById('invoice-type').value.toLowerCase();
           const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const storagePath = `comprobantes/${folder}/${Date.now()}_${cleanName}`;
+          const storagePath = `comprobantes/${currentCompanyId}/${folder}/${Date.now()}_${cleanName}`;
           const storageRef = ref(storage, storagePath);
           const uploadResult = await uploadBytes(storageRef, file);
           const downloadUrl = await getDownloadURL(uploadResult.ref);
           document.getElementById('uploaded-doc-url').value = downloadUrl;
         } catch (storageErr) {
-          console.warn("Storage con advertencia. Se mantienen los datos extraídos:", storageErr);
+          console.warn("Storage con advertencia:", storageErr);
         }
 
         procText.innerText = "¡Factura procesada con éxito!";
       } catch (err) {
-        console.error("Fallo durante el procesamiento:", err);
         alert("Aviso: " + err.message);
       } finally {
         setTimeout(() => {
@@ -993,9 +1275,7 @@
       if (uuid || folio) document.getElementById('invoice-folio').value = uuid || folio;
       
       const fecha = comprobante?.getAttribute("Fecha");
-      if (fecha) {
-        setDropdownDate(fecha.split("T")[0]);
-      }
+      if (fecha) setDropdownDate(fecha.split("T")[0]);
     }
 
     function fileToBase64(file) {
@@ -1007,15 +1287,14 @@
       });
     }
 
-    // MOTOR GEMINI 3.8 FLASH
     async function parseWithGemini(base64Data, mimeType, apiKey) {
       const isCxC = document.getElementById('invoice-type').value === 'CXC';
 
       const prompt = `Actúa como un auditor fiscal experto en comprobantes contables y facturas en México.
 Analiza la carátula de este comprobante y extrae:
 1. "razon_social": ${isCxC ? 'Nombre o Razón Social del RECEPTOR / CLIENTE' : 'Nombre o Razón Social del EMISOR / PROVEEDOR'}.
-2. "folio": UUID o Folio Fiscal de 36 caracteres con guiones. Si no cuenta con UUID, extrae el número de folio interno.
-3. "monto_total": TOTAL NETO FINAL exacto a pagar en formato numérico decimal (ej: 14500.50).
+2. "folio": UUID o Folio Fiscal de 36 caracteres con guiones.
+3. "monto_total": TOTAL NETO FINAL exacto a pagar en formato numérico decimal.
 4. "fecha_emision": Fecha del documento en formato YYYY-MM-DD.
 
 Responde ÚNICAMENTE un objeto JSON válido:
@@ -1026,71 +1305,51 @@ Responde ÚNICAMENTE un objeto JSON válido:
   "fecha_emision": "YYYY-MM-DD"
 }`;
 
-      const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash"];
-      let lastError = null;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64Data } }] }],
+          generationConfig: { response_mime_type: "application/json", temperature: 0.1 }
+        })
+      });
 
-      for (const model of candidateModels) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  { inline_data: { mime_type: mimeType, data: base64Data } }
-                ]
-              }],
-              generationConfig: { 
-                response_mime_type: "application/json",
-                temperature: 0.1
-              }
-            })
-          });
-
-          if (!response.ok) {
-            const errDetail = await response.json();
-            throw new Error(errDetail.error?.message || `HTTP ${response.status} en ${model}`);
-          }
-
-          const resData = await response.json();
-          const rawJson = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!rawJson) throw new Error("Respuesta vacía del modelo");
-
-          const parsed = JSON.parse(rawJson);
-
-          if (parsed.razon_social) document.getElementById('invoice-entity').value = parsed.razon_social;
-          if (parsed.folio) document.getElementById('invoice-folio').value = parsed.folio;
-          if (parsed.monto_total) document.getElementById('invoice-total').value = parsed.monto_total;
-          if (parsed.fecha_emision) setDropdownDate(parsed.fecha_emision);
-
-          return;
-        } catch (err) {
-          lastError = err;
-        }
+      if (!response.ok) {
+        const errDetail = await response.json();
+        throw new Error(errDetail.error?.message || `HTTP ${response.status}`);
       }
 
-      throw new Error(lastError ? lastError.message : "Error procesando con Gemini.");
+      const resData = await response.json();
+      const rawJson = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+      const parsed = JSON.parse(rawJson);
+
+      if (parsed.razon_social) document.getElementById('invoice-entity').value = parsed.razon_social;
+      if (parsed.folio) document.getElementById('invoice-folio').value = parsed.folio;
+      if (parsed.monto_total) document.getElementById('invoice-total').value = parsed.monto_total;
+      if (parsed.fecha_emision) setDropdownDate(parsed.fecha_emision);
     }
 
-    // REGISTRO E IMPORTACIÓN DIRECTA A LA BASE DE DATOS
+    // REGISTRO DE FACTURA (MULTI-TENANT ENLAZADO)
     document.getElementById('form-invoice').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-invoice');
       btn.disabled = true;
-      btn.innerText = "Importando a Base de Datos...";
+      btn.innerText = "Registrando en tenant...";
 
       const type = document.getElementById('invoice-type').value;
       const collectionName = type === 'CXC' ? 'accounts_receivable' : 'accounts_payable';
       const totalAmount = parseFloat(document.getElementById('invoice-total').value) || 0;
       const dueDate = getSelectedInvoiceDate();
+      const folio = document.getElementById('invoice-folio').value.trim();
+      const entity = document.getElementById('invoice-entity').value.trim();
 
       try {
-        await addDoc(collection(db, collectionName), {
-          entity_name: document.getElementById('invoice-entity').value.trim(),
-          folio: document.getElementById('invoice-folio').value.trim(),
+        const docRef = await addDoc(collection(db, collectionName), {
+          company_id: currentCompanyId,
+          company_name: COMPANIES[currentCompanyId]?.name,
+          entity_name: entity,
+          folio: folio,
           total_amount: totalAmount,
           balance: totalAmount,
           due_date: dueDate,
@@ -1101,16 +1360,23 @@ Responde ÚNICAMENTE un objeto JSON válido:
           created_at: serverTimestamp()
         });
 
+        await logAuditEvent(type === 'CXC' ? 'INVOICE_CXC_CREATED' : 'INVOICE_CXP_CREATED', {
+          doc_id: docRef.id,
+          folio: folio,
+          entity: entity,
+          amount: totalAmount
+        });
+
         closeInvoiceModal();
       } catch (err) {
-        alert("Error al importar a base de datos: " + err.message);
+        alert("Error al guardar factura: " + err.message);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<i class="ph-bold ph-cloud-arrow-up text-base"></i> Importar a Base de Datos`;
+        btn.innerHTML = `<i class="ph-bold ph-cloud-arrow-up text-base"></i> Registrar en este Tenant`;
       }
     });
 
-    // ACCIONES DE CONCILIACIÓN
+    // CONCILIACIÓN
     window.marcarCobrada = async (id) => {
       if (confirm("¿Confirmar cobro total y liquidación de esta factura?")) {
         try {
@@ -1120,6 +1386,7 @@ Responde ÚNICAMENTE un objeto JSON válido:
             collected_at: serverTimestamp(),
             collected_by: auth.currentUser?.email
           });
+          await logAuditEvent("INVOICE_CXC_COLLECTED", { doc_id: id });
         } catch (err) {
           alert("Error: " + err.message);
         }
@@ -1135,6 +1402,7 @@ Responde ÚNICAMENTE un objeto JSON válido:
             paid_at: serverTimestamp(),
             paid_by: auth.currentUser?.email
           });
+          await logAuditEvent("INVOICE_CXP_PAID", { doc_id: id });
         } catch (err) {
           alert("Error: " + err.message);
         }
@@ -1145,13 +1413,14 @@ Responde ÚNICAMENTE un objeto JSON válido:
       if (confirm("¿Deseas eliminar este registro contable permanentemente?")) {
         try {
           await deleteDoc(doc(db, colName, id));
+          await logAuditEvent("RECORD_DELETED", { collection: colName, doc_id: id });
         } catch (err) {
           alert("Error: " + err.message);
         }
       }
     };
 
-    // FILTRADO DINÁMICO POR SELECTORES
+    // FILTRADO DINÁMICO
     window.applyFilters = (module) => {
       if (module === 'cxc') renderCxCTable();
       if (module === 'cxp') renderCxPTable();
@@ -1214,7 +1483,7 @@ Responde ÚNICAMENTE un objeto JSON válido:
 
       const tbody = document.getElementById('table-cxc');
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">No hay cuentas por cobrar con los filtros seleccionados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">No hay cuentas por cobrar en esta entidad con los filtros aplicados.</td></tr>';
         return;
       }
 
@@ -1271,7 +1540,7 @@ Responde ÚNICAMENTE un objeto JSON válido:
 
       const tbody = document.getElementById('table-cxp');
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">No hay cuentas por pagar con los filtros seleccionados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">No hay cuentas por pagar en esta entidad con los filtros aplicados.</td></tr>';
         return;
       }
 
@@ -1327,7 +1596,7 @@ Responde ÚNICAMENTE un objeto JSON válido:
 
       const tbody = document.getElementById('table-activos');
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin activos coincidentes con los filtros.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin activos registrados en este tenant.</td></tr>';
         return;
       }
 
@@ -1341,7 +1610,7 @@ Responde ÚNICAMENTE un objeto JSON válido:
           label = "Red / Módem";
         } else if (item.category === "INTANGIBLE_SOFTWARE") {
           badge = "bg-purple-500/10 text-purple-400 border border-purple-500/20";
-          label = "Licencia Software";
+          label = "Licencia";
         }
 
         html += `
@@ -1353,7 +1622,7 @@ Responde ÚNICAMENTE un objeto JSON válido:
             <td class="p-4 text-slate-300 font-medium">${item.assigned_to || '<span class="text-slate-500 italic">Sin asignar</span>'}</td>
             <td class="p-4 font-mono text-white font-semibold">$${cost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
             <td class="p-4 text-right">
-              <button onclick="eliminarItem('fixed_assets', '${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar registro">
+              <button onclick="eliminarItem('fixed_assets', '${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition">
                 <i class="ph ph-trash text-base"></i>
               </button>
             </td>
@@ -1363,45 +1632,46 @@ Responde ÚNICAMENTE un objeto JSON válido:
       tbody.innerHTML = html;
     }
 
-    // EXPORTACIÓN A EXCEL CON SHEETJS
+    // EXPORTACIÓN A EXCEL AISLADA
     window.exportToExcel = (module) => {
       let data = [];
-      let filename = `ContaCore_${module.toUpperCase()}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      const tenantTag = currentCompanyId.toUpperCase();
+      let filename = `ContaCore_${tenantTag}_${module.toUpperCase()}_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
       if (module === 'cxc') {
         data = rawDataCxC.map(item => ({
+          "Empresa": COMPANIES[item.company_id]?.name || item.company_id,
           "Folio/UUID": item.folio || '',
           "Cliente": item.entity_name || '',
           "Vencimiento": item.due_date || '',
           "Monto Total MXN": Number(item.total_amount || 0),
           "Estado": item.status === 'COLLECTED' ? 'COBRADA' : 'POR COBRAR',
-          "Comprobante": item.document_url ? 'SÍ' : 'NO',
           "Registrado Por": item.registered_by || ''
         }));
       } else if (module === 'cxp') {
         data = rawDataCxP.map(item => ({
+          "Empresa": COMPANIES[item.company_id]?.name || item.company_id,
           "Folio/UUID": item.folio || '',
           "Proveedor": item.entity_name || '',
           "Vencimiento": item.due_date || '',
           "Monto Total MXN": Number(item.total_amount || 0),
           "Estado": item.status === 'PAID' ? 'PAGADA' : 'POR PAGAR',
-          "Comprobante": item.document_url ? 'SÍ' : 'NO',
           "Registrado Por": item.registered_by || ''
         }));
       } else if (module === 'activos') {
         data = rawDataActivos.map(item => ({
+          "Empresa": COMPANIES[item.company_id]?.name || item.company_id,
           "Código": item.asset_code || '',
           "Nombre / Modelo": item.name || '',
           "Categoría": item.category || '',
           "Serie / IMEI": item.serial_number || '',
           "Resguardo": item.assigned_to || '',
-          "Costo MXN": Number(item.purchase_cost || 0),
-          "Estado": item.status || 'AVAILABLE'
+          "Costo MXN": Number(item.purchase_cost || 0)
         }));
       }
 
       if (data.length === 0) {
-        alert("No hay registros disponibles para exportar.");
+        alert("No hay registros en esta razón social para exportar.");
         return;
       }
 
@@ -1411,13 +1681,66 @@ Responde ÚNICAMENTE un objeto JSON válido:
       XLSX.writeFile(wb, filename);
     };
 
-    // SINCRONIZACIÓN REACTIVA CON FIRESTORE
+    // STREAM DE AUDITORÍA
+    function initAuditLogStream() {
+      onSnapshot(query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(40)), (snap) => {
+        rawDataAudit = [];
+        const tbody = document.getElementById('table-audit');
+        if (snap.empty) {
+          tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-slate-500 font-mono">Sin registros de auditoría aún.</td></tr>';
+          return;
+        }
+
+        let html = '';
+        snap.forEach(d => {
+          const log = d.data();
+          rawDataAudit.push(log);
+          const dateStr = log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString('es-MX') : 'Reciente';
+
+          html += `
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="p-4 font-mono text-slate-400">${dateStr}</td>
+              <td class="p-4 font-medium text-white">${log.user_email} <span class="text-[10px] text-slate-500 font-mono">(${log.role_id})</span></td>
+              <td class="p-4"><span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">${log.action}</span></td>
+              <td class="p-4 text-slate-300">${log.company_name || log.company_id || 'Global'}</td>
+              <td class="p-4 font-mono text-[11px] text-slate-400 max-w-xs truncate" title='${JSON.stringify(log.details || {})}'>${JSON.stringify(log.details || {})}</td>
+            </tr>
+          `;
+        });
+        tbody.innerHTML = html;
+      });
+    }
+
+    window.exportAuditLogs = () => {
+      if (rawDataAudit.length === 0) return alert("Sin datos de auditoría");
+      const ws = XLSX.utils.json_to_sheet(rawDataAudit.map(l => ({
+        "Fecha": l.timestamp?.toDate ? l.timestamp.toDate().toISOString() : '',
+        "Usuario": l.user_email,
+        "Rol": l.role_id,
+        "Empresa": l.company_name || l.company_id,
+        "Acción": l.action,
+        "Detalle": JSON.stringify(l.details || {})
+      })));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Auditoria");
+      XLSX.writeFile(wb, `Auditoria_ContaCore_${new Date().toISOString().slice(0,10)}.xlsx`);
+    };
+
+    // SINCRONIZACIÓN REACTIVA FILTRADA POR TENANT
     function initLiveMetrics() {
-      // 1. Cuentas por Cobrar
-      onSnapshot(query(collection(db, "accounts_receivable"), orderBy("created_at", "desc")), (snap) => {
+      // Limpiar suscripciones previas si hubo cambio de tenant
+      unsubs.forEach(fn => fn());
+      unsubs = [];
+
+      // 1. Cuentas por Cobrar (CxC) de la razón social activa
+      const qCxC = query(
+        collection(db, "accounts_receivable"),
+        where("company_id", "==", currentCompanyId),
+        orderBy("created_at", "desc")
+      );
+      const unsub1 = onSnapshot(qCxC, (snap) => {
         rawDataCxC = [];
         let pendingTotal = 0;
-
         snap.forEach(d => {
           const item = { id: d.id, ...d.data() };
           rawDataCxC.push(item);
@@ -1425,16 +1748,20 @@ Responde ÚNICAMENTE un objeto JSON válido:
             pendingTotal += Number(item.balance || item.total_amount || 0);
           }
         });
-
         document.getElementById('kpi-cxc').innerText = `$${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
         renderCxCTable();
-      });
+      }, (err) => console.warn("Query CxC requiere índice o esperando:", err));
+      unsubs.push(unsub1);
 
-      // 2. Cuentas por Pagar
-      onSnapshot(query(collection(db, "accounts_payable"), orderBy("created_at", "desc")), (snap) => {
+      // 2. Cuentas por Pagar (CxP)
+      const qCxP = query(
+        collection(db, "accounts_payable"),
+        where("company_id", "==", currentCompanyId),
+        orderBy("created_at", "desc")
+      );
+      const unsub2 = onSnapshot(qCxP, (snap) => {
         rawDataCxP = [];
         let pendingTotal = 0;
-
         snap.forEach(d => {
           const item = { id: d.id, ...d.data() };
           rawDataCxP.push(item);
@@ -1442,26 +1769,30 @@ Responde ÚNICAMENTE un objeto JSON válido:
             pendingTotal += Number(item.balance || item.total_amount || 0);
           }
         });
-
         document.getElementById('kpi-cxp').innerText = `$${pendingTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
         renderCxPTable();
-      });
+      }, (err) => console.warn("Query CxP requiere índice o esperando:", err));
+      unsubs.push(unsub2);
 
       // 3. Activos Fijos
-      onSnapshot(query(collection(db, "fixed_assets"), orderBy("created_at", "desc")), (snap) => {
+      const qActivos = query(
+        collection(db, "fixed_assets"),
+        where("company_id", "==", currentCompanyId),
+        orderBy("created_at", "desc")
+      );
+      const unsub3 = onSnapshot(qActivos, (snap) => {
         rawDataActivos = [];
         let totalCost = 0;
-
         snap.forEach(d => {
           const item = { id: d.id, ...d.data() };
           rawDataActivos.push(item);
           totalCost += Number(item.purchase_cost || 0);
         });
-
         document.getElementById('kpi-activos').innerText = rawDataActivos.length;
         document.getElementById('kpi-valor-libros').innerText = `$${totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
         renderActivosTable();
-      });
+      }, (err) => console.warn("Query Activos requiere índice o esperando:", err));
+      unsubs.push(unsub3);
     }
 
     // REGISTRO DE ACTIVO
@@ -1472,18 +1803,24 @@ Responde ÚNICAMENTE un objeto JSON válido:
       btn.innerText = "Registrando...";
 
       try {
+        const code = document.getElementById('asset-code').value.trim().toUpperCase();
+        const cost = parseFloat(document.getElementById('asset-cost').value) || 0;
+
         await addDoc(collection(db, "fixed_assets"), {
-          asset_code: document.getElementById('asset-code').value.trim().toUpperCase(),
+          company_id: currentCompanyId,
+          company_name: COMPANIES[currentCompanyId]?.name,
+          asset_code: code,
           category: document.getElementById('asset-type').value,
           name: document.getElementById('asset-name').value.trim(),
           serial_number: document.getElementById('asset-serial').value.trim(),
-          purchase_cost: parseFloat(document.getElementById('asset-cost').value) || 0,
+          purchase_cost: cost,
           assigned_to: document.getElementById('asset-assigned').value.trim(),
           registered_by: auth.currentUser?.email || 'admin',
           status: document.getElementById('asset-assigned').value.trim() ? "ASSIGNED" : "AVAILABLE",
           created_at: serverTimestamp()
         });
 
+        await logAuditEvent("ASSET_CREATED", { code, cost, company_id: currentCompanyId });
         toggleModalActivo(false);
       } catch (err) {
         alert("Error al registrar activo: " + err.message);
@@ -1492,6 +1829,34 @@ Responde ÚNICAMENTE un objeto JSON válido:
         btn.innerText = "Guardar Activo";
       }
     });
+
+    // LLAVE GEMINI
+    window.toggleApiKeyModal = (show) => {
+      document.getElementById('modal-api-key').classList.toggle('hidden', !show);
+      if (show) document.getElementById('input-gemini-key').value = localStorage.getItem('GEMINI_API_KEY') || '';
+    };
+
+    window.saveGeminiApiKey = () => {
+      const key = document.getElementById('input-gemini-key').value.trim();
+      if (!key) return alert("Introduce una llave válida.");
+      localStorage.setItem('GEMINI_API_KEY', key);
+      updateApiKeyIndicator();
+      window.toggleApiKeyModal(false);
+      alert("API Key configurada.");
+    };
+
+    function updateApiKeyIndicator() {
+      const key = localStorage.getItem('GEMINI_API_KEY');
+      const ind = document.getElementById('api-key-indicator');
+      if (key) {
+        ind.innerText = "Gemini Key Activa";
+        ind.className = "text-emerald-400 font-semibold";
+      } else {
+        ind.innerText = "Configurar Gemini Key";
+        ind.className = "text-amber-400 font-medium";
+      }
+    }
+    updateApiKeyIndicator();
   </script>
 </body>
 </html>

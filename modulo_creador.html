@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diseñador de Módulos Dinámicos | ContaCore EMCO</title>
+  <title>ContaCore Studio & Diseñador de Módulos | EMCO</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +21,12 @@
       }
     };
   </script>
+  <style>
+    textarea.code-area {
+      tab-size: 2;
+      line-height: 1.5rem;
+    }
+  </style>
 </head>
 <body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-indigo-500 selection:text-white">
 
@@ -29,11 +35,11 @@
     <div>
       <div class="p-6 border-b border-slate-800/60 flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <i class="ph-bold ph-cube text-white text-xl"></i>
+          <i class="ph-bold ph-terminal-window text-white text-xl"></i>
         </div>
         <div>
-          <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
-          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">Schema Studio</span>
+          <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">Studio</span></h1>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">IDE & Schema Builder</span>
         </div>
       </div>
 
@@ -42,12 +48,29 @@
           <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
           <span>Volver al Portal</span>
         </a>
+
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
-        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Diseño & Estructura</div>
-        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
-          <i class="ph-bold ph-squares-four text-lg text-indigo-400"></i>
-          <span>Catálogo de Módulos</span>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Herramientas Studio</div>
+
+        <button onclick="cambiarVista('schemas')" id="tab-btn-schemas" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-squares-four text-lg text-indigo-400"></i>
+            <span>Diseñador de Esquemas</span>
+          </div>
+          <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">No-Code</span>
         </button>
+
+        <button onclick="cambiarVista('ide')" id="tab-btn-ide" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-code text-lg text-emerald-400"></i>
+            <span>Editor de Código (IDE)</span>
+          </div>
+          <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">HTML/JS</span>
+        </button>
+
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Administración</div>
+
         <a href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
           <span>Consola de Auditoría</span>
@@ -60,27 +83,85 @@
     </div>
 
     <div class="p-4 border-t border-slate-800/60 bg-slate-950/60">
-      <span class="text-xs text-slate-500 font-mono">Firestore: emco-accounting</span>
+      <span class="text-xs text-slate-500 font-mono">Base: emco-accounting</span>
     </div>
   </aside>
 
   <!-- CONTENIDO PRINCIPAL -->
-  <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950">
-    <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
-      <div>
-        <h2 class="text-xl font-bold text-white tracking-tight">Creador & Diseñador de Módulos</h2>
-        <span class="text-xs text-slate-400 font-mono">Define colecciones y campos dinámicos para César Giovanni y HR Employment</span>
-      </div>
-      <button onclick="abrirModalCreacion()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-        <i class="ph-bold ph-plus text-sm"></i> + Diseñar Nuevo Módulo
-      </button>
-    </header>
+  <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950">
 
-    <div class="p-8 flex-1 space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="modules-cards-container">
-        <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full">Cargando módulos configurados...</div>
+    <!-- SECCIÓN 1: DISEÑADOR NO-CODE -->
+    <div id="view-schemas" class="flex-1 flex flex-col h-full overflow-y-auto">
+      <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
+        <div>
+          <h2 class="text-xl font-bold text-white tracking-tight">Diseñador de Módulos Dinámicos</h2>
+          <span class="text-xs text-slate-400 font-mono">Crea catálogos con despliegue bilateral garantizado para ambas razones sociales</span>
+        </div>
+        <button onclick="abrirModalCreacion()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+          <i class="ph-bold ph-plus text-sm"></i> + Diseñar Nuevo Módulo
+        </button>
+      </header>
+
+      <div class="p-8 flex-1 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="modules-cards-container">
+          <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full">Cargando módulos configurados...</div>
+        </div>
       </div>
     </div>
+
+    <!-- SECCIÓN 2: EDITOR DE CÓDIGO (IDE) -->
+    <div id="view-ide" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+      <header class="bg-slate-900/90 border-b border-slate-800 px-6 py-3 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3">
+          <select id="ide-file-selector" onchange="cargarArchivoEnEditor(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 outline-none focus:border-indigo-500">
+            <optgroup label="Módulos Fijos del Sistema">
+              <option value="portal_catalogo.html">portal_catalogo.html (Catálogo Maestro)</option>
+              <option value="cg_cxc.html">cg_cxc.html (CxC César Giovanni)</option>
+              <option value="hr_cxc.html">hr_cxc.html (CxC HR Employment)</option>
+              <option value="cg_cxp.html">cg_cxp.html (CxP César Giovanni)</option>
+              <option value="hr_cxp.html">hr_cxp.html (CxP HR Employment)</option>
+              <option value="cg_activos.html">cg_activos.html (Activos César Giovanni)</option>
+              <option value="hr_activos.html">hr_activos.html (Activos HR Employment)</option>
+              <option value="modulo_dinamico.html">modulo_dinamico.html (Visor Universal)</option>
+              <option value="staff.html">staff.html (Gobernanza RBAC)</option>
+              <option value="modulo_logs.html">modulo_logs.html (Consola de Auditoría)</option>
+            </optgroup>
+            <optgroup label="Módulos Dinámicos Creados" id="optgroup-dynamic-modules">
+              <!-- Inyección automática -->
+            </optgroup>
+          </select>
+
+          <span id="ide-status-tag" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700">Modo Inspección</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="previsualizarSandbox()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="ph-bold ph-play text-emerald-400"></i> Previsualizar
+          </button>
+          <button onclick="descargarCodigo()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+            <i class="ph-bold ph-download-simple"></i> Descargar .html
+          </button>
+          <button onclick="guardarCodigoFirestore()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition shadow-lg shadow-emerald-600/20">
+            <i class="ph-bold ph-floppy-disk"></i> Guardar Cambios en BD
+          </button>
+        </div>
+      </header>
+
+      <div class="flex-1 flex overflow-hidden">
+        <div class="flex-1 flex flex-col bg-slate-950 border-r border-slate-800/80 overflow-hidden relative">
+          <textarea id="ide-code-textarea" spellcheck="false" class="code-area w-full h-full p-4 bg-transparent font-mono text-xs text-slate-200 outline-none resize-none leading-relaxed selection:bg-indigo-500/40" placeholder="Selecciona un archivo o escribe código HTML/JS aquí..."></textarea>
+        </div>
+
+        <div id="ide-preview-pane" class="w-1/2 flex flex-col bg-slate-900/50 hidden">
+          <div class="px-4 py-2 border-b border-slate-800 flex justify-between items-center bg-slate-950/40 text-xs font-mono text-slate-400">
+            <span>Previsualización en Vivo (Live Sandbox)</span>
+            <button onclick="document.getElementById('ide-preview-pane').classList.add('hidden')" class="hover:text-white">&times;</button>
+          </div>
+          <iframe id="ide-sandbox-frame" class="w-full flex-1 border-0 bg-slate-950"></iframe>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- MODAL: CONSTRUCTOR DE ESQUEMA -->
@@ -101,45 +182,42 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Descriptivo</label>
-              <input type="text" id="mod-name" placeholder="Ej: Control de Viáticos / Impuestos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <input type="text" id="mod-name" placeholder="Ej: Control de Gastos / Viáticos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
             <div>
-              <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug / Colección Firestore</label>
-              <input type="text" id="mod-slug" placeholder="mod_viaticos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug / Colección en Firestore</label>
+              <input type="text" id="mod-slug" placeholder="mod_control_gastos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Ícono Phosphor (CSS class)</label>
-              <input type="text" id="mod-icon" value="ph-squares-four" placeholder="ph-airplane-tilt, ph-bank, ph-wallet..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500">
+              <input type="text" id="mod-icon" value="ph-squares-four" placeholder="ph-wallet, ph-money, ph-receipt..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500">
             </div>
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción de Alcance</label>
-              <input type="text" id="mod-desc" placeholder="Objetivo de control contable..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <input type="text" id="mod-desc" placeholder="Control administrativo bilateral..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
           </div>
 
-          <!-- GENERADOR DE CAMPOS -->
           <div class="border-t border-slate-800/80 pt-4 space-y-3">
             <div class="flex justify-between items-center">
               <div>
                 <span class="uppercase tracking-wider text-indigo-400 font-mono font-bold block">Campos del Formulario</span>
-                <span class="text-[10px] text-slate-500 font-mono">La razón social (company_id) se indexa en automático</span>
+                <span class="text-[10px] text-slate-500 font-mono">Se generará de forma idéntica e independiente para César Giovanni y HR Employment</span>
               </div>
               <button type="button" onclick="addField()" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
                 <i class="ph-bold ph-plus"></i> Añadir Campo
               </button>
             </div>
             
-            <div id="fields-list" class="space-y-2">
-              <!-- Filas dinámicas de campos -->
-            </div>
+            <div id="fields-list" class="space-y-2"></div>
           </div>
 
           <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
             <button type="button" onclick="toggleModal(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
-            <button type="submit" id="btn-submit" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold shadow-lg shadow-indigo-600/20">Guardar Esquema</button>
+            <button type="submit" id="btn-submit" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold shadow-lg shadow-indigo-600/20">Desplegar en Ambas Razones Sociales</button>
           </div>
         </form>
       </div>
@@ -150,7 +228,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
-      getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, 
+      getFirestore, collection, addDoc, setDoc, updateDoc, deleteDoc, doc, getDoc, 
       onSnapshot, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -170,14 +248,16 @@
 
     let currentUser = null;
     let modulesCache = {};
+    let currentFileName = "portal_catalogo.html";
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.replace("index.html");
         return;
       }
       currentUser = user;
       initModulesListener();
+      cargarArchivoEnEditor(currentFileName);
     });
 
     async function logAudit(action, details = {}) {
@@ -193,6 +273,25 @@
       }
     }
 
+    window.cambiarVista = (vista) => {
+      const viewSchemas = document.getElementById('view-schemas');
+      const viewIde = document.getElementById('view-ide');
+      const btnSchemas = document.getElementById('tab-btn-schemas');
+      const btnIde = document.getElementById('tab-btn-ide');
+
+      if (vista === 'schemas') {
+        viewSchemas.classList.remove('hidden');
+        viewIde.classList.add('hidden');
+        btnSchemas.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm";
+        btnIde.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+      } else {
+        viewSchemas.classList.add('hidden');
+        viewIde.classList.remove('hidden');
+        btnIde.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-white bg-emerald-600/15 border border-emerald-500/20 shadow-sm";
+        btnSchemas.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+      }
+    };
+
     window.toggleModal = (show) => {
       document.getElementById('modal-module').classList.toggle('hidden', !show);
       if (!show) {
@@ -205,11 +304,12 @@
 
     window.abrirModalCreacion = () => {
       toggleModal(true);
-      document.getElementById('modal-title').innerText = "Especificación de Nuevo Módulo";
+      document.getElementById('modal-title').innerText = "Especificación de Nuevo Módulo Bilateral";
       document.getElementById('mod-slug').disabled = false;
-      addField("Concepto / Folio", "text", true);
-      addField("Importe ($ MXN)", "number", true);
-      addField("Fecha de Registro", "date", true);
+      addField("Concepto del Gasto", "text", true);
+      addField("Monto Total ($ MXN)", "number", true);
+      addField("Fecha de Comprobante", "date", true);
+      addField("Proveedor / Beneficiario", "text", false);
     };
 
     window.addField = (defLabel = "", defType = "text", defReq = false) => {
@@ -222,12 +322,12 @@
         <input type="text" placeholder="Etiqueta del campo" value="${defLabel}" class="f-label bg-slate-900 border border-slate-800 text-white rounded-lg px-2.5 py-1.5 text-xs flex-1 outline-none focus:border-indigo-500" required>
         <select class="f-type bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-indigo-500">
           <option value="text" ${defType === 'text' ? 'selected' : ''}>Texto</option>
-          <option value="number" ${defType === 'number' ? 'selected' : ''}>Numérico ($ / Cantidad)</option>
+          <option value="number" ${defType === 'number' ? 'selected' : ''}>Numérico ($ / Monto)</option>
           <option value="date" ${defType === 'date' ? 'selected' : ''}>Fecha</option>
           <option value="textarea" ${defType === 'textarea' ? 'selected' : ''}>Texto Extenso</option>
         </select>
         <label class="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
-          <input type="checkbox" class="f-req rounded border-slate-800" ${defReq ? 'checked' : ''}> Obligatorio
+          <input type="checkbox" class="f-req rounded border-slate-800" ${defReq ? 'checked' : ''}> Req.
         </label>
         <button type="button" onclick="document.getElementById('${id}').remove()" class="text-slate-500 hover:text-rose-400 p-1 transition">
           <i class="ph ph-trash text-base"></i>
@@ -239,7 +339,9 @@
     function initModulesListener() {
       onSnapshot(collection(db, "system_modules"), (snap) => {
         const container = document.getElementById('modules-cards-container');
+        const optgroup = document.getElementById('optgroup-dynamic-modules');
         container.innerHTML = '';
+        optgroup.innerHTML = '';
         modulesCache = {};
 
         if (snap.empty) {
@@ -255,6 +357,11 @@
           const mod = docSnap.data();
           const docId = docSnap.id;
           modulesCache[docId] = { ...mod, docId };
+
+          const opt = document.createElement('option');
+          opt.value = `dynamic:${mod.slug}`;
+          opt.innerText = `[Dinámico] ${mod.title} (${mod.slug})`;
+          optgroup.appendChild(opt);
 
           const fieldCount = mod.fields ? mod.fields.length : 0;
           const card = document.createElement('div');
@@ -283,16 +390,16 @@
 
               <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-mono text-slate-500">
                 <span>${fieldCount} campos configurados</span>
-                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Ambas Empresas</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Bilateral Activo</span>
               </div>
             </div>
 
             <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
-              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=cesar_gonzalez" class="flex-1 text-center py-2 px-2 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/20 text-indigo-300 text-xs font-semibold transition">
-                César G.
+              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=cesar_gonzalez" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+                <i class="ph-bold ph-briefcase"></i> César G.
               </a>
-              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=hr_employment" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition">
-                HR Empl.
+              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=hr_employment" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+                <i class="ph-bold ph-buildings"></i> HR Empl.
               </a>
             </div>
           `;
@@ -301,12 +408,11 @@
       });
     }
 
-    // DESPLIEGUE / EDICIÓN DE ESQUEMA
     document.getElementById('form-module').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit');
       btn.disabled = true;
-      btn.innerText = "Guardando...";
+      btn.innerText = "Registrando módulo y permisos RBAC...";
 
       const editId = document.getElementById('edit-doc-id').value;
       const slug = document.getElementById('mod-slug').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
@@ -328,43 +434,61 @@
       if (fields.length === 0) {
         alert("Debes agregar al menos un campo para el formulario.");
         btn.disabled = false;
-        btn.innerText = "Guardar Esquema";
+        btn.innerText = "Desplegar en Ambas Razones Sociales";
         return;
       }
 
       try {
+        const modulePayload = {
+          slug: slug,
+          title: title,
+          icon: icon,
+          description: desc,
+          fields: fields,
+          tenants_enabled: ["cesar_gonzalez", "hr_employment"],
+          created_by: currentUser?.email,
+          updated_at: serverTimestamp()
+        };
+
         if (editId) {
-          // Edición
-          await updateDoc(doc(db, "system_modules", editId), {
-            title: title,
-            icon: icon,
-            description: desc,
-            fields: fields,
-            updated_at: serverTimestamp()
-          });
+          await updateDoc(doc(db, "system_modules", editId), modulePayload);
           await logAudit("MODULE_SCHEMA_UPDATED", { slug, title, fieldsCount: fields.length });
-          alert(`Módulo "${title}" actualizado con éxito.`);
         } else {
-          // Creación
-          await addDoc(collection(db, "system_modules"), {
-            slug: slug,
-            title: title,
-            icon: icon,
-            description: desc,
-            fields: fields,
-            created_by: currentUser?.email,
-            created_at: serverTimestamp()
-          });
+          modulePayload.created_at = serverTimestamp();
+          await addDoc(collection(db, "system_modules"), modulePayload);
           await logAudit("MODULE_SCHEMA_CREATED", { slug, title, fieldsCount: fields.length });
-          alert(`Módulo "${title}" desplegado exitosamente.`);
         }
+
+        // Auto-inyección de permisos en system_roles
+        const readPerm = `${slug}.read`;
+        const writePerm = `${slug}.write`;
+
+        const contadorRef = doc(db, "system_roles", "CONTADOR");
+        const contadorSnap = await getDoc(contadorRef);
+        if (contadorSnap.exists()) {
+          const perms = contadorSnap.data().permissions || [];
+          if (!perms.includes(readPerm)) perms.push(readPerm);
+          if (!perms.includes(writePerm)) perms.push(writePerm);
+          await updateDoc(contadorRef, { permissions: perms });
+        }
+
+        const auditorRef = doc(db, "system_roles", "AUDITOR");
+        const auditorSnap = await getDoc(auditorRef);
+        if (auditorSnap.exists()) {
+          const perms = auditorSnap.data().permissions || [];
+          if (!perms.includes(readPerm)) perms.push(readPerm);
+          await updateDoc(auditorRef, { permissions: perms });
+        }
+
+        await logAudit("RBAC_PERMISSIONS_INJECTED", { slug, permissions: [readPerm, writePerm] });
+        alert(`Módulo "${title}" guardado exitosamente.\nSe han registrado automáticamente los permisos "${readPerm}" y "${writePerm}" en la gobernanza de Staff.`);
 
         toggleModal(false);
       } catch (err) {
         alert("Error al procesar el módulo: " + err.message);
       } finally {
         btn.disabled = false;
-        btn.innerText = "Guardar Esquema";
+        btn.innerText = "Desplegar en Ambas Razones Sociales";
       }
     });
 
@@ -377,7 +501,7 @@
       document.getElementById('edit-doc-id').value = docId;
       document.getElementById('mod-name').value = mod.title || '';
       document.getElementById('mod-slug').value = mod.slug || '';
-      document.getElementById('mod-slug').disabled = true; // El slug es inmutable para preservar la integridad de datos
+      document.getElementById('mod-slug').disabled = true;
       document.getElementById('mod-icon').value = mod.icon || 'ph-squares-four';
       document.getElementById('mod-desc').value = mod.description || '';
 
@@ -391,7 +515,7 @@
     };
 
     window.eliminarModulo = async (docId, slug, title) => {
-      if (confirm(`¿Confirmas la eliminación del esquema del módulo "${title}" (${slug})?`)) {
+      if (confirm(`¿Confirmas la eliminación del esquema del módulo "${title}" (${slug}) para ambas empresas?`)) {
         try {
           await deleteDoc(doc(db, "system_modules", docId));
           await logAudit("MODULE_SCHEMA_DELETED", { docId, slug, title });
@@ -399,6 +523,105 @@
           alert("Error al eliminar: " + err.message);
         }
       }
+    };
+
+    window.cargarArchivoEnEditor = async (fileKey) => {
+      currentFileName = fileKey;
+      const statusTag = document.getElementById('ide-status-tag');
+      const textarea = document.getElementById('ide-code-textarea');
+
+      statusTag.innerText = "Cargando...";
+      textarea.value = "Cargando código fuente...";
+
+      try {
+        const safeKey = fileKey.replace(/[^a-zA-Z0-9_.-]/g, '_');
+        const customDocRef = doc(db, "system_module_sources", safeKey);
+        const customDoc = await getDoc(customDocRef);
+
+        if (customDoc.exists() && customDoc.data().source_code) {
+          textarea.value = customDoc.data().source_code;
+          statusTag.innerText = `BD Personalizado (v${customDoc.data().version || 1})`;
+          statusTag.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+          return;
+        }
+
+        if (!fileKey.startsWith('dynamic:')) {
+          const resp = await fetch(fileKey);
+          if (resp.ok) {
+            const htmlContent = await resp.text();
+            textarea.value = htmlContent;
+            statusTag.innerText = "Código Base Local";
+            statusTag.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
+            return;
+          }
+        }
+
+        if (fileKey.startsWith('dynamic:')) {
+          const slugKey = fileKey.replace('dynamic:', '');
+          const modDef = Object.values(modulesCache).find(m => m.slug === slugKey);
+          textarea.value = `<!-- ESQUEMA DINÁMICO EN PRODUCCIÓN: ${slugKey} -->\n` + JSON.stringify(modDef || {}, null, 2);
+          statusTag.innerText = "Esquema JSON Dinámico";
+          statusTag.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20";
+        }
+      } catch (err) {
+        textarea.value = `<!-- No se pudo cargar el archivo directo por restricciones locales -->\n<!-- Puedes escribir o pegar tu código aquí y guardarlo en Firestore -->\n<!-- Error: ${err.message} -->`;
+        statusTag.innerText = "Editor en Blanco";
+      }
+    };
+
+    window.guardarCodigoFirestore = async () => {
+      const code = document.getElementById('ide-code-textarea').value;
+      if (!code.trim()) return alert("El editor está vacío.");
+
+      const safeKey = currentFileName.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      const docRef = doc(db, "system_module_sources", safeKey);
+
+      try {
+        const existing = await getDoc(docRef);
+        const nextVersion = (existing.exists() && existing.data().version) ? existing.data().version + 1 : 1;
+
+        await setDoc(docRef, {
+          file_name: currentFileName,
+          source_code: code,
+          version: nextVersion,
+          updated_by: currentUser?.email || 'admin',
+          updated_at: serverTimestamp()
+        });
+
+        await logAudit("SOURCE_CODE_MUTATED", { file: currentFileName, version: nextVersion });
+        alert(`Código de "${currentFileName}" guardado exitosamente en Firestore (Versión ${nextVersion}).`);
+        cargarArchivoEnEditor(currentFileName);
+      } catch (err) {
+        alert("Error al guardar código en Firestore: " + err.message);
+      }
+    };
+
+    window.previsualizarSandbox = () => {
+      const pane = document.getElementById('ide-preview-pane');
+      const frame = document.getElementById('ide-sandbox-frame');
+      const code = document.getElementById('ide-code-textarea').value;
+
+      pane.classList.remove('hidden');
+      const frameDoc = frame.contentWindow.document;
+      frameDoc.open();
+      frameDoc.write(code);
+      frameDoc.close();
+    };
+
+    window.descargarCodigo = () => {
+      const code = document.getElementById('ide-code-textarea').value;
+      if (!code) return alert("Sin código para descargar.");
+
+      const cleanFileName = currentFileName.startsWith('dynamic:') 
+        ? `${currentFileName.replace('dynamic:', '')}.html` 
+        : currentFileName;
+
+      const blob = new Blob([code], { type: "text/html;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = cleanFileName;
+      a.click();
+      URL.revokeObjectURL(a.href);
     };
   </script>
 </body>

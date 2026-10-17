@@ -63,7 +63,7 @@
     </div>
   </header>
 
-  <!-- CONTENEDOR PRINCIPAL -->
+  <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-8 overflow-y-auto">
 
     <!-- PANEL SELECTOR DE RAZÓN SOCIAL ACTIVA -->
@@ -89,7 +89,7 @@
       </div>
     </div>
 
-    <!-- RESUMEN DE SALDOS / MÉTRICAS DE LA RAZÓN SOCIAL -->
+    <!-- RESUMEN DE SALDOS / MÉTRICAS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 relative overflow-hidden">
         <div class="flex justify-between items-start">
@@ -119,7 +119,7 @@
       </div>
     </div>
 
-    <!-- SECCIÓN: CATÁLOGO DE MÓDULOS DE LA ENTIDAD -->
+    <!-- SECCIÓN: MÓDULOS CONTABLES NATIVOS -->
     <div class="space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
@@ -129,7 +129,6 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Cuentas por Cobrar -->
         <a id="link-cxc" href="cg_cxc.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
           <div class="space-y-3">
             <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
@@ -144,7 +143,6 @@
           </div>
         </a>
 
-        <!-- Cuentas por Pagar -->
         <a id="link-cxp" href="cg_cxp.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-rose-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
           <div class="space-y-3">
             <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
@@ -159,7 +157,6 @@
           </div>
         </a>
 
-        <!-- Activos Fijos -->
         <a id="link-activos" href="cg_activos.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
           <div class="space-y-3">
             <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
@@ -176,13 +173,13 @@
       </div>
     </div>
 
-    <!-- SECCIÓN: MÓDULOS DINÁMICOS CREADOS -->
+    <!-- SECCIÓN: MÓDULOS DINÁMICOS REACTIVOS (SINCRONIZACIÓN BILATERAL) -->
     <div class="space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
           <i class="ph-bold ph-cube text-indigo-400 text-base"></i> Catálogos Creados en Caliente
         </h3>
-        <span class="text-[11px] font-mono text-slate-500">Módulos generados desde Schema Studio</span>
+        <span class="text-[11px] font-mono text-slate-500">Módulos adaptados en vivo a la empresa seleccionada</span>
       </div>
 
       <div id="dynamic-modules-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -192,43 +189,40 @@
       </div>
     </div>
 
-    <!-- SECCIÓN: GOBERNANZA & ESTRUCTURA TRANSVERSAL -->
+    <!-- SECCIÓN: GOBERNANZA TRANSVERSAL -->
     <div class="space-y-4 pt-4 border-t border-slate-800">
       <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
         <i class="ph-bold ph-gear text-amber-400 text-base"></i> Gobernanza & Herramientas Transversales
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Diseñador de Módulos -->
         <a href="modulo_creador.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
           <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
-            <i class="ph-bold ph-plus-circle"></i>
+            <i class="ph-bold ph-terminal-window"></i>
           </div>
           <div>
-            <h4 class="text-sm font-bold text-white">Creador de Módulos</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5">Diseña esquemas y colecciones para ambas razones sociales.</p>
+            <h4 class="text-sm font-bold text-white">ContaCore Studio & IDE</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Diseña esquemas y edita el código fuente de los módulos.</p>
           </div>
         </a>
 
-        <!-- Consola de Auditoría -->
         <a href="modulo_logs.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
           <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
             <i class="ph-bold ph-shield-warning"></i>
           </div>
           <div>
             <h4 class="text-sm font-bold text-white">Consola de Auditoría</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5">Pista forense de inserciones, mutaciones, logins y exportaciones.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Pista forense de inserciones, mutaciones y logins.</p>
           </div>
         </a>
 
-        <!-- Staff & RBAC -->
         <a href="staff.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
           <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
             <i class="ph-bold ph-users-three"></i>
           </div>
           <div>
             <h4 class="text-sm font-bold text-white">Staff & Gobernanza</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5">Directorio único de colaboradores, credenciales y empresas asignadas.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Directorio de colaboradores, matriz RBAC y empresas permitidas.</p>
           </div>
         </a>
       </div>
@@ -241,7 +235,7 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
       getFirestore, collection, doc, getDoc, addDoc, 
-      onSnapshot, query, where, orderBy, serverTimestamp 
+      onSnapshot, query, where, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -262,8 +256,7 @@
       "cesar_gonzalez": {
         name: "César Giovanni González Contreras",
         short: "César Giovanni",
-        colorClass: "indigo",
-        gradient: "from-indigo-600 to-indigo-400",
+        badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
         cxcLink: "cg_cxc.html",
         cxpLink: "cg_cxp.html",
         activosLink: "cg_activos.html"
@@ -271,8 +264,7 @@
       "hr_employment": {
         name: "HR Employment",
         short: "HR Employment",
-        colorClass: "emerald",
-        gradient: "from-emerald-600 to-emerald-400",
+        badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
         cxcLink: "hr_cxc.html",
         cxpLink: "hr_cxp.html",
         activosLink: "hr_activos.html"
@@ -282,6 +274,7 @@
     let activeCompanyId = sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
     let currentUserData = null;
     let liveUnsubs = [];
+    let cachedModules = [];
 
     async function logAudit(action, details = {}) {
       try {
@@ -297,7 +290,7 @@
           user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn("Fallo al escribir audit log:", e);
+        console.warn("Fallo log auditoría:", e);
       }
     }
 
@@ -320,7 +313,6 @@
         document.getElementById('user-display-name').innerText = currentUserData.full_name || user.email;
         document.getElementById('user-role-badge').innerText = currentUserData.role_id;
 
-        // Validar empresa activa según allowed_companies
         const allowed = currentUserData.allowed_companies || ["*"];
         if (!allowed.includes("*") && !allowed.includes(activeCompanyId)) {
           activeCompanyId = allowed[0] || "cesar_gonzalez";
@@ -333,7 +325,7 @@
         shield.classList.add("opacity-0", "pointer-events-none");
         setTimeout(() => shield.classList.add("hidden"), 300);
       } catch (err) {
-        console.error("Error al cargar perfil en portal:", err);
+        console.error("Error al cargar perfil:", err);
       }
     });
 
@@ -349,7 +341,9 @@
       activeCompanyId = companyId;
       sessionStorage.setItem("active_company_id", activeCompanyId);
       logAudit("PORTAL_SWITCH_COMPANY", { target_company: companyId });
+
       updatePortalUI();
+      renderDynamicCards(); // Re-renderizado reactivo e inmediato con el nuevo tenant
     };
 
     function updatePortalUI() {
@@ -370,7 +364,6 @@
         brandIcon.className = "w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 transition-all duration-300";
       }
 
-      // Enlaces a los módulos específicos de la empresa
       document.getElementById('link-cxc').href = info.cxcLink;
       document.getElementById('link-cxp').href = info.cxpLink;
       document.getElementById('link-activos').href = info.activosLink;
@@ -379,11 +372,10 @@
     }
 
     function initLiveCompanyMetrics() {
-      // Limpiar listeners anteriores
       liveUnsubs.forEach(fn => fn());
       liveUnsubs = [];
 
-      // 1. Cuentas por Cobrar de la empresa activa
+      // 1. CxC
       const qCxC = query(
         collection(db, "accounts_receivable"),
         where("company_id", "==", activeCompanyId)
@@ -397,10 +389,10 @@
           }
         });
         document.getElementById('kpi-cxc').innerText = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-      }, err => console.warn("Query CxC portal:", err));
+      }, err => console.warn("Query CxC:", err));
       liveUnsubs.push(unsub1);
 
-      // 2. Cuentas por Pagar de la empresa activa
+      // 2. CxP
       const qCxP = query(
         collection(db, "accounts_payable"),
         where("company_id", "==", activeCompanyId)
@@ -414,10 +406,10 @@
           }
         });
         document.getElementById('kpi-cxp').innerText = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-      }, err => console.warn("Query CxP portal:", err));
+      }, err => console.warn("Query CxP:", err));
       liveUnsubs.push(unsub2);
 
-      // 3. Activos de la empresa activa
+      // 3. Activos
       const qActivos = query(
         collection(db, "fixed_assets"),
         where("company_id", "==", activeCompanyId)
@@ -429,44 +421,51 @@
         });
         document.getElementById('kpi-activos').innerText = snap.docs.length;
         document.getElementById('kpi-activos-sub').innerText = `$${totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2 })} en libros`;
-      }, err => console.warn("Query Activos portal:", err));
+      }, err => console.warn("Query Activos:", err));
       liveUnsubs.push(unsub3);
     }
 
     function initDynamicModulesListener() {
       onSnapshot(collection(db, "system_modules"), (snap) => {
-        const grid = document.getElementById('dynamic-modules-grid');
-        grid.innerHTML = '';
+        cachedModules = [];
+        snap.forEach(d => cachedModules.push(d.data()));
+        renderDynamicCards();
+      });
+    }
 
-        if (snap.empty) {
-          grid.innerHTML = `
-            <div class="p-8 rounded-2xl border border-slate-800 bg-slate-900/30 text-center text-slate-500 font-mono text-xs col-span-full">
-              No hay módulos dinámicos adicionales registrados. Crea uno desde el "Creador de Módulos".
-            </div>
-          `;
-          return;
-        }
+    // RENDERIZADO REACTIVO BILATERAL
+    function renderDynamicCards() {
+      const grid = document.getElementById('dynamic-modules-grid');
+      grid.innerHTML = '';
 
-        snap.forEach(d => {
-          const mod = d.data();
-          const card = document.createElement('a');
-          card.href = `modulo_dinamico.html?slug=${mod.slug}&empresa=${activeCompanyId}`;
-          card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between";
-          card.innerHTML = `
-            <div class="space-y-3">
-              <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
-                <i class="ph-bold ${mod.icon || 'ph-squares-four'}"></i>
-              </div>
-              <h4 class="text-lg font-bold text-white">${mod.title}</h4>
-              <p class="text-xs text-slate-400 leading-relaxed">${mod.description || 'Módulo dinámico en producción'}</p>
+      if (cachedModules.length === 0) {
+        grid.innerHTML = `
+          <div class="p-8 rounded-2xl border border-slate-800 bg-slate-900/30 text-center text-slate-500 font-mono text-xs col-span-full">
+            No hay módulos dinámicos adicionales registrados. Crea uno desde ContaCore Studio.
+          </div>
+        `;
+        return;
+      }
+
+      cachedModules.forEach(mod => {
+        const card = document.createElement('a');
+        // Vinculación estricta con la razón social activa actual
+        card.href = `modulo_dinamico.html?slug=${mod.slug}&empresa=${activeCompanyId}`;
+        card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between";
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
+              <i class="ph-bold ${mod.icon || 'ph-squares-four'}"></i>
             </div>
-            <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400">
-              <span>Abrir para ${EMPRESAS[activeCompanyId].short}</span>
-              <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
-            </div>
-          `;
-          grid.appendChild(card);
-        });
+            <h4 class="text-lg font-bold text-white">${mod.title}</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">${mod.description || 'Módulo dinámico activo'}</p>
+          </div>
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400">
+            <span>Abrir para ${EMPRESAS[activeCompanyId].short}</span>
+            <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        `;
+        grid.appendChild(card);
       });
     }
 

@@ -173,11 +173,11 @@
       </div>
     </div>
 
-    <!-- SECCIÓN: MÓDULOS DINÁMICOS REACTIVOS (SINCRONIZACIÓN BILATERAL) -->
+    <!-- SECCIÓN: MÓDULOS DINÁMICOS E IMPORTADOS (ENRUTAMIENTO RESUELTO) -->
     <div class="space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
-          <i class="ph-bold ph-cube text-indigo-400 text-base"></i> Catálogos Creados en Caliente
+          <i class="ph-bold ph-cube text-indigo-400 text-base"></i> Catálogos Creados en Caliente & Importados
         </h3>
         <span class="text-[11px] font-mono text-slate-500">Módulos adaptados en vivo a la empresa seleccionada</span>
       </div>
@@ -189,7 +189,7 @@
       </div>
     </div>
 
-    <!-- SECCIÓN: GOBERNANZA & DIRECCIÓN TRANSVERSAL -->
+    <!-- SECCIÓN: GOBERNANZA, DIRECCIÓN & HERRAMIENTAS TRANSVERSALES -->
     <div class="space-y-4 pt-4 border-t border-slate-800">
       <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
         <i class="ph-bold ph-gear text-amber-400 text-base"></i> Gobernanza, Dirección & Herramientas Transversales
@@ -447,6 +447,7 @@
       });
     }
 
+    // RESOLUCIÓN DE ENRUTAMIENTO UNIVERSAL
     function renderDynamicCards() {
       const grid = document.getElementById('dynamic-modules-grid');
       grid.innerHTML = '';
@@ -462,8 +463,11 @@
 
       cachedModules.forEach(mod => {
         const card = document.createElement('a');
-        const targetUrlBase = mod.is_standalone ? `${mod.slug}.html` : 'modulo_dinamico.html';
-        card.href = `${targetUrlBase}?slug=${mod.slug}&empresa=${activeCompanyId}`;
+        
+        // Todos los módulos (esquemas e importados autónomos) abren mediante modulo_dinamico.html
+        // para que el visor cargue su esquema o su código HTML autónomo guardado en Firestore.
+        card.href = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
+        
         card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between";
         card.innerHTML = `
           <div class="space-y-3">
@@ -471,10 +475,10 @@
               <i class="ph-bold ${mod.icon || 'ph-squares-four'}"></i>
             </div>
             <h4 class="text-lg font-bold text-white">${mod.title}</h4>
-            <p class="text-xs text-slate-400 leading-relaxed">${mod.description || 'Módulo dinámico activo'}</p>
+            <p class="text-xs text-slate-400 leading-relaxed">${mod.description || 'Módulo activo en producción'}</p>
           </div>
           <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400">
-            <span>Abrir para ${EMPRESAS[activeCompanyId].short}</span>
+            <span>Abrir para ${EMPRESAS[activeCompanyId]?.short || activeCompanyId}</span>
             <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
           </div>
         `;

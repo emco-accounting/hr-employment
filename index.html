@@ -16,7 +16,7 @@
         <i class="ph-bold ph-shield-check text-3xl"></i>
       </div>
       <h1 class="text-2xl font-bold tracking-tight text-white">ContaCore EMCO</h1>
-      <p class="text-xs text-slate-400 font-mono tracking-wide uppercase">Control de Acceso & Gobernanza</p>
+      <p class="text-xs text-slate-400 font-mono tracking-wide uppercase">Control de Acceso Multi-Tenant</p>
     </div>
 
     <div id="alert-box" class="hidden p-3.5 mb-6 rounded-xl text-xs font-medium border flex items-start gap-2.5">
@@ -105,7 +105,6 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    // CONEXIÓN DIRECTA A LA BASE NOMBRADA
     const db = getFirestore(app, "emco-accounting");
 
     const alertBox = document.getElementById("alert-box");
@@ -160,9 +159,8 @@
         const staffDoc = await getDoc(staffRef);
 
         if (!staffDoc.exists()) {
-          // Si el usuario existe en Authentication pero aún no fue inyectado en Firestore
           await signOut(auth);
-          showAlert(`El usuario está creado en Auth pero aún no ha sido dado de alta en staff_users (UID: ${user.uid.substring(0,8)}...). Inyéctalo desde staff.html.`, "warning");
+          showAlert(`El usuario existe en Auth pero no está registrado en staff_users (UID: ${user.uid.substring(0,8)}...). Vincúlalo desde staff.html.`, "warning");
           return;
         }
 
@@ -174,8 +172,34 @@
           return;
         }
 
+        // Determinar permisos multi-tenant
+        const allowed = staffData.allowed_companies || ["*"];
         sessionStorage.setItem("active_user_name", staffData.full_name || user.email);
         sessionStorage.setItem("active_user_role", staffData.role_id || "GUEST");
+        sessionStorage.setItem("allowed_companies", JSON.stringify(allowed));
+
+        // Asignar razón social inicial según privilegios
+        if (!allowed.includes("*") && allowed.length === 1) {
+          sessionStorage.setItem("active_company_id", allowed[0]);
+        } else if (!sessionStorage.getItem("active_company_id")) {
+          sessionStorage.setItem("active_company_id", "cesar_gonzalez");
+        }
+
+        // Registro de Auditoría
+        try {
+          await addDoc(collection(db, "audit_logs"), {
+            timestamp: serverTimestamp(),
+            user_email: email,
+            user_name: staffData.full_name || email,
+            role_id: staffData.role_id || "GUEST",
+            company_id: sessionStorage.getItem("active_company_id"),
+            action: "AUTH_LOGIN_SUCCESS",
+            details: { uid: user.uid, allowed_companies: allowed },
+            user_agent: navigator.userAgent
+          });
+        } catch (logErr) {
+          console.warn("No se pudo registrar log de login:", logErr);
+        }
 
         window.location.href = "modulo_general.html";
 

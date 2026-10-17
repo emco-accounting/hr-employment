@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diseñador de Módulos Dinámicos | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- SIDEBAR DE GOBERNANZA -->
+  <aside class="w-72 bg-slate-900/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl z-20">
+    <div>
+      <div class="p-6 border-b border-slate-800/60 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="ph-bold ph-cube text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">Schema Studio</span>
+        </div>
+      </div>
+
+      <nav class="p-4 space-y-1 text-sm font-medium">
+        <a href="portal_catalogo.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
+          <span>Volver al Portal</span>
+        </a>
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Diseño & Estructura</div>
+        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
+          <i class="ph-bold ph-squares-four text-lg text-indigo-400"></i>
+          <span>Catálogo de Módulos</span>
+        </button>
+        <a href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
+          <span>Consola de Auditoría</span>
+        </a>
+        <a href="staff.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-users-three text-lg text-emerald-400"></i>
+          <span>Staff & Gobernanza</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60">
+      <span class="text-xs text-slate-500 font-mono">Firestore: emco-accounting</span>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950">
+    <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
+      <div>
+        <h2 class="text-xl font-bold text-white tracking-tight">Creador & Diseñador de Módulos</h2>
+        <span class="text-xs text-slate-400 font-mono">Define colecciones y campos dinámicos para César Giovanni y HR Employment</span>
+      </div>
+      <button onclick="abrirModalCreacion()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+        <i class="ph-bold ph-plus text-sm"></i> + Diseñar Nuevo Módulo
+      </button>
+    </header>
+
+    <div class="p-8 flex-1 space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="modules-cards-container">
+        <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full">Cargando módulos configurados...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: CONSTRUCTOR DE ESQUEMA -->
+  <div id="modal-module" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-sliders text-indigo-400 text-xl"></i>
+          <h4 id="modal-title" class="text-base font-bold text-white">Especificación de Nuevo Módulo</h4>
+        </div>
+        <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="overflow-y-auto flex-1 space-y-4 pr-1">
+        <form id="form-module" class="space-y-4 text-xs font-medium text-slate-300">
+          <input type="hidden" id="edit-doc-id" value="">
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Descriptivo</label>
+              <input type="text" id="mod-name" placeholder="Ej: Control de Viáticos / Impuestos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug / Colección Firestore</label>
+              <input type="text" id="mod-slug" placeholder="mod_viaticos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Ícono Phosphor (CSS class)</label>
+              <input type="text" id="mod-icon" value="ph-squares-four" placeholder="ph-airplane-tilt, ph-bank, ph-wallet..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción de Alcance</label>
+              <input type="text" id="mod-desc" placeholder="Objetivo de control contable..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+            </div>
+          </div>
+
+          <!-- GENERADOR DE CAMPOS -->
+          <div class="border-t border-slate-800/80 pt-4 space-y-3">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="uppercase tracking-wider text-indigo-400 font-mono font-bold block">Campos del Formulario</span>
+                <span class="text-[10px] text-slate-500 font-mono">La razón social (company_id) se indexa en automático</span>
+              </div>
+              <button type="button" onclick="addField()" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
+                <i class="ph-bold ph-plus"></i> Añadir Campo
+              </button>
+            </div>
+            
+            <div id="fields-list" class="space-y-2">
+              <!-- Filas dinámicas de campos -->
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-slate-800">
+            <button type="button" onclick="toggleModal(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+            <button type="submit" id="btn-submit" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold shadow-lg shadow-indigo-600/20">Guardar Esquema</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, 
+      onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    let currentUser = null;
+    let modulesCache = {};
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+      currentUser = user;
+      initModulesListener();
+    });
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: currentUser?.email || "admin",
+          action: action,
+          details: details
+        });
+      } catch (e) {
+        console.warn("Fallo log:", e);
+      }
+    }
+
+    window.toggleModal = (show) => {
+      document.getElementById('modal-module').classList.toggle('hidden', !show);
+      if (!show) {
+        document.getElementById('form-module').reset();
+        document.getElementById('edit-doc-id').value = '';
+        document.getElementById('mod-slug').disabled = false;
+        document.getElementById('fields-list').innerHTML = '';
+      }
+    };
+
+    window.abrirModalCreacion = () => {
+      toggleModal(true);
+      document.getElementById('modal-title').innerText = "Especificación de Nuevo Módulo";
+      document.getElementById('mod-slug').disabled = false;
+      addField("Concepto / Folio", "text", true);
+      addField("Importe ($ MXN)", "number", true);
+      addField("Fecha de Registro", "date", true);
+    };
+
+    window.addField = (defLabel = "", defType = "text", defReq = false) => {
+      const container = document.getElementById('fields-list');
+      const id = `f_${Date.now()}_${Math.random().toString(36).substring(2,5)}`;
+      const div = document.createElement('div');
+      div.id = id;
+      div.className = "flex items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800 field-item";
+      div.innerHTML = `
+        <input type="text" placeholder="Etiqueta del campo" value="${defLabel}" class="f-label bg-slate-900 border border-slate-800 text-white rounded-lg px-2.5 py-1.5 text-xs flex-1 outline-none focus:border-indigo-500" required>
+        <select class="f-type bg-slate-900 border border-slate-800 text-slate-300 rounded-lg px-2 py-1.5 text-xs outline-none focus:border-indigo-500">
+          <option value="text" ${defType === 'text' ? 'selected' : ''}>Texto</option>
+          <option value="number" ${defType === 'number' ? 'selected' : ''}>Numérico ($ / Cantidad)</option>
+          <option value="date" ${defType === 'date' ? 'selected' : ''}>Fecha</option>
+          <option value="textarea" ${defType === 'textarea' ? 'selected' : ''}>Texto Extenso</option>
+        </select>
+        <label class="flex items-center gap-1 text-[11px] text-slate-400 font-mono">
+          <input type="checkbox" class="f-req rounded border-slate-800" ${defReq ? 'checked' : ''}> Obligatorio
+        </label>
+        <button type="button" onclick="document.getElementById('${id}').remove()" class="text-slate-500 hover:text-rose-400 p-1 transition">
+          <i class="ph ph-trash text-base"></i>
+        </button>
+      `;
+      container.appendChild(div);
+    };
+
+    function initModulesListener() {
+      onSnapshot(collection(db, "system_modules"), (snap) => {
+        const container = document.getElementById('modules-cards-container');
+        container.innerHTML = '';
+        modulesCache = {};
+
+        if (snap.empty) {
+          container.innerHTML = `
+            <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full border border-slate-800/80 rounded-2xl bg-slate-900/30">
+              No hay módulos dinámicos creados aún. Haz clic en "+ Diseñar Nuevo Módulo".
+            </div>
+          `;
+          return;
+        }
+
+        snap.forEach(docSnap => {
+          const mod = docSnap.data();
+          const docId = docSnap.id;
+          modulesCache[docId] = { ...mod, docId };
+
+          const fieldCount = mod.fields ? mod.fields.length : 0;
+          const card = document.createElement('div');
+          card.className = "bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-slate-700 transition";
+          card.innerHTML = `
+            <div class="space-y-4">
+              <div class="flex justify-between items-start">
+                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl">
+                  <i class="ph-bold ${mod.icon || 'ph-squares-four'}"></i>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button onclick="editarModulo('${docId}')" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="Editar Esquema">
+                    <i class="ph ph-note-pencil text-base"></i>
+                  </button>
+                  <button onclick="eliminarModulo('${docId}', '${mod.slug}', '${mod.title}')" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar Módulo">
+                    <i class="ph ph-trash text-base"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h3 class="text-base font-bold text-white leading-tight">${mod.title}</h3>
+                <span class="text-[11px] font-mono text-indigo-400 block mt-0.5">Colección: ${mod.slug}</span>
+                <p class="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">${mod.description || 'Sin descripción'}</p>
+              </div>
+
+              <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                <span>${fieldCount} campos configurados</span>
+                <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300">Ambas Empresas</span>
+              </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
+              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=cesar_gonzalez" class="flex-1 text-center py-2 px-2 rounded-xl bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-500/20 text-indigo-300 text-xs font-semibold transition">
+                César G.
+              </a>
+              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=hr_employment" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition">
+                HR Empl.
+              </a>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    // DESPLIEGUE / EDICIÓN DE ESQUEMA
+    document.getElementById('form-module').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.innerText = "Guardando...";
+
+      const editId = document.getElementById('edit-doc-id').value;
+      const slug = document.getElementById('mod-slug').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const title = document.getElementById('mod-name').value.trim();
+      const icon = document.getElementById('mod-icon').value.trim();
+      const desc = document.getElementById('mod-desc').value.trim();
+
+      const fields = [];
+      document.querySelectorAll('#fields-list .field-item').forEach(el => {
+        const label = el.querySelector('.f-label').value.trim();
+        const type = el.querySelector('.f-type').value;
+        const required = el.querySelector('.f-req').checked;
+        if (label) {
+          const key = label.toLowerCase().replace(/[^a-z0-9]/g, '_');
+          fields.push({ key, label, type, required });
+        }
+      });
+
+      if (fields.length === 0) {
+        alert("Debes agregar al menos un campo para el formulario.");
+        btn.disabled = false;
+        btn.innerText = "Guardar Esquema";
+        return;
+      }
+
+      try {
+        if (editId) {
+          // Edición
+          await updateDoc(doc(db, "system_modules", editId), {
+            title: title,
+            icon: icon,
+            description: desc,
+            fields: fields,
+            updated_at: serverTimestamp()
+          });
+          await logAudit("MODULE_SCHEMA_UPDATED", { slug, title, fieldsCount: fields.length });
+          alert(`Módulo "${title}" actualizado con éxito.`);
+        } else {
+          // Creación
+          await addDoc(collection(db, "system_modules"), {
+            slug: slug,
+            title: title,
+            icon: icon,
+            description: desc,
+            fields: fields,
+            created_by: currentUser?.email,
+            created_at: serverTimestamp()
+          });
+          await logAudit("MODULE_SCHEMA_CREATED", { slug, title, fieldsCount: fields.length });
+          alert(`Módulo "${title}" desplegado exitosamente.`);
+        }
+
+        toggleModal(false);
+      } catch (err) {
+        alert("Error al procesar el módulo: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Guardar Esquema";
+      }
+    });
+
+    window.editarModulo = (docId) => {
+      const mod = modulesCache[docId];
+      if (!mod) return;
+
+      toggleModal(true);
+      document.getElementById('modal-title').innerText = `Editar Módulo: ${mod.title}`;
+      document.getElementById('edit-doc-id').value = docId;
+      document.getElementById('mod-name').value = mod.title || '';
+      document.getElementById('mod-slug').value = mod.slug || '';
+      document.getElementById('mod-slug').disabled = true; // El slug es inmutable para preservar la integridad de datos
+      document.getElementById('mod-icon').value = mod.icon || 'ph-squares-four';
+      document.getElementById('mod-desc').value = mod.description || '';
+
+      const container = document.getElementById('fields-list');
+      container.innerHTML = '';
+      if (mod.fields && mod.fields.length > 0) {
+        mod.fields.forEach(f => addField(f.label, f.type, f.required));
+      } else {
+        addField();
+      }
+    };
+
+    window.eliminarModulo = async (docId, slug, title) => {
+      if (confirm(`¿Confirmas la eliminación del esquema del módulo "${title}" (${slug})?`)) {
+        try {
+          await deleteDoc(doc(db, "system_modules", docId));
+          await logAudit("MODULE_SCHEMA_DELETED", { docId, slug, title });
+        } catch (err) {
+          alert("Error al eliminar: " + err.message);
+        }
+      }
+    };
+  </script>
+</body>
+</html>

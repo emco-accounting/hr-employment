@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Maestro | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- OVERLAY DE CARGA Y VERIFICACIÓN RBAC -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="relative flex items-center justify-center">
+      <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
+        <i class="ph-bold ph-shield-check text-indigo-400 text-3xl"></i>
+      </div>
+      <div class="absolute -inset-1 rounded-2xl bg-indigo-500/20 blur-lg -z-10 animate-pulse"></div>
+    </div>
+    <div class="text-center space-y-1">
+      <h3 class="text-base font-semibold text-white tracking-wide">ContaCore Portal Maestro</h3>
+      <p id="shield-status" class="text-xs text-slate-400 font-mono">Verificando sesión y directivas multiempresa...</p>
+    </div>
+  </div>
+
+  <!-- BARRA SUPERIOR EJECUTIVA -->
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <div id="header-brand-icon" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 transition-all duration-300">
+        <i class="ph-bold ph-scales text-white text-xl"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
+        <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Portal Maestro & Catálogo de Razón Social</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-5">
+      <div class="text-right">
+        <p id="user-display-name" class="text-xs font-semibold text-white">Cargando...</p>
+        <div class="flex items-center justify-end gap-1.5 mt-0.5">
+          <span id="user-role-badge" class="text-[10px] font-mono text-slate-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">GUEST</span>
+        </div>
+      </div>
+      <button onclick="logoutSession()" class="p-2 text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 rounded-xl transition" title="Cerrar Sesión Segura">
+        <i class="ph ph-sign-out text-lg"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-8 overflow-y-auto">
+
+    <!-- PANEL SELECTOR DE RAZÓN SOCIAL ACTIVA -->
+    <div class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-2xl backdrop-blur-sm relative overflow-hidden">
+      <div class="relative z-10 space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="company-status-dot"></span>
+          <span class="text-xs font-mono uppercase tracking-wider text-slate-400 font-semibold">Razón Social en Gestión</span>
+        </div>
+        <h2 id="current-company-title" class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">César Giovanni González Contreras</h2>
+        <p id="company-subtitle" class="text-xs text-slate-400">Todos los módulos siguientes operarán bajo esta razón fiscal de forma aislada.</p>
+      </div>
+
+      <div class="relative z-10 flex items-center gap-2 bg-slate-950/90 p-2 rounded-2xl border border-slate-800 shadow-inner">
+        <button id="btn-cg" onclick="switchCompany('cesar_gonzalez')" class="px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
+          <i class="ph-bold ph-briefcase"></i>
+          <span>César Giovanni</span>
+        </button>
+        <button id="btn-hr" onclick="switchCompany('hr_employment')" class="px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white">
+          <i class="ph-bold ph-buildings"></i>
+          <span>HR Employment</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RESUMEN DE SALDOS / MÉTRICAS DE LA RAZÓN SOCIAL -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Por Cobrar (CxC)</span>
+          <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-hand-coins text-lg"></i></span>
+        </div>
+        <p id="kpi-cxc" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Saldo exigible de esta entidad</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Por Pagar (CxP)</span>
+          <span class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="ph-bold ph-receipt text-lg"></i></span>
+        </div>
+        <p id="kpi-cxp" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Pasivos operativos de esta entidad</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 relative overflow-hidden">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Activos Fijos</span>
+          <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-laptop text-lg"></i></span>
+        </div>
+        <p id="kpi-activos" class="text-2xl font-bold font-mono text-white mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-activos-sub">0 equipos patrimoniales</span>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: CATÁLOGO DE MÓDULOS DE LA ENTIDAD -->
+    <div class="space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
+          <i class="ph-bold ph-folder-open text-indigo-400 text-base"></i> Módulos Contables de la Razón Social
+        </h3>
+        <span class="text-[11px] font-mono text-slate-500">Operaciones con partición por <code class="text-indigo-400">company_id</code></span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Cuentas por Cobrar -->
+        <a id="link-cxc" href="cg_cxc.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
+              <i class="ph-bold ph-hand-coins"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white">Cuentas por Cobrar (CxC)</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">Emisión, control de folios fiscales CFDI, dispersión y liquidación de cobros.</p>
+          </div>
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-emerald-400">
+            <span>Acceder al Módulo</span>
+            <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </a>
+
+        <!-- Cuentas por Pagar -->
+        <a id="link-cxp" href="cg_cxp.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-rose-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
+              <i class="ph-bold ph-receipt"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white">Cuentas por Pagar (CxP)</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">Pasivos exigibles, verificación fiscal de proveedores y dispersiones bancarias.</p>
+          </div>
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-rose-400">
+            <span>Acceder al Módulo</span>
+            <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </a>
+
+        <!-- Activos Fijos -->
+        <a id="link-activos" href="cg_activos.html" class="group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/40 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
+              <i class="ph-bold ph-device-mobile-camera"></i>
+            </div>
+            <h4 class="text-lg font-bold text-white">Inventario de Hardware</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">Control patrimonial, números de serie, resguardo de colaboradores y valor en libros.</p>
+          </div>
+          <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400">
+            <span>Acceder al Módulo</span>
+            <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: MÓDULOS DINÁMICOS CREADOS -->
+    <div class="space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
+          <i class="ph-bold ph-cube text-indigo-400 text-base"></i> Catálogos Creados en Caliente
+        </h3>
+        <span class="text-[11px] font-mono text-slate-500">Módulos generados desde Schema Studio</span>
+      </div>
+
+      <div id="dynamic-modules-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="p-8 rounded-2xl border border-slate-800 bg-slate-900/30 text-center text-slate-500 font-mono text-xs col-span-full">
+          Cargando módulos dinámicos...
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: GOBERNANZA & ESTRUCTURA TRANSVERSAL -->
+    <div class="space-y-4 pt-4 border-t border-slate-800">
+      <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
+        <i class="ph-bold ph-gear text-amber-400 text-base"></i> Gobernanza & Herramientas Transversales
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Diseñador de Módulos -->
+        <a href="modulo_creador.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
+            <i class="ph-bold ph-plus-circle"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white">Creador de Módulos</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Diseña esquemas y colecciones para ambas razones sociales.</p>
+          </div>
+        </a>
+
+        <!-- Consola de Auditoría -->
+        <a href="modulo_logs.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-amber-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
+            <i class="ph-bold ph-shield-warning"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white">Consola de Auditoría</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Pista forense de inserciones, mutaciones, logins y exportaciones.</p>
+          </div>
+        </a>
+
+        <!-- Staff & RBAC -->
+        <a href="staff.html" class="bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 transition flex items-center gap-4 group">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform">
+            <i class="ph-bold ph-users-three"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-white">Staff & Gobernanza</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Directorio único de colaboradores, credenciales y empresas asignadas.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, doc, getDoc, addDoc, 
+      onSnapshot, query, where, orderBy, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const EMPRESAS = {
+      "cesar_gonzalez": {
+        name: "César Giovanni González Contreras",
+        short: "César Giovanni",
+        colorClass: "indigo",
+        gradient: "from-indigo-600 to-indigo-400",
+        cxcLink: "cg_cxc.html",
+        cxpLink: "cg_cxp.html",
+        activosLink: "cg_activos.html"
+      },
+      "hr_employment": {
+        name: "HR Employment",
+        short: "HR Employment",
+        colorClass: "emerald",
+        gradient: "from-emerald-600 to-emerald-400",
+        cxcLink: "hr_cxc.html",
+        cxpLink: "hr_cxp.html",
+        activosLink: "hr_activos.html"
+      }
+    };
+
+    let activeCompanyId = sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
+    let currentUserData = null;
+    let liveUnsubs = [];
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: auth.currentUser?.email || "anon",
+          user_name: currentUserData?.full_name || "Desconocido",
+          role_id: currentUserData?.role_id || "GUEST",
+          company_id: activeCompanyId,
+          company_name: EMPRESAS[activeCompanyId]?.name || activeCompanyId,
+          action: action,
+          details: details,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        console.warn("Fallo al escribir audit log:", e);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+
+      try {
+        const snap = await getDoc(doc(db, "staff_users", user.uid));
+        if (!snap.exists() || snap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        currentUserData = snap.data();
+        document.getElementById('user-display-name').innerText = currentUserData.full_name || user.email;
+        document.getElementById('user-role-badge').innerText = currentUserData.role_id;
+
+        // Validar empresa activa según allowed_companies
+        const allowed = currentUserData.allowed_companies || ["*"];
+        if (!allowed.includes("*") && !allowed.includes(activeCompanyId)) {
+          activeCompanyId = allowed[0] || "cesar_gonzalez";
+          sessionStorage.setItem("active_company_id", activeCompanyId);
+        }
+
+        updatePortalUI();
+        initDynamicModulesListener();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error al cargar perfil en portal:", err);
+      }
+    });
+
+    window.switchCompany = (companyId) => {
+      const allowed = currentUserData?.allowed_companies || ["*"];
+      const isSuper = currentUserData?.role_id === "SUPERADMIN";
+
+      if (!isSuper && !allowed.includes("*") && !allowed.includes(companyId)) {
+        alert("Acceso denegado: Tu perfil no tiene permisos asignados para esta razón social.");
+        return;
+      }
+
+      activeCompanyId = companyId;
+      sessionStorage.setItem("active_company_id", activeCompanyId);
+      logAudit("PORTAL_SWITCH_COMPANY", { target_company: companyId });
+      updatePortalUI();
+    };
+
+    function updatePortalUI() {
+      const info = EMPRESAS[activeCompanyId];
+      document.getElementById('current-company-title').innerText = info.name;
+
+      const btnCg = document.getElementById('btn-cg');
+      const btnHr = document.getElementById('btn-hr');
+      const brandIcon = document.getElementById('header-brand-icon');
+
+      if (activeCompanyId === "cesar_gonzalez") {
+        btnCg.className = "px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-indigo-600 text-white shadow-lg shadow-indigo-600/30";
+        btnHr.className = "px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white";
+        brandIcon.className = "w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 transition-all duration-300";
+      } else {
+        btnHr.className = "px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-emerald-600 text-white shadow-lg shadow-emerald-600/30";
+        btnCg.className = "px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:text-white";
+        brandIcon.className = "w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 transition-all duration-300";
+      }
+
+      // Enlaces a los módulos específicos de la empresa
+      document.getElementById('link-cxc').href = info.cxcLink;
+      document.getElementById('link-cxp').href = info.cxpLink;
+      document.getElementById('link-activos').href = info.activosLink;
+
+      initLiveCompanyMetrics();
+    }
+
+    function initLiveCompanyMetrics() {
+      // Limpiar listeners anteriores
+      liveUnsubs.forEach(fn => fn());
+      liveUnsubs = [];
+
+      // 1. Cuentas por Cobrar de la empresa activa
+      const qCxC = query(
+        collection(db, "accounts_receivable"),
+        where("company_id", "==", activeCompanyId)
+      );
+      const unsub1 = onSnapshot(qCxC, snap => {
+        let total = 0;
+        snap.forEach(d => {
+          const item = d.data();
+          if (item.status !== "COLLECTED") {
+            total += Number(item.balance || item.total_amount || 0);
+          }
+        });
+        document.getElementById('kpi-cxc').innerText = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+      }, err => console.warn("Query CxC portal:", err));
+      liveUnsubs.push(unsub1);
+
+      // 2. Cuentas por Pagar de la empresa activa
+      const qCxP = query(
+        collection(db, "accounts_payable"),
+        where("company_id", "==", activeCompanyId)
+      );
+      const unsub2 = onSnapshot(qCxP, snap => {
+        let total = 0;
+        snap.forEach(d => {
+          const item = d.data();
+          if (item.status !== "PAID") {
+            total += Number(item.balance || item.total_amount || 0);
+          }
+        });
+        document.getElementById('kpi-cxp').innerText = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+      }, err => console.warn("Query CxP portal:", err));
+      liveUnsubs.push(unsub2);
+
+      // 3. Activos de la empresa activa
+      const qActivos = query(
+        collection(db, "fixed_assets"),
+        where("company_id", "==", activeCompanyId)
+      );
+      const unsub3 = onSnapshot(qActivos, snap => {
+        let totalCost = 0;
+        snap.forEach(d => {
+          totalCost += Number(d.data().purchase_cost || 0);
+        });
+        document.getElementById('kpi-activos').innerText = snap.docs.length;
+        document.getElementById('kpi-activos-sub').innerText = `$${totalCost.toLocaleString('es-MX', { minimumFractionDigits: 2 })} en libros`;
+      }, err => console.warn("Query Activos portal:", err));
+      liveUnsubs.push(unsub3);
+    }
+
+    function initDynamicModulesListener() {
+      onSnapshot(collection(db, "system_modules"), (snap) => {
+        const grid = document.getElementById('dynamic-modules-grid');
+        grid.innerHTML = '';
+
+        if (snap.empty) {
+          grid.innerHTML = `
+            <div class="p-8 rounded-2xl border border-slate-800 bg-slate-900/30 text-center text-slate-500 font-mono text-xs col-span-full">
+              No hay módulos dinámicos adicionales registrados. Crea uno desde el "Creador de Módulos".
+            </div>
+          `;
+          return;
+        }
+
+        snap.forEach(d => {
+          const mod = d.data();
+          const card = document.createElement('a');
+          card.href = `modulo_dinamico.html?slug=${mod.slug}&empresa=${activeCompanyId}`;
+          card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between";
+          card.innerHTML = `
+            <div class="space-y-3">
+              <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
+                <i class="ph-bold ${mod.icon || 'ph-squares-four'}"></i>
+              </div>
+              <h4 class="text-lg font-bold text-white">${mod.title}</h4>
+              <p class="text-xs text-slate-400 leading-relaxed">${mod.description || 'Módulo dinámico en producción'}</p>
+            </div>
+            <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400">
+              <span>Abrir para ${EMPRESAS[activeCompanyId].short}</span>
+              <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      });
+    }
+
+    window.logoutSession = async () => {
+      if (confirm("¿Finalizar sesión segura en ContaCore?")) {
+        await logAudit("AUTH_LOGOUT", {});
+        await signOut(auth);
+        window.location.replace("index.html");
+      }
+    };
+  </script>
+</body>
+</html>

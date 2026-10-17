@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gobernanza & Staff Central | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- SIDEBAR DE GOBERNANZA TRANSVERSAL -->
+  <aside class="w-72 bg-slate-900/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl z-20">
+    <div>
+      <div class="p-6 border-b border-slate-800/60 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i class="ph-bold ph-shield-check text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">RBAC & Governance</span>
+        </div>
+      </div>
+
+      <nav class="p-4 space-y-1 text-sm font-medium">
+        <a href="portal_catalogo.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
+          <span>Portal Maestro</span>
+        </a>
+
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Gobernanza Central</div>
+
+        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
+          <i class="ph-bold ph-users-three text-lg text-indigo-400"></i>
+          <span>Directorio de Staff</span>
+        </button>
+
+        <a href="modulo_creador.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-cube text-lg text-indigo-400"></i>
+          <span>Creador de Módulos</span>
+        </a>
+
+        <a href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
+          <span>Consola de Auditoría</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60">
+      <span class="text-xs text-slate-500 font-mono">Firestore: emco-accounting</span>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950">
+    <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
+      <div>
+        <h2 class="text-xl font-bold text-white tracking-tight">Directorio de Staff & Gobernanza Multi-Empresa</h2>
+        <span class="text-xs text-slate-400 font-mono">Gestión unificada de usuarios, roles RBAC y asignación de razones sociales</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="sembrarRoles()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+          <i class="ph-bold ph-shield-star text-amber-400 text-sm"></i> Sembrar Roles RBAC
+        </button>
+        <button onclick="toggleModalStaff(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+          <i class="ph-bold ph-user-plus text-sm"></i> + Inyectar Colaborador
+        </button>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1 space-y-6">
+
+      <!-- TARJETAS RESUMEN DE GOBERNANZA -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-mono text-slate-400 uppercase">Colaboradores Totales</span>
+            <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-users"></i></span>
+          </div>
+          <p id="kpi-total-users" class="text-2xl font-bold font-mono text-white mt-2">0</p>
+          <span class="text-[11px] text-slate-500 mt-1 block">Usuarios registrados en staff_users</span>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-mono text-slate-400 uppercase">Acceso Global (Ambas)</span>
+            <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-buildings"></i></span>
+          </div>
+          <p id="kpi-global-users" class="text-2xl font-bold font-mono text-emerald-400 mt-2">0</p>
+          <span class="text-[11px] text-slate-500 mt-1 block">Operadores con acceso dual</span>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-mono text-slate-400 uppercase">Usuarios Activos</span>
+            <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="ph-bold ph-check-circle"></i></span>
+          </div>
+          <p id="kpi-active-users" class="text-2xl font-bold font-mono text-white mt-2">0</p>
+          <span class="text-[11px] text-slate-500 mt-1 block">Sesiones habilitadas</span>
+        </div>
+      </div>
+
+      <!-- TABLA DE STAFF -->
+      <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+        <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+          <div class="flex items-center gap-3">
+            <h3 class="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Directorio de Colaboradores</h3>
+            <span id="staff-count-badge" class="text-xs font-mono font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">0 registros</span>
+          </div>
+          <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+            <i class="ph ph-magnifying-glass text-slate-400"></i>
+            <input type="text" id="filter-staff-search" oninput="renderStaffTable()" placeholder="Buscar colaborador, correo..." class="bg-transparent text-white focus:outline-none text-xs w-60">
+          </div>
+        </div>
+
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+            <tr>
+              <th class="p-4">Colaborador</th>
+              <th class="p-4">Correo Corporativo</th>
+              <th class="p-4">Razones Sociales Asignadas</th>
+              <th class="p-4">Rol RBAC</th>
+              <th class="p-4">Estatus</th>
+              <th class="p-4 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="table-staff" class="divide-y divide-slate-800/60 font-sans text-xs">
+            <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando personal de emco-accounting...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL: REGISTRAR / INYECTAR COLABORADOR -->
+  <div id="modal-staff" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white">Inyectar Nuevo Colaborador</h4>
+          <span class="text-[11px] text-slate-400 font-mono">Crea usuario en Firebase Auth y registra credenciales en Firestore</span>
+        </div>
+        <button onclick="toggleModalStaff(false)" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
+      </div>
+
+      <form id="form-staff" class="space-y-4 text-xs font-medium text-slate-300">
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Completo</label>
+          <input type="text" id="staff-name" placeholder="Ej: Lic. Antonio Valladares" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Correo Corporativo</label>
+          <input type="email" id="staff-email" placeholder="usuario@hremploy..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Contraseña Inicial</label>
+          <input type="password" id="staff-password" minlength="6" placeholder="Mínimo 6 caracteres" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+        </div>
+
+        <!-- SELECTOR DE EMPRESAS PERMITIDAS -->
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Razones Sociales Autorizadas</label>
+          <select id="staff-companies" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+            <option value="ALL">Acceso Global (César Giovanni & HR Employment)</option>
+            <option value="cesar_gonzalez">Solo César Giovanni González Contreras</option>
+            <option value="hr_employment">Solo HR Employment</option>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Rol RBAC</label>
+            <select id="staff-role" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <option value="SUPERADMIN">SUPERADMIN</option>
+              <option value="CONTADOR">CONTADOR</option>
+              <option value="AUXILIAR">AUXILIAR</option>
+              <option value="AUDITOR">AUDITOR</option>
+            </select>
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Estatus</label>
+            <select id="staff-status" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="SUSPENDED">SUSPENDED</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="toggleModalStaff(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold transition">Cancelar</button>
+          <button type="submit" id="btn-submit-staff" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold transition shadow-lg shadow-indigo-600/20">Crear & Inyectar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      doc, 
+      setDoc, 
+      updateDoc,
+      addDoc,
+      onSnapshot, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const mainApp = initializeApp(firebaseConfig);
+    const auth = getAuth(mainApp);
+    const db = getFirestore(mainApp, "emco-accounting");
+
+    // Instancia secundaria de Auth para registrar usuarios sin desconectar la sesión activa del Superadmin
+    const secondaryApp = initializeApp(firebaseConfig, "SecondaryStaffApp");
+    const secondaryAuth = getAuth(secondaryApp);
+
+    let currentAdmin = null;
+    let rawStaffList = [];
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+      currentAdmin = user;
+      initStaffListener();
+    });
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: currentAdmin?.email || "admin",
+          action: action,
+          details: details
+        });
+      } catch (e) {
+        console.warn("Fallo log:", e);
+      }
+    }
+
+    window.toggleModalStaff = (show) => {
+      document.getElementById('modal-staff').classList.toggle('hidden', !show);
+      if (!show) document.getElementById('form-staff').reset();
+    };
+
+    // SEMBRAR MATRIZ DE ROLES PREESTABLECIDA
+    window.sembrarRoles = async () => {
+      const roles = {
+        "SUPERADMIN": {
+          permissions: ["*"],
+          description: "Control total multi-tenant, gobernanza y módulos"
+        },
+        "CONTADOR": {
+          permissions: ["cxc.read", "cxc.write", "cxp.read", "cxp.write", "assets.read", "assets.write"],
+          description: "Operaciones completas de CxC, CxP y conciliaciones"
+        },
+        "AUXILIAR": {
+          permissions: ["cxc.read", "cxc.write", "cxp.read", "assets.read"],
+          description: "Captura de comprobantes y consulta de balances"
+        },
+        "AUDITOR": {
+          permissions: ["cxc.read", "cxp.read", "assets.read", "audit.read"],
+          description: "Inspección de saldos y registros de auditoría sin mutación"
+        }
+      };
+
+      try {
+        for (const [roleId, data] of Object.entries(roles)) {
+          await setDoc(doc(db, "system_roles", roleId), data);
+        }
+        await logAudit("ROLES_SEEDED", { roles: Object.keys(roles) });
+        alert("Matriz de roles RBAC sembrada exitosamente en Firestore.");
+      } catch (err) {
+        alert("Error al sembrar roles: " + err.message);
+      }
+    };
+
+    // LISTENER REACTIVO DE STAFF
+    function initStaffListener() {
+      onSnapshot(collection(db, "staff_users"), (snap) => {
+        rawStaffList = [];
+        let total = snap.docs.length;
+        let globalCount = 0;
+        let activeCount = 0;
+
+        snap.forEach(d => {
+          const u = { id: d.id, ...d.data() };
+          rawStaffList.push(u);
+
+          const allowed = u.allowed_companies || ["*"];
+          if (allowed.includes("*") || (allowed.includes("cesar_gonzalez") && allowed.includes("hr_employment"))) {
+            globalCount++;
+          }
+          if (u.status === "ACTIVE") {
+            activeCount++;
+          }
+        });
+
+        document.getElementById('kpi-total-users').innerText = total;
+        document.getElementById('kpi-global-users').innerText = globalCount;
+        document.getElementById('kpi-active-users').innerText = activeCount;
+        document.getElementById('staff-count-badge').innerText = `${total} colaboradores`;
+
+        renderStaffTable();
+      });
+    }
+
+    window.renderStaffTable = () => {
+      const search = (document.getElementById('filter-staff-search').value || '').toLowerCase().trim();
+      const tbody = document.getElementById('table-staff');
+
+      const filtered = rawStaffList.filter(u => {
+        if (search) {
+          const matchName = (u.full_name || '').toLowerCase().includes(search);
+          const matchEmail = (u.email || '').toLowerCase().includes(search);
+          const matchRole = (u.role_id || '').toLowerCase().includes(search);
+          if (!matchName && !matchEmail && !matchRole) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono text-xs">Sin colaboradores coincidentes.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(u => {
+        const isActive = u.status === "ACTIVE";
+        const allowed = u.allowed_companies || ["*"];
+
+        let companiesBadge = '';
+        if (allowed.includes("*")) {
+          companiesBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">AMBAS (GLOBAL)</span>`;
+        } else {
+          companiesBadge = allowed.map(c => {
+            if (c === "cesar_gonzalez") {
+              return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 mr-1">CÉSAR G.</span>`;
+            }
+            if (c === "hr_employment") {
+              return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mr-1">HR EMPL.</span>`;
+            }
+            return '';
+          }).join('');
+        }
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-semibold text-white">${u.full_name || 'Sin nombre'}</td>
+            <td class="p-4 text-slate-400 font-mono text-xs">${u.email}</td>
+            <td class="p-4">${companiesBadge}</td>
+            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-slate-800 text-slate-300 border border-slate-700">${u.role_id}</span></td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium ${isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
+                ${isActive ? 'ACTIVO' : 'SUSPENDIDO'}
+              </span>
+            </td>
+            <td class="p-4 text-right space-x-2">
+              <button onclick="cambiarEmpresas('${u.id}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">Empresas</button>
+              <button onclick="cambiarRol('${u.id}', '${u.role_id}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">Rol</button>
+              <button onclick="cambiarEstado('${u.id}', '${isActive ? 'SUSPENDED' : 'ACTIVE'}')" class="text-xs px-2.5 py-1 rounded-lg border ${isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/20' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'} transition">
+                ${isActive ? 'Suspender' : 'Activar'}
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    };
+
+    // INYECCIÓN DE USUARIO
+    document.getElementById('form-staff').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-staff');
+      btn.disabled = true;
+      btn.innerText = "Inyectando...";
+
+      const email = document.getElementById('staff-email').value.trim().toLowerCase();
+      const password = document.getElementById('staff-password').value;
+      const fullName = document.getElementById('staff-name').value.trim();
+      const roleId = document.getElementById('staff-role').value;
+      const status = document.getElementById('staff-status').value;
+      const compSelect = document.getElementById('staff-companies').value;
+
+      let allowed = compSelect === "ALL" ? ["*"] : [compSelect];
+
+      try {
+        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const newUid = cred.user.uid;
+
+        await setDoc(doc(db, "staff_users", newUid), {
+          full_name: fullName,
+          email: email,
+          role_id: roleId,
+          allowed_companies: allowed,
+          status: status,
+          created_at: serverTimestamp()
+        });
+
+        await logAudit("STAFF_USER_CREATED", { email, roleId, allowed, uid: newUid });
+        alert(`Colaborador ${fullName} inyectado exitosamente.`);
+        toggleModalStaff(false);
+      } catch (err) {
+        alert("Error al inyectar colaborador: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Crear & Inyectar";
+      }
+    });
+
+    window.cambiarEstado = async (uid, newStatus) => {
+      try {
+        await updateDoc(doc(db, "staff_users", uid), { status: newStatus });
+        await logAudit("STAFF_STATUS_MUTATED", { uid, newStatus });
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+
+    window.cambiarRol = async (uid, currentRole) => {
+      const nuevo = prompt("Selecciona nuevo Rol RBAC:\n1 = SUPERADMIN\n2 = CONTADOR\n3 = AUXILIAR\n4 = AUDITOR", "2");
+      const mapping = { "1": "SUPERADMIN", "2": "CONTADOR", "3": "AUXILIAR", "4": "AUDITOR" };
+      if (!mapping[nuevo]) return;
+
+      try {
+        await updateDoc(doc(db, "staff_users", uid), { role_id: mapping[nuevo] });
+        await logAudit("STAFF_ROLE_MUTATED", { uid, old_role: currentRole, new_role: mapping[nuevo] });
+        alert("Rol actualizado exitosamente.");
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+
+    window.cambiarEmpresas = async (uid) => {
+      const opt = prompt("Asignar Razones Sociales autorizadas:\n1 = Ambas (Acceso Global)\n2 = Solo César Giovanni González Contreras\n3 = Solo HR Employment", "1");
+      let allowed = ["*"];
+      if (opt === "2") allowed = ["cesar_gonzalez"];
+      if (opt === "3") allowed = ["hr_employment"];
+
+      try {
+        await updateDoc(doc(db, "staff_users", uid), { allowed_companies: allowed });
+        await logAudit("STAFF_COMPANIES_UPDATED", { uid, allowed });
+        alert("Permisos de empresa actualizados con éxito.");
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    };
+  </script>
+</body>
+</html>

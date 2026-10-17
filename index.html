@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Administrativo | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full bg-gradient-to-b from-slate-900 to-slate-950 text-slate-100 flex items-center justify-center p-4 font-sans selection:bg-indigo-500 selection:text-white">
+
+  <div class="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl shadow-2xl p-8 backdrop-blur-xl relative overflow-hidden">
+    
+    <!-- Efecto ambiental de fondo -->
+    <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="text-center space-y-2 mb-8 relative z-10">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-400 border border-indigo-500/30 text-white shadow-lg shadow-indigo-500/20 mb-2">
+        <i class="ph-bold ph-scales text-3xl"></i>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
+      <p class="text-xs text-slate-400 font-mono tracking-wide uppercase">Acceso al Portal Maestro Multi-Empresa</p>
+    </div>
+
+    <!-- Alertas -->
+    <div id="alert-box" class="hidden p-3.5 mb-6 rounded-2xl text-xs font-medium border flex items-start gap-2.5 relative z-10 transition">
+      <i id="alert-icon" class="ph-bold text-base shrink-0 mt-0.5"></i>
+      <span id="alert-msg"></span>
+    </div>
+
+    <form id="form-login" class="space-y-4 relative z-10">
+      <div>
+        <label for="email" class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-400 mb-1.5">Correo Corporativo</label>
+        <div class="relative">
+          <i class="ph ph-envelope-simple absolute left-3.5 top-3 text-slate-500 text-lg"></i>
+          <input 
+            type="email" 
+            id="email" 
+            required 
+            placeholder="usuario@hremploy..." 
+            class="w-full pl-10 pr-4 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition font-sans"
+          >
+        </div>
+      </div>
+
+      <div>
+        <label for="password" class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-400 mb-1.5">Contraseña de Seguridad</label>
+        <div class="relative">
+          <i class="ph ph-lock-key absolute left-3.5 top-3 text-slate-500 text-lg"></i>
+          <input 
+            type="password" 
+            id="password" 
+            required 
+            placeholder="••••••••••••" 
+            class="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition font-sans"
+          >
+          <button 
+            type="button" 
+            id="toggle-pwd" 
+            class="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 transition"
+          >
+            <i class="ph ph-eye" id="toggle-pwd-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <button 
+        type="submit" 
+        id="btn-login" 
+        class="w-full mt-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2"
+      >
+        <span>Ingresar al Catálogo Maestro</span>
+        <i class="ph-bold ph-arrow-right"></i>
+      </button>
+    </form>
+
+    <div class="mt-8 pt-4 border-t border-slate-800/80 text-center relative z-10">
+      <p class="text-[11px] text-slate-500 font-mono">
+        Base de datos: <span class="text-slate-400">emco-accounting</span> | Sesión Protegida
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      signOut 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc, 
+      collection, 
+      addDoc, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    // CONEXIÓN DIRECTA A BASE NOMBRADA emco-accounting
+    const db = getFirestore(app, "emco-accounting");
+
+    const alertBox = document.getElementById("alert-box");
+    const alertMsg = document.getElementById("alert-msg");
+    const alertIcon = document.getElementById("alert-icon");
+
+    function showAlert(message, type = "error") {
+      alertBox.classList.remove("hidden", "bg-rose-950/60", "border-rose-800", "text-rose-200", "bg-amber-950/60", "border-amber-800", "text-amber-200");
+      if (type === "error") {
+        alertBox.classList.add("bg-rose-950/60", "border-rose-800", "text-rose-200");
+        alertIcon.className = "ph-bold ph-warning-circle text-rose-400 text-base shrink-0 mt-0.5";
+      } else {
+        alertBox.classList.add("bg-amber-950/60", "border-amber-800", "text-amber-200");
+        alertIcon.className = "ph-bold ph-shield-warning text-amber-400 text-base shrink-0 mt-0.5";
+      }
+      alertMsg.innerText = message;
+    }
+
+    function clearAlert() {
+      alertBox.classList.add("hidden");
+      alertMsg.innerText = "";
+    }
+
+    const toggleBtn = document.getElementById("toggle-pwd");
+    const pwdInput = document.getElementById("password");
+    const pwdIcon = document.getElementById("toggle-pwd-icon");
+    toggleBtn.addEventListener("click", () => {
+      const isPassword = pwdInput.type === "password";
+      pwdInput.type = isPassword ? "text" : "password";
+      pwdIcon.className = isPassword ? "ph ph-eye-slash" : "ph ph-eye";
+    });
+
+    const form = document.getElementById("form-login");
+    const btnLogin = document.getElementById("btn-login");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearAlert();
+
+      const email = document.getElementById("email").value.trim().toLowerCase();
+      const password = pwdInput.value;
+
+      btnLogin.disabled = true;
+      btnLogin.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> <span>Verificando perfil...</span>`;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Comprobación de credenciales y permisos en staff_users
+        const staffRef = doc(db, "staff_users", user.uid);
+        const staffDoc = await getDoc(staffRef);
+
+        if (!staffDoc.exists()) {
+          await signOut(auth);
+          showAlert(`El usuario existe en Authentication pero no está registrado en staff_users (UID: ${user.uid.substring(0,8)}...). Inyéctalo desde staff.html.`, "warning");
+          return;
+        }
+
+        const staffData = staffDoc.data();
+
+        if (staffData.status !== "ACTIVE") {
+          await signOut(auth);
+          showAlert(`Acceso denegado: El usuario se encuentra en estatus "${staffData.status}".`, "error");
+          return;
+        }
+
+        // Determinar permisos multi-empresa
+        const allowed = staffData.allowed_companies || ["*"];
+        sessionStorage.setItem("active_user_name", staffData.full_name || user.email);
+        sessionStorage.setItem("active_user_role", staffData.role_id || "GUEST");
+        sessionStorage.setItem("allowed_companies", JSON.stringify(allowed));
+
+        // Asignación de Razón Social inicial según privilegios
+        if (!allowed.includes("*") && allowed.length === 1) {
+          sessionStorage.setItem("active_company_id", allowed[0]);
+        } else if (!sessionStorage.getItem("active_company_id")) {
+          sessionStorage.setItem("active_company_id", "cesar_gonzalez");
+        }
+
+        // Registro de Auditoría de Login Exitoso
+        try {
+          await addDoc(collection(db, "audit_logs"), {
+            timestamp: serverTimestamp(),
+            user_email: email,
+            user_name: staffData.full_name || email,
+            role_id: staffData.role_id || "GUEST",
+            company_id: sessionStorage.getItem("active_company_id"),
+            action: "AUTH_LOGIN_SUCCESS",
+            details: { uid: user.uid, allowed_companies: allowed },
+            user_agent: navigator.userAgent
+          });
+        } catch (logErr) {
+          console.warn("No se pudo escribir log de login:", logErr);
+        }
+
+        // Redirección directa al Catálogo Maestro
+        window.location.href = "portal_catalogo.html";
+
+      } catch (error) {
+        console.error("Error al iniciar sesión:", error);
+        let errorMsg = "Credenciales incorrectas o problema de comunicación con el servidor.";
+        if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
+          errorMsg = "Correo o contraseña incorrectos.";
+        }
+        showAlert(errorMsg, "error");
+      } finally {
+        btnLogin.disabled = false;
+        btnLogin.innerHTML = `<span>Ingresar al Catálogo Maestro</span> <i class="ph-bold ph-arrow-right"></i>`;
+      }
+    });
+  </script>
+</body>
+</html>

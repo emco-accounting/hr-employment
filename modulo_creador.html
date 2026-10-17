@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ContaCore Studio & Diseñador de Módulos | EMCO</title>
+  <title>ContaCore Studio | Creador & Importador de Módulos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,7 +39,7 @@
         </div>
         <div>
           <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">Studio</span></h1>
-          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">IDE & Schema Builder</span>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">Schema & Import Engine</span>
         </div>
       </div>
 
@@ -55,9 +55,9 @@
         <button onclick="cambiarVista('schemas')" id="tab-btn-schemas" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
           <div class="flex items-center gap-3">
             <i class="ph-bold ph-squares-four text-lg text-indigo-400"></i>
-            <span>Diseñador de Esquemas</span>
+            <span>Catálogo & Diseñador</span>
           </div>
-          <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">No-Code</span>
+          <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Core</span>
         </button>
 
         <button onclick="cambiarVista('ide')" id="tab-btn-ide" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
@@ -90,16 +90,21 @@
   <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-1 flex flex-col h-screen overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950">
 
-    <!-- SECCIÓN 1: DISEÑADOR NO-CODE -->
+    <!-- SECCIÓN 1: CATÁLOGO, DISEÑADOR E IMPORTADOR -->
     <div id="view-schemas" class="flex-1 flex flex-col h-full overflow-y-auto">
       <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
         <div>
-          <h2 class="text-xl font-bold text-white tracking-tight">Diseñador de Módulos Dinámicos</h2>
-          <span class="text-xs text-slate-400 font-mono">Crea catálogos con despliegue bilateral garantizado para ambas razones sociales</span>
+          <h2 class="text-xl font-bold text-white tracking-tight">Diseñador & Gestor de Módulos</h2>
+          <span class="text-xs text-slate-400 font-mono">Diseña en caliente o inyecta módulos externos para César Giovanni y HR Employment</span>
         </div>
-        <button onclick="abrirModalCreacion()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-          <i class="ph-bold ph-plus text-sm"></i> + Diseñar Nuevo Módulo
-        </button>
+        <div class="flex items-center gap-3">
+          <button onclick="abrirModalImportacion()" class="bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-500/10">
+            <i class="ph-bold ph-file-arrow-up text-sm text-indigo-400"></i> + Importar Módulo Externo
+          </button>
+          <button onclick="abrirModalCreacion()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+            <i class="ph-bold ph-plus text-sm"></i> + Diseñar Esquema No-Code
+          </button>
+        </div>
       </header>
 
       <div class="p-8 flex-1 space-y-6">
@@ -126,7 +131,7 @@
               <option value="staff.html">staff.html (Gobernanza RBAC)</option>
               <option value="modulo_logs.html">modulo_logs.html (Consola de Auditoría)</option>
             </optgroup>
-            <optgroup label="Módulos Dinámicos Creados" id="optgroup-dynamic-modules">
+            <optgroup label="Módulos Dinámicos e Importados" id="optgroup-dynamic-modules">
               <!-- Inyección automática -->
             </optgroup>
           </select>
@@ -164,7 +169,7 @@
 
   </main>
 
-  <!-- MODAL: CONSTRUCTOR DE ESQUEMA -->
+  <!-- MODAL 1: CONSTRUCTOR DE ESQUEMA (NO-CODE) -->
   <div id="modal-module" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5 max-h-[90vh] flex flex-col">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
@@ -224,6 +229,83 @@
     </div>
   </div>
 
+  <!-- MODAL 2: IMPORTADOR DE MÓDULOS EXTERNOS (HTML / JSON) -->
+  <div id="modal-import" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-file-arrow-up text-indigo-400 text-xl"></i>
+          <div>
+            <h4 class="text-base font-bold text-white">Importador de Módulos Externos</h4>
+            <span class="text-xs text-slate-400 font-mono">Inyecta módulos programados fuera de ContaCore en Firestore</span>
+          </div>
+        </div>
+        <button onclick="toggleModalImport(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="overflow-y-auto flex-1 space-y-4 pr-1">
+        <form id="form-import" class="space-y-4 text-xs font-medium text-slate-300">
+          
+          <!-- Selector de Modo de Importación -->
+          <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-950 rounded-xl border border-slate-800">
+            <button type="button" onclick="setImportMode('html')" id="btn-mode-html" class="py-2 px-3 rounded-lg font-bold transition bg-indigo-600 text-white">
+              Archivo HTML Autónomo
+            </button>
+            <button type="button" onclick="setImportMode('json')" id="btn-mode-json" class="py-2 px-3 rounded-lg font-bold transition text-slate-400 hover:text-white">
+              Esquema JSON Estructurado
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Título del Módulo</label>
+              <input type="text" id="import-title" placeholder="Ej: Control de Gastos Avanzado" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug Clave / Archivo Base</label>
+              <input type="text" id="import-slug" placeholder="control_gastos_avanzado" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Ícono Phosphor</label>
+              <input type="text" id="import-icon" value="ph-squares-four" placeholder="ph-chart-pie-slice, ph-receipt..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción Breve</label>
+              <input type="text" id="import-desc" placeholder="Propósito del módulo importado..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+            </div>
+          </div>
+
+          <!-- Zona de Carga de Archivo -->
+          <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-4 text-center bg-slate-950/50 cursor-pointer relative group transition">
+            <input type="file" id="import-file-input" accept=".html, .json, .txt" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="leerArchivoExterno(event)">
+            <i class="ph-bold ph-upload-simple text-2xl text-indigo-400 group-hover:scale-110 transition-transform inline-block mb-1"></i>
+            <p class="text-xs font-semibold text-slate-200" id="import-file-label">Arrastra o selecciona el archivo .html o .json</p>
+            <p class="text-[10px] text-slate-500 font-mono">El contenido se cargará automáticamente en el editor de abajo</p>
+          </div>
+
+          <!-- Editor / Contenedor del Código Importado -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="block uppercase tracking-wider text-slate-400 font-mono text-[10px]" id="import-payload-label">Código Fuente HTML / JS del Módulo</label>
+              <span class="text-[10px] text-emerald-400 font-mono" id="import-size-badge"></span>
+            </div>
+            <textarea id="import-payload-textarea" rows="8" required class="code-area w-full p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-200 outline-none focus:border-indigo-500 selection:bg-indigo-500/40" placeholder="Pega aquí el código HTML o el JSON del módulo..."></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+            <button type="button" onclick="toggleModalImport(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+            <button type="submit" id="btn-submit-import" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold shadow-lg shadow-indigo-600/20 flex items-center gap-1.5">
+              <i class="ph-bold ph-lightning"></i> Inyectar e Inicializar en Ambas Empresas
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -249,6 +331,7 @@
     let currentUser = null;
     let modulesCache = {};
     let currentFileName = "portal_catalogo.html";
+    let currentImportMode = "html"; // 'html' o 'json'
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -292,6 +375,9 @@
       }
     };
 
+    // ==========================================
+    // 1. GESTOR DE ESQUEMAS NO-CODE
+    // ==========================================
     window.toggleModal = (show) => {
       document.getElementById('modal-module').classList.toggle('hidden', !show);
       if (!show) {
@@ -347,7 +433,7 @@
         if (snap.empty) {
           container.innerHTML = `
             <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full border border-slate-800/80 rounded-2xl bg-slate-900/30">
-              No hay módulos dinámicos creados aún. Haz clic en "+ Diseñar Nuevo Módulo".
+              No hay módulos dinámicos creados aún. Haz clic en "+ Diseñar Esquema No-Code" o "+ Importar Módulo Externo".
             </div>
           `;
           return;
@@ -359,11 +445,17 @@
           modulesCache[docId] = { ...mod, docId };
 
           const opt = document.createElement('option');
-          opt.value = `dynamic:${mod.slug}`;
-          opt.innerText = `[Dinámico] ${mod.title} (${mod.slug})`;
+          opt.value = mod.is_standalone ? `${mod.slug}.html` : `dynamic:${mod.slug}`;
+          opt.innerText = `[${mod.is_standalone ? 'Autónomo' : 'Dinámico'}] ${mod.title} (${mod.slug})`;
           optgroup.appendChild(opt);
 
           const fieldCount = mod.fields ? mod.fields.length : 0;
+          const badgeType = mod.is_standalone
+            ? `<span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">HTML Autónomo</span>`
+            : `<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Bilateral Activo</span>`;
+
+          const targetUrlBase = mod.is_standalone ? `${mod.slug}.html` : 'modulo_dinamico.html';
+
           const card = document.createElement('div');
           card.className = "bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-slate-700 transition";
           card.innerHTML = `
@@ -384,21 +476,22 @@
 
               <div>
                 <h3 class="text-base font-bold text-white leading-tight">${mod.title}</h3>
-                <span class="text-[11px] font-mono text-indigo-400 block mt-0.5">Colección: ${mod.slug}</span>
+                <span class="text-[11px] font-mono text-indigo-400 block mt-0.5">Clave: ${mod.slug}</span>
                 <p class="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">${mod.description || 'Sin descripción'}</p>
               </div>
 
               <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] font-mono text-slate-500">
-                <span>${fieldCount} campos configurados</span>
-                <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Bilateral Activo</span>
+                <span>${mod.is_standalone ? 'Módulo Externo' : `${fieldCount} campos`}</span>
+                ${badgeType}
               </div>
             </div>
 
+            <!-- ENLACES DE ACCESO DIRECTO BILATERAL -->
             <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
-              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=cesar_gonzalez" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+              <a href="${targetUrlBase}?slug=${mod.slug}&empresa=cesar_gonzalez" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
                 <i class="ph-bold ph-briefcase"></i> César G.
               </a>
-              <a href="modulo_dinamico.html?slug=${mod.slug}&empresa=hr_employment" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+              <a href="${targetUrlBase}?slug=${mod.slug}&empresa=hr_employment" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition flex items-center justify-center gap-1">
                 <i class="ph-bold ph-buildings"></i> HR Empl.
               </a>
             </div>
@@ -406,6 +499,32 @@
           container.appendChild(card);
         });
       });
+    }
+
+    async function inyectarPermisosEnRoles(slug) {
+      const readPerm = `${slug}.read`;
+      const writePerm = `${slug}.write`;
+
+      // Rol CONTADOR
+      const contadorRef = doc(db, "system_roles", "CONTADOR");
+      const contadorSnap = await getDoc(contadorRef);
+      if (contadorSnap.exists()) {
+        const perms = contadorSnap.data().permissions || [];
+        if (!perms.includes(readPerm)) perms.push(readPerm);
+        if (!perms.includes(writePerm)) perms.push(writePerm);
+        await updateDoc(contadorRef, { permissions: perms });
+      }
+
+      // Rol AUDITOR
+      const auditorRef = doc(db, "system_roles", "AUDITOR");
+      const auditorSnap = await getDoc(auditorRef);
+      if (auditorSnap.exists()) {
+        const perms = auditorSnap.data().permissions || [];
+        if (!perms.includes(readPerm)) perms.push(readPerm);
+        await updateDoc(auditorRef, { permissions: perms });
+      }
+
+      await logAudit("RBAC_PERMISSIONS_INJECTED", { slug, permissions: [readPerm, writePerm] });
     }
 
     document.getElementById('form-module').addEventListener('submit', async (e) => {
@@ -445,6 +564,7 @@
           icon: icon,
           description: desc,
           fields: fields,
+          is_standalone: false,
           tenants_enabled: ["cesar_gonzalez", "hr_employment"],
           created_by: currentUser?.email,
           updated_at: serverTimestamp()
@@ -459,29 +579,8 @@
           await logAudit("MODULE_SCHEMA_CREATED", { slug, title, fieldsCount: fields.length });
         }
 
-        // Auto-inyección de permisos en system_roles
-        const readPerm = `${slug}.read`;
-        const writePerm = `${slug}.write`;
-
-        const contadorRef = doc(db, "system_roles", "CONTADOR");
-        const contadorSnap = await getDoc(contadorRef);
-        if (contadorSnap.exists()) {
-          const perms = contadorSnap.data().permissions || [];
-          if (!perms.includes(readPerm)) perms.push(readPerm);
-          if (!perms.includes(writePerm)) perms.push(writePerm);
-          await updateDoc(contadorRef, { permissions: perms });
-        }
-
-        const auditorRef = doc(db, "system_roles", "AUDITOR");
-        const auditorSnap = await getDoc(auditorRef);
-        if (auditorSnap.exists()) {
-          const perms = auditorSnap.data().permissions || [];
-          if (!perms.includes(readPerm)) perms.push(readPerm);
-          await updateDoc(auditorRef, { permissions: perms });
-        }
-
-        await logAudit("RBAC_PERMISSIONS_INJECTED", { slug, permissions: [readPerm, writePerm] });
-        alert(`Módulo "${title}" guardado exitosamente.\nSe han registrado automáticamente los permisos "${readPerm}" y "${writePerm}" en la gobernanza de Staff.`);
+        await inyectarPermisosEnRoles(slug);
+        alert(`Módulo "${title}" guardado exitosamente.\nSe han registrado automáticamente los permisos "${slug}.read" y "${slug}.write" en la gobernanza de Staff.`);
 
         toggleModal(false);
       } catch (err) {
@@ -515,7 +614,7 @@
     };
 
     window.eliminarModulo = async (docId, slug, title) => {
-      if (confirm(`¿Confirmas la eliminación del esquema del módulo "${title}" (${slug}) para ambas empresas?`)) {
+      if (confirm(`¿Confirmas la eliminación del módulo "${title}" (${slug}) para ambas empresas?`)) {
         try {
           await deleteDoc(doc(db, "system_modules", docId));
           await logAudit("MODULE_SCHEMA_DELETED", { docId, slug, title });
@@ -525,6 +624,157 @@
       }
     };
 
+    // ==========================================
+    // 2. MOTOR DE IMPORTACIÓN DE MÓDULOS EXTERNOS
+    // ==========================================
+    window.toggleModalImport = (show) => {
+      document.getElementById('modal-import').classList.toggle('hidden', !show);
+      if (!show) {
+        document.getElementById('form-import').reset();
+        document.getElementById('import-file-label').innerText = "Arrastra o selecciona el archivo .html o .json";
+        document.getElementById('import-size-badge').innerText = "";
+      }
+    };
+
+    window.abrirModalImportacion = () => {
+      toggleModalImport(true);
+      setImportMode('html');
+    };
+
+    window.setImportMode = (mode) => {
+      currentImportMode = mode;
+      const btnHtml = document.getElementById('btn-mode-html');
+      const btnJson = document.getElementById('btn-mode-json');
+      const label = document.getElementById('import-payload-label');
+
+      if (mode === 'html') {
+        btnHtml.className = "py-2 px-3 rounded-lg font-bold transition bg-indigo-600 text-white";
+        btnJson.className = "py-2 px-3 rounded-lg font-bold transition text-slate-400 hover:text-white";
+        label.innerText = "Código Fuente HTML / JS del Módulo Autónomo";
+        document.getElementById('import-file-input').accept = ".html, .txt";
+      } else {
+        btnJson.className = "py-2 px-3 rounded-lg font-bold transition bg-indigo-600 text-white";
+        btnHtml.className = "py-2 px-3 rounded-lg font-bold transition text-slate-400 hover:text-white";
+        label.innerText = "Esquema JSON de Definición de Campos";
+        document.getElementById('import-file-input').accept = ".json, .txt";
+      }
+    };
+
+    window.leerArchivoExterno = (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target.result;
+        document.getElementById('import-payload-textarea').value = content;
+        document.getElementById('import-file-label').innerText = `Archivo cargado: ${file.name}`;
+        document.getElementById('import-size-badge').innerText = `${(file.size / 1024).toFixed(1)} KB`;
+
+        // Sugerir slug y título basados en el nombre del archivo
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        if (!document.getElementById('import-slug').value) {
+          document.getElementById('import-slug').value = baseName.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+        }
+        if (!document.getElementById('import-title').value) {
+          document.getElementById('import-title').value = baseName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    // PROCESAMIENTO E INYECCIÓN ATÓMICA DE MÓDULO EXTERNO
+    document.getElementById('form-import').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-import');
+      btn.disabled = true;
+      btn.innerText = "Inyectando módulo en Firestore...";
+
+      const title = document.getElementById('import-title').value.trim();
+      const slug = document.getElementById('import-slug').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_');
+      const icon = document.getElementById('import-icon').value.trim();
+      const desc = document.getElementById('import-desc').value.trim();
+      const payloadContent = document.getElementById('import-payload-textarea').value.trim();
+
+      if (!payloadContent) {
+        alert("El contenido del archivo importado está vacío.");
+        btn.disabled = false;
+        btn.innerText = "Inyectar e Inicializar en Ambas Empresas";
+        return;
+      }
+
+      try {
+        let isStandalone = (currentImportMode === 'html');
+        let fieldsArray = [];
+
+        // Si es JSON, validar sintaxis y extraer campos
+        if (currentImportMode === 'json') {
+          try {
+            const parsed = JSON.parse(payloadContent);
+            fieldsArray = parsed.fields || parsed;
+            if (!Array.isArray(fieldsArray)) throw new Error("El JSON debe contener un arreglo de campos 'fields'.");
+          } catch (jsonErr) {
+            throw new Error(`JSON no válido: ${jsonErr.message}`);
+          }
+        }
+
+        // 1. Guardar código fuente en system_module_sources si es HTML autónomo
+        if (isStandalone) {
+          const sourceFileName = `${slug}.html`;
+          await setDoc(doc(db, "system_module_sources", sourceFileName), {
+            file_name: sourceFileName,
+            source_code: payloadContent,
+            version: 1,
+            imported: true,
+            updated_by: currentUser?.email || 'admin',
+            updated_at: serverTimestamp()
+          });
+        }
+
+        // 2. Inyectar definición en system_modules
+        const moduleDoc = {
+          slug: slug,
+          title: title,
+          icon: icon,
+          description: desc,
+          fields: fieldsArray,
+          is_standalone: isStandalone,
+          standalone_file: isStandalone ? `${slug}.html` : null,
+          imported: true,
+          tenants_enabled: ["cesar_gonzalez", "hr_employment"],
+          created_by: currentUser?.email,
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp()
+        };
+
+        await addDoc(collection(db, "system_modules"), moduleDoc);
+
+        // 3. Auto-inyección de permisos en system_roles
+        await inyectarPermisosEnRoles(slug);
+
+        // 4. Auditoría forense
+        await logAudit("MODULE_EXTERNAL_IMPORTED", {
+          slug,
+          title,
+          mode: currentImportMode,
+          isStandalone,
+          fileName: isStandalone ? `${slug}.html` : null
+        });
+
+        alert(`¡Módulo "${title}" inyectado exitosamente!\n\n• Colección registrada: ${slug}\n• Permisos RBAC auto-configurados: ${slug}.read y ${slug}.write\n• Disponible para César Giovanni y HR Employment.`);
+        toggleModalImport(false);
+
+      } catch (err) {
+        alert(`Fallo en la importación: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Inyectar e Inicializar en Ambas Empresas";
+      }
+    });
+
+    // ==========================================
+    // 3. CONSOLA DE CÓDIGO (IDE / STUDIO)
+    // ==========================================
     window.cargarArchivoEnEditor = async (fileKey) => {
       currentFileName = fileKey;
       const statusTag = document.getElementById('ide-status-tag');
@@ -564,7 +814,7 @@
           statusTag.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20";
         }
       } catch (err) {
-        textarea.value = `<!-- No se pudo cargar el archivo directo por restricciones locales -->\n<!-- Puedes escribir o pegar tu código aquí y guardarlo en Firestore -->\n<!-- Error: ${err.message} -->`;
+        textarea.value = `<!-- Editor en blanco para ${fileKey} -->\n<!-- Puedes escribir o pegar tu código y guardarlo directamente en Firestore -->\n<!-- Error al leer local: ${err.message} -->`;
         statusTag.innerText = "Editor en Blanco";
       }
     };

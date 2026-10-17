@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activos & Hardware | César Giovanni González Contreras</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- OVERLAY DE AUTORIZACIÓN -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
+      <i class="ph-bold ph-device-mobile-camera text-indigo-400 text-3xl"></i>
+    </div>
+    <p class="text-xs text-slate-400 font-mono">Conectando a inventario de César Giovanni...</p>
+  </div>
+
+  <!-- ENCABEZADO SUPERIOR -->
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+        <i class="ph-bold ph-arrow-left text-lg"></i>
+      </a>
+      <div>
+        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <span>Inventario de Hardware & Activos</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CÉSAR GIOVANNI</span>
+        </h2>
+        <span class="text-xs text-slate-400 font-mono">Titular: <strong class="text-slate-200">César Giovanni González Contreras</strong> | BD: emco-accounting</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="exportarExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+        <i class="ph-bold ph-microsoft-excel-logo"></i> Exportar Inventario
+      </button>
+      <button onclick="toggleModalActivo(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+        <i class="ph-bold ph-plus"></i> + Registrar Activo
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
+
+    <!-- FILA DE KPIS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Valor Patrimonial en Libros</span>
+          <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="ph-bold ph-vault text-lg"></i></span>
+        </div>
+        <p id="kpi-valor-libros" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Inversión acumulada en activos</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Parque de Hardware Total</span>
+          <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-laptop text-lg"></i></span>
+        </div>
+        <p id="kpi-total-equipos" class="text-2xl font-bold font-mono text-indigo-400 mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Laptops, módems y licencias</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Equipos en Resguardo</span>
+          <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-user-check text-lg"></i></span>
+        </div>
+        <p id="kpi-asignados" class="text-2xl font-bold font-mono text-emerald-400 mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-disponibles-sub">0 disponibles para asignación</span>
+      </div>
+    </div>
+
+    <!-- BARRA DE FILTROS -->
+    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          <i class="ph ph-magnifying-glass text-slate-400"></i>
+          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar código, serie, modelo, asignado..." class="bg-transparent text-white focus:outline-none text-xs w-64">
+        </div>
+
+        <select id="filter-category" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs">
+          <option value="ALL">Todas las Categorías</option>
+          <option value="TANGIBLE_HARDWARE">Hardware (Laptop / PC)</option>
+          <option value="TANGIBLE_NETWORK">Red (Módem Móvil 4G/5G)</option>
+          <option value="INTANGIBLE_SOFTWARE">Software / Licencias</option>
+        </select>
+      </div>
+
+      <span id="counter-records" class="font-mono text-slate-500 text-xs">0 activos registrados</span>
+    </div>
+
+    <!-- TABLA DE ACTIVOS -->
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+      <table class="w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+          <tr>
+            <th class="p-4">Código</th>
+            <th class="p-4">Descripción / Modelo</th>
+            <th class="p-4">Categoría</th>
+            <th class="p-4">Serie / MAC / IMEI</th>
+            <th class="p-4">Colaborador en Resguardo</th>
+            <th class="p-4">Costo Adquisición</th>
+            <th class="p-4 text-right">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="table-activos" class="divide-y divide-slate-800/60 font-sans text-xs">
+          <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Sincronizando inventario de César Giovanni...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- MODAL: REGISTRAR ACTIVO -->
+  <div id="modal-activo" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white">Alta de Activo / Equipo</h4>
+          <span class="text-[11px] font-mono text-indigo-400">Patrimonio: César Giovanni González Contreras</span>
+        </div>
+        <button onclick="toggleModalActivo(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-activo" class="space-y-4 text-xs font-medium text-slate-300">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Código de Activo</label>
+            <input type="text" id="asset-code" placeholder="LAP-CG-01" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 uppercase font-mono">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Categoría</label>
+            <select id="asset-type" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <option value="TANGIBLE_HARDWARE">Hardware (Laptop / PC)</option>
+              <option value="TANGIBLE_NETWORK">Red (Módem Móvil 4G/5G)</option>
+              <option value="INTANGIBLE_SOFTWARE">Software / Licencia</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción / Modelo</label>
+          <input type="text" id="asset-name" placeholder="Ej: Lenovo ThinkPad E14 / Módem Huawei" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Serie / MAC / IMEI</label>
+            <input type="text" id="asset-serial" placeholder="Identificador físico único" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Costo ($ MXN)</label>
+            <input type="number" step="0.01" id="asset-cost" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Colaborador en Resguardo (Opcional)</label>
+          <input type="text" id="asset-assigned" placeholder="Nombre completo de quien recibe el activo" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="toggleModalActivo(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold transition">Cancelar</button>
+          <button type="submit" id="btn-submit" class="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 font-semibold shadow-lg shadow-indigo-600/20">Guardar Activo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, addDoc, deleteDoc, doc, getDoc, 
+      query, where, orderBy, onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const COMPANY_ID = "cesar_gonzalez";
+    const COMPANY_NAME = "César Giovanni González Contreras";
+
+    let currentUser = null;
+    let rawData = [];
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: currentUser?.email || "anonimo",
+          company_id: COMPANY_ID,
+          company_name: COMPANY_NAME,
+          action: action,
+          details: details,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        console.warn("Fallo log:", e);
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+
+      try {
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        if (!staffSnap.exists() || staffSnap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        currentUser = staffSnap.data();
+        const allowed = currentUser.allowed_companies || ["*"];
+        const isSuper = currentUser.role_id === "SUPERADMIN";
+
+        if (!isSuper && !allowed.includes("*") && !allowed.includes(COMPANY_ID)) {
+          alert("Acceso denegado: No tienes autorización para la razón social de César Giovanni.");
+          window.location.replace("portal_catalogo.html");
+          return;
+        }
+
+        initLiveStream();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error en sesión:", err);
+      }
+    });
+
+    function initLiveStream() {
+      const q = query(
+        collection(db, "fixed_assets"),
+        where("company_id", "==", COMPANY_ID),
+        orderBy("created_at", "desc")
+      );
+
+      onSnapshot(q, (snap) => {
+        rawData = [];
+        let totalCosto = 0;
+        let asignados = 0;
+
+        snap.forEach(d => {
+          const item = { id: d.id, ...d.data() };
+          rawData.push(item);
+
+          totalCosto += Number(item.purchase_cost || 0);
+          if (item.assigned_to && item.assigned_to.trim() !== "") {
+            asignados++;
+          }
+        });
+
+        const totalEquipos = rawData.length;
+        const disponibles = totalEquipos - asignados;
+
+        document.getElementById('kpi-valor-libros').innerText = `$${totalCosto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        document.getElementById('kpi-total-equipos').innerText = totalEquipos;
+        document.getElementById('kpi-asignados').innerText = asignados;
+        document.getElementById('kpi-disponibles-sub').innerText = `${disponibles} disponibles para asignación`;
+
+        renderTable();
+      });
+    }
+
+    window.renderTable = () => {
+      const search = (document.getElementById('filter-search')?.value || '').toLowerCase().trim();
+      const cat = document.getElementById('filter-category')?.value || 'ALL';
+
+      const filtered = rawData.filter(i => {
+        if (cat !== 'ALL' && i.category !== cat) return false;
+        if (search) {
+          const matchCode = (i.asset_code || '').toLowerCase().includes(search);
+          const matchName = (i.name || '').toLowerCase().includes(search);
+          const matchSerial = (i.serial_number || '').toLowerCase().includes(search);
+          const matchAssigned = (i.assigned_to || '').toLowerCase().includes(search);
+          if (!matchCode && !matchName && !matchSerial && !matchAssigned) return false;
+        }
+        return true;
+      });
+
+      document.getElementById('counter-records').innerText = `${filtered.length} activos registrados`;
+      const tbody = document.getElementById('table-activos');
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin activos registrados con los filtros aplicados.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(i => {
+        let badge = "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
+        let label = "Hardware";
+        if (i.category === "TANGIBLE_NETWORK") {
+          badge = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
+          label = "Red / Módem";
+        } else if (i.category === "INTANGIBLE_SOFTWARE") {
+          badge = "bg-purple-500/10 text-purple-400 border border-purple-500/20";
+          label = "Licencia";
+        }
+
+        const asignadoText = i.assigned_to && i.assigned_to.trim() !== ""
+          ? `<span class="text-white font-medium">${i.assigned_to}</span>`
+          : `<span class="text-slate-500 italic">Disponible en almacén</span>`;
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-mono font-bold text-white text-xs">${i.asset_code || 'S/C'}</td>
+            <td class="p-4 text-slate-200 font-medium">${i.name}</td>
+            <td class="p-4"><span class="px-2.5 py-0.5 rounded text-[10px] font-mono ${badge}">${label}</span></td>
+            <td class="p-4 font-mono text-xs text-slate-400">${i.serial_number}</td>
+            <td class="p-4">${asignadoText}</td>
+            <td class="p-4 font-mono text-white font-semibold">$${Number(i.purchase_cost || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4 text-right">
+              <button onclick="eliminarActivo('${i.id}', '${i.asset_code}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar Activo">
+                <i class="ph ph-trash text-base"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    };
+
+    window.toggleModalActivo = (show) => {
+      document.getElementById('modal-activo').classList.toggle('hidden', !show);
+      if (!show) document.getElementById('form-activo').reset();
+    };
+
+    document.getElementById('form-activo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.innerText = "Guardando...";
+
+      const code = document.getElementById('asset-code').value.trim().toUpperCase();
+      const category = document.getElementById('asset-type').value;
+      const name = document.getElementById('asset-name').value.trim();
+      const serial = document.getElementById('asset-serial').value.trim();
+      const cost = parseFloat(document.getElementById('asset-cost').value) || 0;
+      const assigned = document.getElementById('asset-assigned').value.trim();
+
+      try {
+        const docRef = await addDoc(collection(db, "fixed_assets"), {
+          company_id: COMPANY_ID,
+          company_name: COMPANY_NAME,
+          asset_code: code,
+          category: category,
+          name: name,
+          serial_number: serial,
+          purchase_cost: cost,
+          assigned_to: assigned,
+          status: assigned ? "ASSIGNED" : "AVAILABLE",
+          registered_by: auth.currentUser?.email || 'admin',
+          created_at: serverTimestamp()
+        });
+
+        await logAudit("ASSET_CREATED", { doc_id: docRef.id, code, name, cost, assigned });
+        toggleModalActivo(false);
+      } catch (err) {
+        alert("Error al registrar activo: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Guardar Activo";
+      }
+    });
+
+    window.eliminarActivo = async (id, code) => {
+      if (confirm(`¿Eliminar el activo ${code} permanentemente del inventario de César Giovanni?`)) {
+        try {
+          await deleteDoc(doc(db, "fixed_assets", id));
+          await logAudit("ASSET_DELETED", { doc_id: id, code });
+        } catch (e) {
+          alert("Error: " + e.message);
+        }
+      }
+    };
+
+    window.exportarExcel = () => {
+      if (rawData.length === 0) return alert("Sin activos para exportar.");
+      const rows = rawData.map(i => ({
+        "Código": i.asset_code || '',
+        "Descripción / Modelo": i.name || '',
+        "Categoría": i.category || '',
+        "Número de Serie": i.serial_number || '',
+        "Colaborador en Resguardo": i.assigned_to || 'Disponible',
+        "Costo Adquisición MXN": Number(i.purchase_cost || 0),
+        "Estatus": i.status || 'AVAILABLE',
+        "Registrado Por": i.registered_by || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Activos_Cesar_Giovanni");
+      XLSX.writeFile(wb, `Activos_Cesar_Giovanni_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+  </script>
+</body>
+</html>

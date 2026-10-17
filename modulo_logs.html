@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría Forense & Logs | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- OVERLAY DE CARGA Y AUTORIZACIÓN -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="relative flex items-center justify-center">
+      <div class="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/30 animate-pulse flex items-center justify-center">
+        <i class="ph-bold ph-shield-warning text-amber-400 text-3xl"></i>
+      </div>
+      <div class="absolute -inset-1 rounded-2xl bg-amber-500/20 blur-lg -z-10 animate-pulse"></div>
+    </div>
+    <div class="text-center space-y-1">
+      <h3 class="text-base font-semibold text-white tracking-wide">ContaCore Audit Engine</h3>
+      <p id="shield-status" class="text-xs text-slate-400 font-mono">Conectando con la pista forense inmutable...</p>
+    </div>
+  </div>
+
+  <!-- HEADER NAVEGACIÓN -->
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal">
+        <i class="ph-bold ph-arrow-left text-lg"></i>
+      </a>
+      <div>
+        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <i class="ph-bold ph-shield-check text-amber-400"></i> Consola Central de Auditoría Forense
+        </h2>
+        <span class="text-xs text-slate-400 font-mono">Registro inmutable multi-entidad | BD: <span class="text-slate-300 font-semibold">emco-accounting</span></span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button onclick="exportarExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-emerald-600/10">
+        <i class="ph-bold ph-microsoft-excel-logo text-base"></i> Exportar Auditoría (.xlsx)
+      </button>
+      <button onclick="logoutSession()" class="p-2 text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 rounded-xl transition" title="Finalizar Sesión">
+        <i class="ph ph-sign-out text-lg"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
+
+    <!-- TARJETAS DE INDICADORES DE EVENTOS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Eventos Auditados</span>
+          <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-database"></i></span>
+        </div>
+        <p id="kpi-total-logs" class="text-2xl font-bold font-mono text-white mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Trazas históricas cargadas</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">César Giovanni</span>
+          <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="ph-bold ph-briefcase"></i></span>
+        </div>
+        <p id="kpi-cg-logs" class="text-2xl font-bold font-mono text-blue-400 mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Mutaciones registradas</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">HR Employment</span>
+          <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-buildings"></i></span>
+        </div>
+        <p id="kpi-hr-logs" class="text-2xl font-bold font-mono text-emerald-400 mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Mutaciones registradas</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Acciones Críticas</span>
+          <span class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="ph-bold ph-warning-octagon"></i></span>
+        </div>
+        <p id="kpi-danger-logs" class="text-2xl font-bold font-mono text-rose-400 mt-2">0</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Eliminaciones y mutaciones RBAC</span>
+      </div>
+    </div>
+
+    <!-- BARRA DE CONTROL Y FILTROS -->
+    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          <i class="ph ph-magnifying-glass text-slate-400"></i>
+          <input type="text" id="filter-search" oninput="renderLogs()" placeholder="Buscar usuario, acción, detalle..." class="bg-transparent text-white focus:outline-none text-xs w-64 font-sans">
+        </div>
+
+        <select id="filter-company" onchange="renderLogs()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs">
+          <option value="ALL">Todas las Razones Sociales</option>
+          <option value="cesar_gonzalez">César Giovanni González</option>
+          <option value="hr_employment">HR Employment</option>
+          <option value="GLOBAL">Global / Sistema Transversal</option>
+        </select>
+
+        <select id="filter-action" onchange="renderLogs()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs">
+          <option value="ALL">Todas las Categorías de Evento</option>
+          <option value="AUTH">Sesiones (Login / Logout)</option>
+          <option value="INVOICE">Facturas (CxC / CxP)</option>
+          <option value="ASSET">Activos & Hardware</option>
+          <option value="MODULE">Módulos & Esquemas</option>
+          <option value="STAFF">Gobernanza de Staff</option>
+          <option value="DELETED">Eliminaciones (Bajas)</option>
+        </select>
+      </div>
+
+      <button onclick="limpiarFiltros()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-mono">
+        <i class="ph ph-arrow-counter-clockwise"></i> Limpiar Filtros
+      </button>
+    </div>
+
+    <!-- TABLA PRINCIPAL DE PISTA FORENSE -->
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
+      <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+        <span class="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Línea de Tiempo de Auditoría</span>
+        <span id="logs-counter" class="text-xs font-mono font-medium bg-slate-800 text-slate-400 border border-slate-700/60 px-2.5 py-0.5 rounded-full">0 eventos</span>
+      </div>
+
+      <table class="w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+          <tr>
+            <th class="p-4">Fecha y Hora</th>
+            <th class="p-4">Usuario Operador</th>
+            <th class="p-4">Acción Auditada</th>
+            <th class="p-4">Razón Social Implicada</th>
+            <th class="p-4">Resumen del Evento</th>
+            <th class="p-4 text-right">Inspección</th>
+          </tr>
+        </thead>
+        <tbody id="table-logs" class="divide-y divide-slate-800/60 font-sans text-xs">
+          <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando pistas de auditoría forense...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- MODAL: VISOR DE PAYLOAD E INSPECCIÓN DETALLADA -->
+  <div id="modal-payload" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-code text-indigo-400 text-lg"></i>
+          <h4 class="text-base font-bold text-white">Inspección de Registro Forense</h4>
+        </div>
+        <button onclick="toggleModalPayload(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span class="block text-slate-500 font-mono text-[10px] uppercase">Evento / Acción</span>
+            <span id="inspect-action" class="font-mono text-indigo-400 font-bold"></span>
+          </div>
+          <div>
+            <span class="block text-slate-500 font-mono text-[10px] uppercase">Fecha y Hora</span>
+            <span id="inspect-date" class="font-mono text-slate-300"></span>
+          </div>
+        </div>
+
+        <div>
+          <span class="block text-slate-500 font-mono text-[10px] uppercase mb-1">Payload JSON Completo</span>
+          <pre id="inspect-json" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-60 leading-relaxed"></pre>
+        </div>
+
+        <div>
+          <span class="block text-slate-500 font-mono text-[10px] uppercase mb-0.5">Agente de Usuario (Dispositivo / Navegador)</span>
+          <p id="inspect-ua" class="text-[10px] font-mono text-slate-400 break-words bg-slate-950/50 p-2 rounded-lg border border-slate-800/60"></p>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-3 border-t border-slate-800">
+        <button type="button" onclick="toggleModalPayload(false)" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 text-xs font-semibold transition">
+          Cerrar Inspección
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, query, orderBy, limit, onSnapshot, doc, getDoc 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const EMPRESAS = {
+      "cesar_gonzalez": "César Giovanni González Contreras",
+      "hr_employment": "HR Employment"
+    };
+
+    let rawLogs = [];
+    let logsMap = {};
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+
+      try {
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        if (!staffSnap.exists() || staffSnap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        initAuditStream();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error en validación RBAC de logs:", err);
+      }
+    });
+
+    function initAuditStream() {
+      // Stream reactivo a los últimos 200 eventos
+      const q = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(200));
+
+      onSnapshot(q, (snap) => {
+        rawLogs = [];
+        logsMap = {};
+        let cgCount = 0;
+        let hrCount = 0;
+        let dangerCount = 0;
+
+        snap.forEach(d => {
+          const l = { id: d.id, ...d.data() };
+          rawLogs.push(l);
+          logsMap[d.id] = l;
+
+          if (l.company_id === "cesar_gonzalez") cgCount++;
+          if (l.company_id === "hr_employment") hrCount++;
+          if (l.action && (l.action.includes("DELETED") || l.action.includes("MUTATED") || l.action.includes("SUSPENDED"))) {
+            dangerCount++;
+          }
+        });
+
+        document.getElementById('kpi-total-logs').innerText = rawLogs.length;
+        document.getElementById('kpi-cg-logs').innerText = cgCount;
+        document.getElementById('kpi-hr-logs').innerText = hrCount;
+        document.getElementById('kpi-danger-logs').innerText = dangerCount;
+
+        renderLogs();
+      });
+    }
+
+    window.renderLogs = () => {
+      const search = (document.getElementById('filter-search').value || '').toLowerCase().trim();
+      const comp = document.getElementById('filter-company').value;
+      const act = document.getElementById('filter-action').value;
+
+      const filtered = rawLogs.filter(l => {
+        // Filtro de empresa
+        if (comp !== 'ALL') {
+          if (comp === 'GLOBAL' && l.company_id && l.company_id !== 'GLOBAL') return false;
+          if (comp !== 'GLOBAL' && l.company_id !== comp) return false;
+        }
+
+        // Filtro de acción
+        if (act !== 'ALL') {
+          if (!l.action?.toUpperCase().includes(act)) return false;
+        }
+
+        // Búsqueda libre
+        if (search) {
+          const u = (l.user_email || '').toLowerCase().includes(search);
+          const n = (l.user_name || '').toLowerCase().includes(search);
+          const a = (l.action || '').toLowerCase().includes(search);
+          const d = JSON.stringify(l.details || {}).toLowerCase().includes(search);
+          if (!u && !n && !a && !d) return false;
+        }
+
+        return true;
+      });
+
+      document.getElementById('logs-counter').innerText = `${filtered.length} eventos`;
+
+      const tbody = document.getElementById('table-logs');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono text-xs">Sin registros de auditoría coincidentes con los filtros.</td></tr>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(l => {
+        const dateStr = l.timestamp?.toDate ? l.timestamp.toDate().toLocaleString('es-MX') : 'Reciente';
+
+        // Badge estilizado según severidad de acción
+        let badgeColor = "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
+        if (l.action?.includes("DELETED") || l.action?.includes("SUSPENDED")) {
+          badgeColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+        } else if (l.action?.includes("AUTH") || l.action?.includes("SUCCESS")) {
+          badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        } else if (l.action?.includes("MODULE") || l.action?.includes("ROLES")) {
+          badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+        }
+
+        // Tag de Razón Social
+        let companyTag = `<span class="text-slate-400 font-mono text-[11px]">Sistema Global</span>`;
+        if (l.company_id === "cesar_gonzalez") {
+          companyTag = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CÉSAR GIOVANNI</span>`;
+        } else if (l.company_id === "hr_employment") {
+          companyTag = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">HR EMPLOYMENT</span>`;
+        }
+
+        const summary = JSON.stringify(l.details || {});
+
+        html += `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-mono text-slate-400 whitespace-nowrap">${dateStr}</td>
+            <td class="p-4 font-medium text-white">
+              <div class="leading-tight">${l.user_email || 'anónimo'}</div>
+              <span class="text-[10px] text-slate-500 font-mono">${l.user_name || ''} (${l.role_id || 'GUEST'})</span>
+            </td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-mono border font-semibold ${badgeColor}">
+                ${l.action || 'DESCONOCIDO'}
+              </span>
+            </td>
+            <td class="p-4">${companyTag}</td>
+            <td class="p-4 font-mono text-[11px] text-slate-400 max-w-xs truncate" title='${summary}'>
+              ${summary}
+            </td>
+            <td class="p-4 text-right">
+              <button onclick="inspeccionar('${l.id}')" class="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition" title="Inspeccionar Payload">
+                <i class="ph ph-magnifying-glass-plus text-base"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    };
+
+    window.inspeccionar = (id) => {
+      const log = logsMap[id];
+      if (!log) return;
+
+      document.getElementById('inspect-action').innerText = log.action || 'N/A';
+      document.getElementById('inspect-date').innerText = log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString('es-MX') : 'Reciente';
+      document.getElementById('inspect-json').innerText = JSON.stringify(log.details || {}, null, 2);
+      document.getElementById('inspect-ua').innerText = log.user_agent || 'No capturado';
+
+      toggleModalPayload(true);
+    };
+
+    window.toggleModalPayload = (show) => {
+      document.getElementById('modal-payload').classList.toggle('hidden', !show);
+    };
+
+    window.limpiarFiltros = () => {
+      document.getElementById('filter-search').value = '';
+      document.getElementById('filter-company').value = 'ALL';
+      document.getElementById('filter-action').value = 'ALL';
+      renderLogs();
+    };
+
+    window.exportarExcel = () => {
+      if (rawLogs.length === 0) {
+        alert("No hay registros de auditoría para exportar.");
+        return;
+      }
+
+      const rows = rawLogs.map(l => ({
+        "ID Registro": l.id,
+        "Timestamp": l.timestamp?.toDate ? l.timestamp.toDate().toISOString() : '',
+        "Usuario": l.user_email || '',
+        "Nombre": l.user_name || '',
+        "Rol": l.role_id || '',
+        "Razón Social": l.company_name || l.company_id || 'Global',
+        "Acción": l.action || '',
+        "Detalles (Payload)": JSON.stringify(l.details || {}),
+        "User Agent": l.user_agent || ''
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Auditoria");
+      XLSX.writeFile(wb, `Auditoria_ContaCore_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+
+    window.logoutSession = async () => {
+      if (confirm("¿Finalizar sesión segura en ContaCore?")) {
+        await signOut(auth);
+        window.location.replace("index.html");
+      }
+    };
+  </script>
+</body>
+</html>

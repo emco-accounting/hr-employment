@@ -72,12 +72,12 @@
   <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950">
     <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
       <div>
-        <h2 class="text-xl font-bold text-white tracking-tight">Directorio de Staff & Gobernanza Multi-Empresa</h2>
-        <span class="text-xs text-slate-400 font-mono">Gestión unificada de usuarios, roles RBAC y asignación de razones sociales</span>
+        <h2 class="text-xl font-bold text-white tracking-tight">Directorio de Staff & Gobernanza</h2>
+        <span class="text-xs text-slate-400 font-mono">Gestión de roles RBAC, módulos dinámicos y asignación de empresas</span>
       </div>
       <div class="flex items-center gap-3">
-        <button onclick="sembrarRoles()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
-          <i class="ph-bold ph-shield-star text-amber-400 text-sm"></i> Sembrar Roles RBAC
+        <button onclick="abrirMatrizPermisos()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
+          <i class="ph-bold ph-shield-star text-amber-400 text-sm"></i> Matriz de Permisos RBAC
         </button>
         <button onclick="toggleModalStaff(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
           <i class="ph-bold ph-user-plus text-sm"></i> + Inyectar Colaborador
@@ -87,7 +87,7 @@
 
     <div class="p-8 flex-1 space-y-6">
 
-      <!-- TARJETAS RESUMEN DE GOBERNANZA -->
+      <!-- TARJETAS RESUMEN -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
           <div class="flex justify-between items-start">
@@ -95,7 +95,7 @@
             <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-users"></i></span>
           </div>
           <p id="kpi-total-users" class="text-2xl font-bold font-mono text-white mt-2">0</p>
-          <span class="text-[11px] text-slate-500 mt-1 block">Usuarios registrados en staff_users</span>
+          <span class="text-[11px] text-slate-500 mt-1 block">Usuarios registrados</span>
         </div>
 
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
@@ -122,7 +122,7 @@
         <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
           <div class="flex items-center gap-3">
             <h3 class="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Directorio de Colaboradores</h3>
-            <span id="staff-count-badge" class="text-xs font-mono font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">0 registros</span>
+            <span id="staff-count-badge" class="text-xs font-mono font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full">0 colaboradores</span>
           </div>
           <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
             <i class="ph ph-magnifying-glass text-slate-400"></i>
@@ -142,7 +142,7 @@
             </tr>
           </thead>
           <tbody id="table-staff" class="divide-y divide-slate-800/60 font-sans text-xs">
-            <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando personal de emco-accounting...</td></tr>
+            <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando personal...</td></tr>
           </tbody>
         </table>
       </div>
@@ -150,15 +150,12 @@
     </div>
   </main>
 
-  <!-- MODAL: REGISTRAR / INYECTAR COLABORADOR -->
+  <!-- MODAL: REGISTRAR COLABORADOR -->
   <div id="modal-staff" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <div>
-          <h4 class="text-base font-bold text-white">Inyectar Nuevo Colaborador</h4>
-          <span class="text-[11px] text-slate-400 font-mono">Crea usuario en Firebase Auth y registra credenciales en Firestore</span>
-        </div>
-        <button onclick="toggleModalStaff(false)" class="text-slate-400 hover:text-white text-xl font-bold transition">&times;</button>
+        <h4 class="text-base font-bold text-white">Inyectar Nuevo Colaborador</h4>
+        <button onclick="toggleModalStaff(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
 
       <form id="form-staff" class="space-y-4 text-xs font-medium text-slate-300">
@@ -166,18 +163,14 @@
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Completo</label>
           <input type="text" id="staff-name" placeholder="Ej: Lic. Antonio Valladares" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
         </div>
-
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Correo Corporativo</label>
           <input type="email" id="staff-email" placeholder="usuario@hremploy..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
         </div>
-
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Contraseña Inicial</label>
           <input type="password" id="staff-password" minlength="6" placeholder="Mínimo 6 caracteres" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
         </div>
-
-        <!-- SELECTOR DE EMPRESAS PERMITIDAS -->
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Razones Sociales Autorizadas</label>
           <select id="staff-companies" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
@@ -186,7 +179,6 @@
             <option value="hr_employment">Solo HR Employment</option>
           </select>
         </div>
-
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Rol RBAC</label>
@@ -214,18 +206,51 @@
     </div>
   </div>
 
+  <!-- MODAL: MATRIZ DE PERMISOS DINÁMICOS POR ROL -->
+  <div id="modal-roles" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
+        <div>
+          <h4 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="ph-bold ph-shield-star text-amber-400"></i> Matriz de Permisos RBAC (Dinámica)
+          </h4>
+          <span class="text-xs text-slate-400 font-mono">Configura los accesos para módulos nativos y creados</span>
+        </div>
+        <button onclick="toggleModalRoles(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="flex items-center gap-3 bg-slate-950 p-2 rounded-xl border border-slate-800 shrink-0">
+        <label class="text-xs font-mono uppercase text-slate-400">Seleccionar Rol:</label>
+        <select id="select-role-edit" onchange="cargarPermisosDelRol(this.value)" class="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 outline-none">
+          <option value="CONTADOR">CONTADOR</option>
+          <option value="AUXILIAR">AUXILIAR</option>
+          <option value="AUDITOR">AUDITOR</option>
+        </select>
+        <span class="text-[10px] text-slate-500 font-mono ml-auto">SUPERADMIN siempre tiene acceso total (*)</span>
+      </div>
+
+      <div class="overflow-y-auto flex-1 space-y-3 pr-1" id="permissions-container">
+        <!-- Renderizado dinámico de checkboxes de permisos -->
+      </div>
+
+      <div class="flex justify-between items-center pt-3 border-t border-slate-800 shrink-0">
+        <button type="button" onclick="sembrarRoles()" class="text-xs text-slate-400 hover:text-white font-mono flex items-center gap-1">
+          <i class="ph ph-arrow-counter-clockwise"></i> Restaurar Valores Predeterminados
+        </button>
+        <div class="flex gap-2">
+          <button type="button" onclick="toggleModalRoles(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 text-xs">Cerrar</button>
+          <button type="button" onclick="guardarPermisosRol()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20">Guardar Permisos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
-      getFirestore, 
-      collection, 
-      doc, 
-      setDoc, 
-      updateDoc,
-      addDoc,
-      onSnapshot, 
-      serverTimestamp 
+      getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, 
+      onSnapshot, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -242,12 +267,12 @@
     const auth = getAuth(mainApp);
     const db = getFirestore(mainApp, "emco-accounting");
 
-    // Instancia secundaria de Auth para registrar usuarios sin desconectar la sesión activa del Superadmin
     const secondaryApp = initializeApp(firebaseConfig, "SecondaryStaffApp");
     const secondaryAuth = getAuth(secondaryApp);
 
     let currentAdmin = null;
     let rawStaffList = [];
+    let systemModulesList = [];
 
     onAuthStateChanged(auth, (user) => {
       if (!user) {
@@ -276,25 +301,17 @@
       if (!show) document.getElementById('form-staff').reset();
     };
 
-    // SEMBRAR MATRIZ DE ROLES PREESTABLECIDA
+    window.toggleModalRoles = (show) => {
+      document.getElementById('modal-roles').classList.toggle('hidden', !show);
+    };
+
+    // SEMBRAR ROLES RBAC
     window.sembrarRoles = async () => {
       const roles = {
-        "SUPERADMIN": {
-          permissions: ["*"],
-          description: "Control total multi-tenant, gobernanza y módulos"
-        },
-        "CONTADOR": {
-          permissions: ["cxc.read", "cxc.write", "cxp.read", "cxp.write", "assets.read", "assets.write"],
-          description: "Operaciones completas de CxC, CxP y conciliaciones"
-        },
-        "AUXILIAR": {
-          permissions: ["cxc.read", "cxc.write", "cxp.read", "assets.read"],
-          description: "Captura de comprobantes y consulta de balances"
-        },
-        "AUDITOR": {
-          permissions: ["cxc.read", "cxp.read", "assets.read", "audit.read"],
-          description: "Inspección de saldos y registros de auditoría sin mutación"
-        }
+        "SUPERADMIN": { permissions: ["*"], description: "Control total multi-tenant y gobernanza" },
+        "CONTADOR": { permissions: ["cxc.read", "cxc.write", "cxp.read", "cxp.write", "assets.read", "assets.write"], description: "Operaciones completas" },
+        "AUXILIAR": { permissions: ["cxc.read", "cxc.write", "cxp.read", "assets.read"], description: "Captura y balances" },
+        "AUDITOR": { permissions: ["cxc.read", "cxp.read", "assets.read", "audit.read"], description: "Inspección sin mutación" }
       };
 
       try {
@@ -302,13 +319,13 @@
           await setDoc(doc(db, "system_roles", roleId), data);
         }
         await logAudit("ROLES_SEEDED", { roles: Object.keys(roles) });
-        alert("Matriz de roles RBAC sembrada exitosamente en Firestore.");
+        alert("Roles RBAC restaurados con éxito.");
+        cargarPermisosDelRol(document.getElementById('select-role-edit').value);
       } catch (err) {
         alert("Error al sembrar roles: " + err.message);
       }
     };
 
-    // LISTENER REACTIVO DE STAFF
     function initStaffListener() {
       onSnapshot(collection(db, "staff_users"), (snap) => {
         rawStaffList = [];
@@ -324,9 +341,7 @@
           if (allowed.includes("*") || (allowed.includes("cesar_gonzalez") && allowed.includes("hr_employment"))) {
             globalCount++;
           }
-          if (u.status === "ACTIVE") {
-            activeCount++;
-          }
+          if (u.status === "ACTIVE") activeCount++;
         });
 
         document.getElementById('kpi-total-users').innerText = total;
@@ -344,10 +359,10 @@
 
       const filtered = rawStaffList.filter(u => {
         if (search) {
-          const matchName = (u.full_name || '').toLowerCase().includes(search);
-          const matchEmail = (u.email || '').toLowerCase().includes(search);
-          const matchRole = (u.role_id || '').toLowerCase().includes(search);
-          if (!matchName && !matchEmail && !matchRole) return false;
+          const mN = (u.full_name || '').toLowerCase().includes(search);
+          const mE = (u.email || '').toLowerCase().includes(search);
+          const mR = (u.role_id || '').toLowerCase().includes(search);
+          if (!mN && !mE && !mR) return false;
         }
         return true;
       });
@@ -367,12 +382,8 @@
           companiesBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">AMBAS (GLOBAL)</span>`;
         } else {
           companiesBadge = allowed.map(c => {
-            if (c === "cesar_gonzalez") {
-              return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 mr-1">CÉSAR G.</span>`;
-            }
-            if (c === "hr_employment") {
-              return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mr-1">HR EMPL.</span>`;
-            }
+            if (c === "cesar_gonzalez") return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 mr-1">CÉSAR G.</span>`;
+            if (c === "hr_employment") return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mr-1">HR EMPL.</span>`;
             return '';
           }).join('');
         }
@@ -414,14 +425,11 @@
       const roleId = document.getElementById('staff-role').value;
       const status = document.getElementById('staff-status').value;
       const compSelect = document.getElementById('staff-companies').value;
-
       let allowed = compSelect === "ALL" ? ["*"] : [compSelect];
 
       try {
         const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        const newUid = cred.user.uid;
-
-        await setDoc(doc(db, "staff_users", newUid), {
+        await setDoc(doc(db, "staff_users", cred.user.uid), {
           full_name: fullName,
           email: email,
           role_id: roleId,
@@ -430,7 +438,7 @@
           created_at: serverTimestamp()
         });
 
-        await logAudit("STAFF_USER_CREATED", { email, roleId, allowed, uid: newUid });
+        await logAudit("STAFF_USER_CREATED", { email, roleId, allowed, uid: cred.user.uid });
         alert(`Colaborador ${fullName} inyectado exitosamente.`);
         toggleModalStaff(false);
       } catch (err) {
@@ -445,9 +453,7 @@
       try {
         await updateDoc(doc(db, "staff_users", uid), { status: newStatus });
         await logAudit("STAFF_STATUS_MUTATED", { uid, newStatus });
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
+      } catch (err) { alert(err.message); }
     };
 
     window.cambiarRol = async (uid, currentRole) => {
@@ -458,10 +464,7 @@
       try {
         await updateDoc(doc(db, "staff_users", uid), { role_id: mapping[nuevo] });
         await logAudit("STAFF_ROLE_MUTATED", { uid, old_role: currentRole, new_role: mapping[nuevo] });
-        alert("Rol actualizado exitosamente.");
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
+      } catch (err) { alert(err.message); }
     };
 
     window.cambiarEmpresas = async (uid) => {
@@ -473,9 +476,106 @@
       try {
         await updateDoc(doc(db, "staff_users", uid), { allowed_companies: allowed });
         await logAudit("STAFF_COMPANIES_UPDATED", { uid, allowed });
-        alert("Permisos de empresa actualizados con éxito.");
+      } catch (err) { alert(err.message); }
+    };
+
+    // ==========================================
+    // MATRIZ DE PERMISOS DINÁMICOS
+    // ==========================================
+    window.abrirMatrizPermisos = async () => {
+      toggleModalRoles(true);
+      // Cargar lista de módulos dinámicos desde system_modules
+      const snap = await getDocs(collection(db, "system_modules"));
+      systemModulesList = [];
+      snap.forEach(d => systemModulesList.push(d.data()));
+
+      cargarPermisosDelRol(document.getElementById('select-role-edit').value);
+    };
+
+    window.cargarPermisosDelRol = async (roleId) => {
+      const container = document.getElementById('permissions-container');
+      container.innerHTML = '<p class="text-xs text-slate-400 font-mono">Cargando permisos...</p>';
+
+      const roleDoc = await getDoc(doc(db, "system_roles", roleId));
+      const currentPerms = roleDoc.exists() ? (roleDoc.data().permissions || []) : [];
+
+      let html = `
+        <div class="border border-slate-800 rounded-xl p-3 bg-slate-950/60 space-y-2">
+          <span class="text-xs font-mono font-bold uppercase text-indigo-400">Módulos Nativos del Núcleo</span>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" value="cxc.read" ${currentPerms.includes('cxc.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver CxC (Cobrar)
+            </label>
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" value="cxc.write" ${currentPerms.includes('cxc.write') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Registrar / Cobrar CxC
+            </label>
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" value="cxp.read" ${currentPerms.includes('cxp.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver CxP (Pagar)
+            </label>
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" value="cxp.write" ${currentPerms.includes('cxp.write') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Registrar / Pagar CxP
+            </label>
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" value="assets.read" ${currentPerms.includes('assets.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver Activos Fijos
+            </label>
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" value="assets.write" ${currentPerms.includes('assets.write') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Registrar Activos
+            </label>
+            <label class="flex items-center gap-2 text-slate-300">
+              <input type="checkbox" value="audit.read" ${currentPerms.includes('audit.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver Auditoría Forense
+            </label>
+          </div>
+        </div>
+      `;
+
+      // Renderizado de permisos para módulos dinámicos
+      if (systemModulesList.length > 0) {
+        html += `
+          <div class="border border-slate-800 rounded-xl p-3 bg-slate-950/60 space-y-2 mt-3">
+            <span class="text-xs font-mono font-bold uppercase text-emerald-400">Módulos Creados en Caliente (Bilateral)</span>
+            <div class="space-y-2">
+        `;
+
+        systemModulesList.forEach(m => {
+          const rKey = `${m.slug}.read`;
+          const wKey = `${m.slug}.write`;
+
+          html += `
+            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800/80">
+              <div>
+                <span class="text-xs font-bold text-white block">${m.title}</span>
+                <span class="text-[10px] font-mono text-slate-500">${m.slug}</span>
+              </div>
+              <div class="flex items-center gap-4 text-xs">
+                <label class="flex items-center gap-1.5 text-slate-300">
+                  <input type="checkbox" value="${rKey}" ${currentPerms.includes(rKey) ? 'checked' : ''} class="perm-check rounded border-slate-700"> Lectura
+                </label>
+                <label class="flex items-center gap-1.5 text-slate-300">
+                  <input type="checkbox" value="${wKey}" ${currentPerms.includes(wKey) ? 'checked' : ''} class="perm-check rounded border-slate-700"> Captura
+                </label>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `</div></div>`;
+      }
+
+      container.innerHTML = html;
+    };
+
+    window.guardarPermisosRol = async () => {
+      const roleId = document.getElementById('select-role-edit').value;
+      const checks = document.querySelectorAll('.perm-check:checked');
+      const permissions = Array.from(checks).map(c => c.value);
+
+      try {
+        await updateDoc(doc(db, "system_roles", roleId), { permissions });
+        await logAudit("RBAC_ROLE_PERMISSIONS_SAVED", { roleId, permissions });
+        alert(`Permisos actualizados con éxito para el rol ${roleId}.`);
+        toggleModalRoles(false);
       } catch (err) {
-        alert("Error: " + err.message);
+        alert("Error al guardar permisos: " + err.message);
       }
     };
   </script>

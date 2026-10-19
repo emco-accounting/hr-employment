@@ -39,10 +39,10 @@
     </div>
   </div>
 
-  <!-- HEADER NAVEGACIÓN -->
+  <!-- HEADER NAVEGACIÓN CON PERSISTENCIA DE TENANT -->
   <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
-      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal">
+      <a href="portal_catalogo.html" id="btn-back-portal" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
         <i class="ph-bold ph-arrow-left text-lg"></i>
       </a>
       <div>
@@ -101,7 +101,7 @@
           <span class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="ph-bold ph-warning-octagon"></i></span>
         </div>
         <p id="kpi-danger-logs" class="text-2xl font-bold font-mono text-rose-400 mt-2">0</p>
-        <span class="text-[11px] text-slate-500 mt-1 block">Eliminaciones y mutaciones RBAC</span>
+        <span class="text-[11px] text-slate-500 mt-1 block">Bajas y mutaciones RBAC</span>
       </div>
     </div>
 
@@ -125,8 +125,9 @@
           <option value="AUTH">Sesiones (Login / Logout)</option>
           <option value="INVOICE">Facturas (CxC / CxP)</option>
           <option value="ASSET">Activos & Hardware</option>
-          <option value="MODULE">Módulos & Esquemas</option>
-          <option value="STAFF">Gobernanza de Staff</option>
+          <option value="MODULE">Módulos & Esquemas (Creación / Importación)</option>
+          <option value="DYNAMIC">Registros de Módulos Dinámicos</option>
+          <option value="STAFF">Gobernanza de Staff & RBAC</option>
           <option value="DELETED">Eliminaciones (Bajas)</option>
         </select>
       </div>
@@ -230,6 +231,15 @@
       "hr_employment": "HR Employment"
     };
 
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeCompanyId = urlParams.get('empresa') || localStorage.getItem('active_company_id') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
+
+    // Sincronizar enlace de retorno
+    const btnBack = document.getElementById('btn-back-portal');
+    if (btnBack) {
+      btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(activeCompanyId)}`;
+    }
+
     let rawLogs = [];
     let logsMap = {};
 
@@ -258,8 +268,7 @@
     });
 
     function initAuditStream() {
-      // Stream reactivo a los últimos 200 eventos
-      const q = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(200));
+      const q = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(250));
 
       onSnapshot(q, (snap) => {
         rawLogs = [];
@@ -295,18 +304,24 @@
       const act = document.getElementById('filter-action').value;
 
       const filtered = rawLogs.filter(l => {
-        // Filtro de empresa
         if (comp !== 'ALL') {
           if (comp === 'GLOBAL' && l.company_id && l.company_id !== 'GLOBAL') return false;
           if (comp !== 'GLOBAL' && l.company_id !== comp) return false;
         }
 
-        // Filtro de acción
         if (act !== 'ALL') {
-          if (!l.action?.toUpperCase().includes(act)) return false;
+          const actionUpper = (l.action || '').toUpperCase();
+          if (act === 'MODULE') {
+            if (!actionUpper.includes("MODULE") && !actionUpper.includes("SCHEMA")) return false;
+          } else if (act === 'DYNAMIC') {
+            if (!actionUpper.includes("DYNAMIC")) return false;
+          } else if (act === 'STAFF') {
+            if (!actionUpper.includes("STAFF") && !actionUpper.includes("RBAC") && !actionUpper.includes("ROLES")) return false;
+          } else {
+            if (!actionUpper.includes(act)) return false;
+          }
         }
 
-        // Búsqueda libre
         if (search) {
           const u = (l.user_email || '').toLowerCase().includes(search);
           const n = (l.user_name || '').toLowerCase().includes(search);
@@ -330,17 +345,15 @@
       filtered.forEach(l => {
         const dateStr = l.timestamp?.toDate ? l.timestamp.toDate().toLocaleString('es-MX') : 'Reciente';
 
-        // Badge estilizado según severidad de acción
         let badgeColor = "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
         if (l.action?.includes("DELETED") || l.action?.includes("SUSPENDED")) {
           badgeColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
-        } else if (l.action?.includes("AUTH") || l.action?.includes("SUCCESS")) {
+        } else if (l.action?.includes("PAID") || l.action?.includes("COLLECTED") || l.action?.includes("AUTH") || l.action?.includes("SUCCESS")) {
           badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-        } else if (l.action?.includes("MODULE") || l.action?.includes("ROLES")) {
+        } else if (l.action?.includes("MODULE") || l.action?.includes("DYNAMIC") || l.action?.includes("ROLES") || l.action?.includes("MUTATED")) {
           badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
         }
 
-        // Tag de Razón Social
         let companyTag = `<span class="text-slate-400 font-mono text-[11px]">Sistema Global</span>`;
         if (l.company_id === "cesar_gonzalez") {
           companyTag = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CÉSAR GIOVANNI</span>`;
@@ -355,7 +368,7 @@
             <td class="p-4 font-mono text-slate-400 whitespace-nowrap">${dateStr}</td>
             <td class="p-4 font-medium text-white">
               <div class="leading-tight">${l.user_email || 'anónimo'}</div>
-              <span class="text-[10px] text-slate-500 font-mono">${l.user_name || ''} (${l.role_id || 'GUEST'})</span>
+              <span class="text-[10px] text-slate-500 font-mono">${l.user_name || 'Operador'} (${l.role_id || 'GUEST'})</span>
             </td>
             <td class="p-4">
               <span class="px-2.5 py-1 rounded-full text-[10px] font-mono border font-semibold ${badgeColor}">
@@ -427,6 +440,8 @@
     window.logoutSession = async () => {
       if (confirm("¿Finalizar sesión segura en ContaCore?")) {
         await signOut(auth);
+        localStorage.removeItem("active_company_id");
+        sessionStorage.clear();
         window.location.replace("index.html");
       }
     };

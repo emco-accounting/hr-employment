@@ -37,7 +37,7 @@
   <!-- ENCABEZADO SUPERIOR -->
   <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
-      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+      <a href="portal_catalogo.html?empresa=cesar_gonzalez" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
         <i class="ph-bold ph-arrow-left text-lg"></i>
       </a>
       <div>
@@ -189,11 +189,34 @@
     </div>
   </div>
 
+  <!-- MODAL: REASIGNAR RESGUARDO -->
+  <div id="modal-reasignar" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-700/80 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h4 class="text-sm font-bold text-white">Reasignar Resguardo de Activo</h4>
+        <button onclick="toggleModalReasignar(false)" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <input type="hidden" id="reassign-asset-id" value="">
+      <p id="reassign-asset-desc" class="text-xs text-slate-400 font-mono"></p>
+
+      <div>
+        <label class="block uppercase tracking-wider text-[11px] text-slate-400 mb-1">Nuevo Colaborador (Vacío = Disponible)</label>
+        <input type="text" id="reassign-asset-assigned" placeholder="Dejar en blanco para almacén" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 text-xs">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-800 text-xs">
+        <button type="button" onclick="toggleModalReasignar(false)" class="px-3.5 py-1.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800">Cancelar</button>
+        <button type="button" onclick="guardarReasignacion()" id="btn-save-reassign" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition">Guardar</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
-      getFirestore, collection, addDoc, deleteDoc, doc, getDoc, 
+      getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, 
       query, where, orderBy, onSnapshot, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -217,19 +240,23 @@
     let currentUser = null;
     let rawData = [];
 
-    async function logAudit(action, details = {}) {
+    // AUDITORÍA FORENSE ENRIQUECIDA Y HOMOLOGADA
+    async function logAudit(action, details = {}, moduleSlug = "assets") {
       try {
         await addDoc(collection(db, "audit_logs"), {
           timestamp: serverTimestamp(),
-          user_email: currentUser?.email || "anonimo",
+          user_email: currentUser?.email || auth.currentUser?.email || "anonimo",
+          user_name: currentUser?.name || currentUser?.full_name || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : "Operador"),
+          role_id: currentUser?.role_id || "OPERADOR",
           company_id: COMPANY_ID,
           company_name: COMPANY_NAME,
+          module_slug: moduleSlug,
           action: action,
           details: details,
           user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn("Fallo log:", e);
+        console.warn("Fallo log auditoría:", e);
       }
     }
 
@@ -254,7 +281,7 @@
 
         if (!isSuper && !allowed.includes("*") && !allowed.includes(COMPANY_ID)) {
           alert("Acceso denegado: No tienes autorización para la razón social de César Giovanni.");
-          window.location.replace("portal_catalogo.html");
+          window.location.replace("portal_catalogo.html?empresa=" + encodeURIComponent(allowed[0] || "hr_employment"));
           return;
         }
 
@@ -283,7 +310,8 @@
           const item = { id: d.id, ...d.data() };
           rawData.push(item);
 
-          totalCosto += Number(item.purchase_cost || 0);
+          const costNum = Number(item.purchase_cost);
+          totalCosto += (!isNaN(costNum) && isFinite(costNum)) ? costNum : 0;
           if (item.assigned_to && item.assigned_to.trim() !== "") {
             asignados++;
           }
@@ -349,7 +377,10 @@
             <td class="p-4 font-mono text-xs text-slate-400">${i.serial_number}</td>
             <td class="p-4">${asignadoText}</td>
             <td class="p-4 font-mono text-white font-semibold">$${Number(i.purchase_cost || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-            <td class="p-4 text-right">
+            <td class="p-4 text-right space-x-2">
+              <button onclick="abrirModalReasignar('${i.id}', '${i.asset_code}', '${(i.assigned_to || '').replace(/'/g, "\\'")}')" class="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition" title="Reasignar Resguardo">
+                <i class="ph ph-user-switch text-base"></i>
+              </button>
               <button onclick="eliminarActivo('${i.id}', '${i.asset_code}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar Activo">
                 <i class="ph ph-trash text-base"></i>
               </button>
@@ -365,6 +396,42 @@
       if (!show) document.getElementById('form-activo').reset();
     };
 
+    window.toggleModalReasignar = (show) => {
+      document.getElementById('modal-reasignar').classList.toggle('hidden', !show);
+    };
+
+    window.abrirModalReasignar = (id, code, currentAssigned) => {
+      document.getElementById('reassign-asset-id').value = id;
+      document.getElementById('reassign-asset-desc').innerText = `Activo: ${code}`;
+      document.getElementById('reassign-asset-assigned').value = currentAssigned || '';
+      toggleModalReasignar(true);
+    };
+
+    window.guardarReasignacion = async () => {
+      const id = document.getElementById('reassign-asset-id').value;
+      const newAssigned = document.getElementById('reassign-asset-assigned').value.trim();
+      const btn = document.getElementById('btn-save-reassign');
+
+      btn.disabled = true;
+      btn.innerText = "Guardando...";
+
+      try {
+        await updateDoc(doc(db, "fixed_assets", id), {
+          assigned_to: newAssigned,
+          status: newAssigned ? "ASSIGNED" : "AVAILABLE",
+          updated_at: serverTimestamp()
+        });
+
+        await logAudit("ASSET_REASSIGNED", { doc_id: id, assigned_to: newAssigned });
+        toggleModalReasignar(false);
+      } catch (err) {
+        alert("Error al reasignar: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Guardar";
+      }
+    };
+
     document.getElementById('form-activo').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit');
@@ -375,7 +442,8 @@
       const category = document.getElementById('asset-type').value;
       const name = document.getElementById('asset-name').value.trim();
       const serial = document.getElementById('asset-serial').value.trim();
-      const cost = parseFloat(document.getElementById('asset-cost').value) || 0;
+      const rawCost = parseFloat(document.getElementById('asset-cost').value);
+      const cost = (!isNaN(rawCost) && isFinite(rawCost)) ? rawCost : 0;
       const assigned = document.getElementById('asset-assigned').value.trim();
 
       try {
@@ -389,11 +457,12 @@
           purchase_cost: cost,
           assigned_to: assigned,
           status: assigned ? "ASSIGNED" : "AVAILABLE",
-          registered_by: auth.currentUser?.email || 'admin',
+          registered_by: currentUser?.email || auth.currentUser?.email || 'admin',
+          registered_by_name: currentUser?.name || currentUser?.full_name || 'Operador',
           created_at: serverTimestamp()
         });
 
-        await logAudit("ASSET_CREATED", { doc_id: docRef.id, code, name, cost, assigned });
+        await logAudit("ASSET_CREATED", { doc_id: docRef.id, code, name, cost, assigned }, "assets");
         toggleModalActivo(false);
       } catch (err) {
         alert("Error al registrar activo: " + err.message);
@@ -407,7 +476,7 @@
       if (confirm(`¿Eliminar el activo ${code} permanentemente del inventario de César Giovanni?`)) {
         try {
           await deleteDoc(doc(db, "fixed_assets", id));
-          await logAudit("ASSET_DELETED", { doc_id: id, code });
+          await logAudit("ASSET_DELETED", { doc_id: id, code }, "assets");
         } catch (e) {
           alert("Error: " + e.message);
         }

@@ -91,19 +91,32 @@
       </div>
     </div>
 
-    <!-- FILTROS -->
+    <!-- FILTROS Y CONSULTA POR PERIODO -->
     <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
       <div class="flex flex-wrap items-center gap-3">
+        <!-- Búsqueda texto -->
         <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
           <i class="ph ph-magnifying-glass text-slate-400"></i>
-          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar proveedor, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-64">
+          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar proveedor, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-56">
         </div>
 
-        <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs">
+        <!-- Estado -->
+        <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
           <option value="ALL">Todos los Estados</option>
           <option value="PENDING">Pendientes / Por Pagar</option>
           <option value="PAID">Pagadas / Liquidadas</option>
         </select>
+
+        <!-- Filtro Rango de Fechas -->
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          <span class="text-slate-400 font-mono text-[11px]">Desde:</span>
+          <input type="date" id="filter-date-from" onchange="renderTable()" class="bg-transparent text-white outline-none font-mono text-xs">
+          <span class="text-slate-400 font-mono text-[11px] ml-1">Hasta:</span>
+          <input type="date" id="filter-date-to" onchange="renderTable()" class="bg-transparent text-white outline-none font-mono text-xs">
+          <button onclick="limpiarFiltroFechas()" class="text-slate-500 hover:text-rose-400 ml-1" title="Limpiar rango de fechas">
+            <i class="ph ph-x-circle text-sm"></i>
+          </button>
+        </div>
       </div>
 
       <span id="counter-records" class="font-mono text-slate-500 text-xs">0 facturas</span>
@@ -147,11 +160,11 @@
         <div id="upload-idle" class="space-y-1">
           <i class="ph-bold ph-file-arrow-up text-2xl text-rose-400 inline-block"></i>
           <p class="text-xs font-semibold text-slate-200">Arrastra factura de proveedor (PDF o XML)</p>
-          <p class="text-[10px] text-slate-500 font-mono">Lectura inteligente con Gemini 3.8 Flash</p>
+          <p class="text-[10px] text-slate-500 font-mono">Lectura inteligente con Gemini 3.8 / 2.5 Flash</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
           <i class="ph ph-spinner animate-spin text-2xl text-rose-400 inline-block"></i>
-          <p id="processing-text" class="text-xs font-mono text-rose-300">Extrayendo datos del emisor...</p>
+          <p id="processing-text" class="text-xs font-mono text-rose-300">Procesando archivo...</p>
         </div>
       </div>
 
@@ -192,12 +205,38 @@
     </div>
   </div>
 
+  <!-- MODAL: REGISTRAR / EDITAR FECHA DE PAGO -->
+  <div id="modal-pay-date" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-700/80 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h4 id="pay-modal-title" class="text-sm font-bold text-white">Fecha de Liquidación</h4>
+        <button onclick="toggleModalPayDate(false)" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+      
+      <input type="hidden" id="pay-record-id" value="">
+      
+      <div class="space-y-2">
+        <p id="pay-record-desc" class="text-xs text-slate-400 font-mono"></p>
+        <label class="block uppercase tracking-wider text-[11px] text-slate-400 font-medium">Fecha en que se pagó:</label>
+        <input type="date" id="pay-record-date" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono text-xs">
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-800 text-xs">
+        <button type="button" onclick="toggleModalPayDate(false)" class="px-3.5 py-1.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800">Cancelar</button>
+        <button type="button" onclick="confirmarPagoConFecha()" id="btn-save-pay-date" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition">Guardar Pago</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL VISOR COMPROBANTE -->
   <div id="modal-viewer" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex flex-col p-4 sm:p-6 z-50">
     <div class="bg-slate-900 rounded-2xl w-full h-full flex flex-col border border-slate-700/80 shadow-2xl overflow-hidden">
       <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50 shrink-0">
         <h4 id="viewer-title" class="text-sm font-bold text-white">Comprobante Fiscal de Proveedor</h4>
         <div class="flex items-center gap-3">
+          <a id="viewer-open-external" href="#" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+            <i class="ph ph-arrow-square-out"></i> Abrir en Pestaña
+          </a>
           <a id="viewer-download" href="#" target="_blank" download class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold transition">Descargar Salva</a>
           <button onclick="toggleModalViewer(false)" class="text-slate-400 hover:text-white text-2xl font-bold p-1">&times;</button>
         </div>
@@ -311,44 +350,32 @@
 
       onSnapshot(q, (snap) => {
         rawData = [];
-        let pendTotal = 0, pendCount = 0;
-        let pagTotal = 0, pagCount = 0;
-        let grossTotal = 0;
-
         snap.forEach(d => {
-          const item = { id: d.id, ...d.data() };
-          rawData.push(item);
-
-          const amt = Number(item.total_amount || 0);
-          grossTotal += amt;
-
-          if (item.status === "PAID") {
-            pagTotal += amt;
-            pagCount++;
-          } else {
-            pendTotal += Number(item.balance || amt);
-            pendCount++;
-          }
+          rawData.push({ id: d.id, ...d.data() });
         });
-
-        document.getElementById('kpi-pendiente').innerText = `$${pendTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-        document.getElementById('kpi-pendiente-sub').innerText = `${pendCount} facturas pendientes de pago`;
-
-        document.getElementById('kpi-liquidado').innerText = `$${pagTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-        document.getElementById('kpi-liquidado-sub').innerText = `${pagCount} facturas liquidadas`;
-
-        document.getElementById('kpi-total').innerText = `$${grossTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-
         renderTable();
       });
     }
 
+    window.limpiarFiltroFechas = () => {
+      document.getElementById('filter-date-from').value = '';
+      document.getElementById('filter-date-to').value = '';
+      renderTable();
+    };
+
     window.renderTable = () => {
       const search = (document.getElementById('filter-search')?.value || '').toLowerCase().trim();
       const st = document.getElementById('filter-status')?.value || 'ALL';
+      const dateFrom = document.getElementById('filter-date-from')?.value || '';
+      const dateTo = document.getElementById('filter-date-to')?.value || '';
 
       const filtered = rawData.filter(i => {
         if (st !== 'ALL' && i.status !== st) return false;
+
+        const targetDate = (i.status === 'PAID' && i.paid_date) ? i.paid_date : (i.due_date || '');
+        if (dateFrom && targetDate && targetDate < dateFrom) return false;
+        if (dateTo && targetDate && targetDate > dateTo) return false;
+
         if (search) {
           const f = (i.folio || '').toLowerCase().includes(search);
           const e = (i.entity_name || '').toLowerCase().includes(search);
@@ -357,9 +384,33 @@
         return true;
       });
 
-      document.getElementById('counter-records').innerText = `${filtered.length} facturas`;
-      const tbody = document.getElementById('table-cxp');
+      // Recalcular KPIs dinámicamente según el periodo / filtro
+      let pendTotal = 0, pendCount = 0;
+      let pagTotal = 0, pagCount = 0;
+      let grossTotal = 0;
 
+      filtered.forEach(item => {
+        const amt = Number(item.total_amount || 0);
+        grossTotal += amt;
+        if (item.status === 'PAID') {
+          pagTotal += amt;
+          pagCount++;
+        } else {
+          pendTotal += Number(item.balance || amt);
+          pendCount++;
+        }
+      });
+
+      document.getElementById('kpi-pendiente').innerText = `$${pendTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+      document.getElementById('kpi-pendiente-sub').innerText = `${pendCount} facturas pendientes`;
+
+      document.getElementById('kpi-liquidado').innerText = `$${pagTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+      document.getElementById('kpi-liquidado-sub').innerText = `${pagCount} facturas liquidadas`;
+
+      document.getElementById('kpi-total').innerText = `$${grossTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+      document.getElementById('counter-records').innerText = `${filtered.length} facturas`;
+
+      const tbody = document.getElementById('table-cxp');
       if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin registros de CxP con los criterios seleccionados.</td></tr>';
         return;
@@ -369,16 +420,30 @@
       filtered.forEach(i => {
         const isPaid = i.status === "PAID";
         const docBtn = i.document_url
-          ? `<button onclick="verDocumento('${i.document_url}', 'CxP: ${i.folio}')" class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 font-mono text-xs border border-rose-500/20"><i class="ph ph-eye"></i> Salva</button>`
+          ? `<div class="flex items-center gap-1.5">
+               <button onclick="verDocumento('${i.document_url}', 'CxP: ${i.folio}')" class="px-2 py-1 rounded bg-rose-500/10 text-rose-400 font-mono text-xs border border-rose-500/20 hover:bg-rose-500/20 transition">
+                 <i class="ph ph-eye"></i> Salva
+               </button>
+               <a href="${i.document_url}" target="_blank" rel="noopener noreferrer" class="p-1 text-slate-400 hover:text-white" title="Abrir en pestaña nueva">
+                 <i class="ph ph-arrow-square-out text-sm"></i>
+               </a>
+             </div>`
           : `<span class="text-slate-600 font-mono text-xs">Sin archivo</span>`;
 
         const statusBadge = isPaid 
-          ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PAGADA</span>`
+          ? `<div class="flex flex-col">
+               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-center">PAGADA</span>
+               <span class="text-[10px] font-mono text-slate-400 mt-0.5 text-center">${i.paid_date || 'S/F'}</span>
+             </div>`
           : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20">POR PAGAR</span>`;
 
         const actionBtn = isPaid 
-          ? `<span class="text-slate-500 text-xs font-mono">Liquidada</span>`
-          : `<button onclick="marcarPagada('${i.id}')" class="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded text-xs font-medium border border-emerald-500/30 hover:bg-emerald-600 hover:text-white transition">Pagar</button>`;
+          ? `<button onclick="abrirModalPago('${i.id}', '${i.folio}', '${i.paid_date || ''}', true)" class="px-2 py-1 bg-slate-800 text-slate-300 rounded text-xs border border-slate-700 hover:text-white hover:border-slate-500 transition" title="Modificar fecha de pago">
+               <i class="ph ph-calendar"></i> Fecha
+             </button>`
+          : `<button onclick="abrirModalPago('${i.id}', '${i.folio}', '', false)" class="px-2.5 py-1 bg-emerald-600/20 text-emerald-400 rounded text-xs font-medium border border-emerald-500/30 hover:bg-emerald-600 hover:text-white transition">
+               Pagar
+             </button>`;
 
         html += `
           <tr class="hover:bg-slate-800/40 transition">
@@ -415,8 +480,12 @@
       const modal = document.getElementById('modal-viewer');
       const frame = document.getElementById('viewer-frame');
       const img = document.getElementById('viewer-img');
+      const externalLink = document.getElementById('viewer-open-external');
+      const downloadLink = document.getElementById('viewer-download');
+
       document.getElementById('viewer-title').innerText = title;
-      document.getElementById('viewer-download').href = url;
+      externalLink.href = url;
+      downloadLink.href = url;
 
       frame.classList.add('hidden');
       img.classList.add('hidden');
@@ -439,7 +508,7 @@
       }
     };
 
-    // PROCESAMIENTO GEMINI Y STORAGE
+    // PROCESAMIENTO GEMINI (3.8 FLASH -> 2.5 FLASH) Y ALMACENAMIENTO FÍSICO
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -451,6 +520,18 @@
       proc.classList.remove('hidden');
 
       try {
+        // 1. Resguardo de la salva en Firebase Storage primero
+        procTxt.innerText = "Guardando comprobante en Storage...";
+        const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxp/${Date.now()}_${cleanName}`);
+        const upRes = await uploadBytes(sRef, file);
+        const downloadUrl = await getDownloadURL(upRes.ref);
+
+        document.getElementById('uploaded-doc-url').value = downloadUrl;
+        document.getElementById('uploaded-doc-name').value = file.name;
+        document.getElementById('doc-status-msg').innerText = `Guardado: ${file.name}`;
+
+        // 2. Extracción de datos
         if (file.name.toLowerCase().endsWith('.xml')) {
           procTxt.innerText = "Extrayendo CFDI XML...";
           const text = await file.text();
@@ -458,26 +539,15 @@
         } else {
           const key = localStorage.getItem('GEMINI_API_KEY');
           if (!key) {
-            alert("Configura tu API Key de Gemini en la barra superior.");
+            alert("Archivo guardado físicamente, pero debes configurar tu Gemini API Key para autocompletar campos.");
             toggleApiKeyModal(true);
             return;
           }
-          procTxt.innerText = "Analizando con Gemini 3.8 Flash...";
           const b64 = await fileToBase64(file);
-          await parseWithGemini(b64, file.type, key);
+          await parseWithGeminiDual(b64, file.type, key, procTxt);
         }
-
-        document.getElementById('uploaded-doc-name').value = file.name;
-        document.getElementById('doc-status-msg').innerText = `Cargado: ${file.name}`;
-
-        // Almacenar salva particionada en Storage
-        procTxt.innerText = "Guardando comprobante en Storage...";
-        const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxp/${Date.now()}_${cleanName}`);
-        const upRes = await uploadBytes(sRef, file);
-        document.getElementById('uploaded-doc-url').value = await getDownloadURL(upRes.ref);
-
       } catch (err) {
+        console.error("Error en procesamiento:", err);
         alert("Aviso: " + err.message);
       } finally {
         setTimeout(() => {
@@ -509,27 +579,72 @@
       });
     }
 
-    async function parseWithGemini(base64Data, mimeType, apiKey) {
-      const prompt = `Analiza la factura de PROVEEDOR o cuenta por pagar. Extrae en formato JSON:
-      {"razon_social":"Nombre o Razón Social del Emisor o Proveedor","folio":"UUID fiscal de 36 caracteres o folio","monto_total":0.00,"fecha_emision":"YYYY-MM-DD"}`;
+    async function parseWithGeminiDual(base64Data, mimeType, apiKey, statusElement) {
+      const models = [
+        { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
+        { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" }
+      ];
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: mimeType, data: base64Data } }] }],
-          generationConfig: { response_mime_type: "application/json" }
-        })
-      });
+      const prompt = `Analiza la factura de PROVEEDOR o cuenta por pagar. Extrae en formato JSON plano:
+{
+  "razon_social": "Nombre o Razón Social del Emisor o Proveedor",
+  "folio": "UUID fiscal de 36 caracteres o folio impreso",
+  "monto_total": 0.00,
+  "fecha_emision": "YYYY-MM-DD"
+}`;
 
-      if (!resp.ok) throw new Error("Fallo al comunicarse con Gemini");
-      const d = await resp.json();
-      const p = JSON.parse(d.candidates[0].content.parts[0].text);
-      if (p.razon_social) document.getElementById('invoice-entity').value = p.razon_social;
-      if (p.folio) document.getElementById('invoice-folio').value = p.folio;
-      if (p.monto_total) document.getElementById('invoice-total').value = p.monto_total;
-      if (p.fecha_emision) document.getElementById('invoice-date').value = p.fecha_emision;
+      let success = false;
+      let lastError = null;
+
+      for (const m of models) {
+        try {
+          if (statusElement) statusElement.innerText = `Analizando con ${m.label}...`;
+          
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m.id}:generateContent?key=${apiKey}`;
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inline_data: { mime_type: mimeType, data: base64Data } }
+                ]
+              }],
+              generationConfig: {
+                response_mime_type: "application/json"
+              }
+            })
+          });
+
+          if (!resp.ok) {
+            const errDetail = await resp.json().catch(() => null);
+            throw new Error(errDetail?.error?.message || `HTTP ${resp.status} en ${m.label}`);
+          }
+
+          const d = await resp.json();
+          const rawText = d.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) throw new Error("Sin respuesta de texto.");
+
+          const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const p = JSON.parse(cleanJson);
+
+          if (p.razon_social) document.getElementById('invoice-entity').value = p.razon_social;
+          if (p.folio) document.getElementById('invoice-folio').value = p.folio;
+          if (p.monto_total) document.getElementById('invoice-total').value = p.monto_total;
+          if (p.fecha_emision) document.getElementById('invoice-date').value = p.fecha_emision;
+
+          success = true;
+          break;
+        } catch (err) {
+          console.warn(`Fallo con ${m.label}:`, err.message);
+          lastError = err;
+        }
+      }
+
+      if (!success) {
+        throw new Error(`Fallo de comunicación con Gemini: ${lastError?.message || "Servicio no disponible"}`);
+      }
     }
 
     // REGISTRO DE PASIVO
@@ -569,17 +684,46 @@
       }
     });
 
-    window.marcarPagada = async (id) => {
-      if (confirm("¿Confirmar liquidación y pago total a proveedor?")) {
-        try {
-          await updateDoc(doc(db, "accounts_payable", id), {
-            status: "PAID",
-            balance: 0.0,
-            paid_at: serverTimestamp(),
-            paid_by: auth.currentUser?.email
-          });
-          await logAudit("INVOICE_CXP_PAID", { doc_id: id });
-        } catch (e) { alert(e.message); }
+    // CONTROL DEL MODAL DE FECHA DE PAGO
+    window.toggleModalPayDate = (show) => {
+      document.getElementById('modal-pay-date').classList.toggle('hidden', !show);
+    };
+
+    window.abrirModalPago = (id, folio, currentPaidDate, isEdit) => {
+      document.getElementById('pay-record-id').value = id;
+      document.getElementById('pay-record-desc').innerText = `Folio: ${folio}`;
+      document.getElementById('pay-modal-title').innerText = isEdit ? "Editar Fecha de Pago" : "Registrar Liquidación";
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('pay-record-date').value = currentPaidDate || today;
+      toggleModalPayDate(true);
+    };
+
+    window.confirmarPagoConFecha = async () => {
+      const id = document.getElementById('pay-record-id').value;
+      const payDate = document.getElementById('pay-record-date').value;
+      if (!payDate) return alert("Por favor selecciona una fecha válida.");
+
+      const btn = document.getElementById('btn-save-pay-date');
+      btn.disabled = true;
+      btn.innerText = "Guardando...";
+
+      try {
+        await updateDoc(doc(db, "accounts_payable", id), {
+          status: "PAID",
+          balance: 0.0,
+          paid_date: payDate,
+          paid_at: serverTimestamp(),
+          paid_by: auth.currentUser?.email
+        });
+
+        await logAudit("INVOICE_CXP_PAY_DATE_UPDATED", { doc_id: id, paid_date: payDate });
+        toggleModalPayDate(false);
+      } catch (e) {
+        alert("Error al actualizar pago: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Guardar Pago";
       }
     };
 
@@ -598,6 +742,7 @@
         "Folio/UUID": i.folio || '',
         "Proveedor": i.entity_name || '',
         "Vencimiento": i.due_date || '',
+        "Fecha de Pago": i.paid_date || '',
         "Monto Total MXN": Number(i.total_amount || 0),
         "Estado": i.status === 'PAID' ? 'PAGADA' : 'POR PAGAR',
         "Comprobante": i.document_url ? 'SÍ' : 'NO',

@@ -106,7 +106,7 @@
           <span class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="ph-bold ph-receipt text-lg"></i></span>
         </div>
         <p id="kpi-cxp" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
-        <span class="text-[11px] text-slate-500 mt-1 block">Pasivos operativos de esta entidad</span>
+        <span class="text-[11px] text-slate-500 mt-1 block">Pasivos exigibles acumulados</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 relative overflow-hidden">
@@ -115,7 +115,7 @@
           <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-laptop text-lg"></i></span>
         </div>
         <p id="kpi-activos" class="text-2xl font-bold font-mono text-white mt-2">0</p>
-        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-activos-sub">0 equipos patrimoniales</span>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-activos-sub">$0.00 en libros</span>
       </div>
     </div>
 
@@ -135,7 +135,7 @@
               <i class="ph-bold ph-hand-coins"></i>
             </div>
             <h4 class="text-lg font-bold text-white">Cuentas por Cobrar (CxC)</h4>
-            <p class="text-xs text-slate-400 leading-relaxed">Emisión, control de folios fiscales CFDI, dispersión y liquidación de cobros.</p>
+            <p class="text-xs text-slate-400 leading-relaxed">Facturación emitida, folios fiscales, salvas en Storage y fechas de cobranza.</p>
           </div>
           <div class="mt-6 flex items-center justify-between text-xs font-mono text-emerald-400 pointer-events-none">
             <span>Acceder al Módulo</span>
@@ -149,7 +149,7 @@
               <i class="ph-bold ph-receipt"></i>
             </div>
             <h4 class="text-lg font-bold text-white">Cuentas por Pagar (CxP)</h4>
-            <p class="text-xs text-slate-400 leading-relaxed">Pasivos exigibles, verificación fiscal de proveedores y dispersiones bancarias.</p>
+            <p class="text-xs text-slate-400 leading-relaxed">Pasivos a proveedores, verificación con Gemini 3.8/2.5 y fechas de pago.</p>
           </div>
           <div class="mt-6 flex items-center justify-between text-xs font-mono text-rose-400 pointer-events-none">
             <span>Acceder al Módulo</span>
@@ -162,8 +162,8 @@
             <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl group-hover:scale-105 transition-transform">
               <i class="ph-bold ph-device-mobile-camera"></i>
             </div>
-            <h4 class="text-lg font-bold text-white">Inventario de Hardware</h4>
-            <p class="text-xs text-slate-400 leading-relaxed">Control patrimonial, números de serie, resguardo de colaboradores y valor en libros.</p>
+            <h4 class="text-lg font-bold text-white">Inventario de Hardware & Activos</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">Control patrimonial, números de serie y base para depreciación de activos.</p>
           </div>
           <div class="mt-6 flex items-center justify-between text-xs font-mono text-indigo-400 pointer-events-none">
             <span>Acceder al Módulo</span>
@@ -179,7 +179,7 @@
         <h3 class="text-sm font-mono uppercase tracking-wider text-slate-300 flex items-center gap-2 font-bold">
           <i class="ph-bold ph-cube text-indigo-400 text-base"></i> Catálogos Creados en Caliente & Importados
         </h3>
-        <span class="text-[11px] font-mono text-slate-500">Módulos adaptados en vivo a la empresa seleccionada</span>
+        <span class="text-[11px] font-mono text-slate-500">Filtrado inteligente por permisos y razón social</span>
       </div>
 
       <div id="dynamic-modules-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -196,14 +196,14 @@
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        <!-- BOTÓN TABLERO GERENCIAL (RESOLUCIÓN PROGRAMÁTICA UNIVERSAL) -->
-        <div onclick="abrirModuloUniversal('modulo_gerencial')" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 transition flex items-center gap-4 group shadow-lg cursor-pointer">
+        <!-- ENLACE DIRECTO AL TABLERO GERENCIAL -->
+        <div onclick="abrirTableroGerencialDirecto()" class="bg-slate-900/80 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 transition flex items-center gap-4 group shadow-lg cursor-pointer">
           <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl shrink-0 group-hover:scale-105 transition-transform border border-purple-500/20 pointer-events-none">
             <i class="ph-bold ph-chart-polar"></i>
           </div>
           <div class="pointer-events-none">
             <h4 class="text-sm font-bold text-white">Tablero Gerencial</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5">Liquidez, otros ingresos, margen real y depreciación.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Liquidez real, margen operativo y depreciación mensual.</p>
           </div>
         </div>
 
@@ -225,7 +225,7 @@
           </div>
           <div class="pointer-events-none">
             <h4 class="text-sm font-bold text-white">Consola Auditoría</h4>
-            <p class="text-[11px] text-slate-400 mt-0.5">Pista forense de inserciones, mutaciones y accesos.</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Pista forense inmutable de todas las mutaciones.</p>
           </div>
         </div>
 
@@ -285,30 +285,46 @@
       }
     };
 
-    let activeCompanyId = sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
+    // PERSISTENCIA DOBLE: Prioriza URL param, luego localStorage, luego sessionStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeCompanyId = urlParams.get('empresa') || localStorage.getItem("active_company_id") || sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
+
     let currentUserData = null;
+    let userPermissions = [];
     let liveUnsubs = [];
     let cachedModules = [];
 
-    // NAVEGACIÓN PROGRAMÁTICA PURA (Elimina interferencias de scripts y extensiones)
+    function guardarContextoEmpresa(companyId) {
+      activeCompanyId = companyId;
+      localStorage.setItem("active_company_id", companyId);
+      sessionStorage.setItem("active_company_id", companyId);
+    }
+
+    guardarContextoEmpresa(activeCompanyId);
+
     window.navegarRutaSegura = (url) => {
-      window.location.assign(url);
+      const sep = url.includes('?') ? '&' : '?';
+      window.location.assign(`${url}${sep}empresa=${encodeURIComponent(activeCompanyId)}`);
     };
 
-    // APERTURA DE MÓDULOS NATIVOS POR EMPRESA
     window.abrirModuloNativo = (moduloKey) => {
       const info = EMPRESAS[activeCompanyId];
       if (!info) return;
 
-      if (moduloKey === 'cxc') window.location.assign(info.cxcLink);
-      else if (moduloKey === 'cxp') window.location.assign(info.cxpLink);
-      else if (moduloKey === 'activos') window.location.assign(info.activosLink);
+      let link = info.cxcLink;
+      if (moduloKey === 'cxp') link = info.cxpLink;
+      if (moduloKey === 'activos') link = info.activosLink;
+
+      window.location.assign(`${link}?empresa=${encodeURIComponent(activeCompanyId)}`);
     };
 
-    // ENRUTAMIENTO DINÁMICO UNIVERSAL (Carga de Firestore vía modulo_dinamico sin 404s)
     window.abrirModuloUniversal = (slug) => {
       const targetUrl = `modulo_dinamico.html?slug=${encodeURIComponent(slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
       window.location.assign(targetUrl);
+    };
+
+    window.abrirTableroGerencialDirecto = () => {
+      window.location.assign(`modulo_gerencial.html?empresa=${encodeURIComponent(activeCompanyId)}`);
     };
 
     async function logAudit(action, details = {}) {
@@ -348,10 +364,17 @@
         document.getElementById('user-display-name').innerText = currentUserData.full_name || user.email;
         document.getElementById('user-role-badge').innerText = currentUserData.role_id;
 
+        // Cargar permisos RBAC reales del rol
+        if (currentUserData.role_id === "SUPERADMIN") {
+          userPermissions = ["*"];
+        } else {
+          const roleSnap = await getDoc(doc(db, "system_roles", currentUserData.role_id));
+          userPermissions = roleSnap.exists() ? (roleSnap.data().permissions || []) : [];
+        }
+
         const allowed = currentUserData.allowed_companies || ["*"];
         if (!allowed.includes("*") && !allowed.includes(activeCompanyId)) {
-          activeCompanyId = allowed[0] || "cesar_gonzalez";
-          sessionStorage.setItem("active_company_id", activeCompanyId);
+          guardarContextoEmpresa(allowed[0] || "cesar_gonzalez");
         }
 
         updatePortalUI();
@@ -360,7 +383,7 @@
         shield.classList.add("opacity-0", "pointer-events-none");
         setTimeout(() => shield.classList.add("hidden"), 300);
       } catch (err) {
-        console.error("Error al cargar perfil:", err);
+        console.error("Error al cargar perfil en portal:", err);
       }
     });
 
@@ -373,8 +396,7 @@
         return;
       }
 
-      activeCompanyId = companyId;
-      sessionStorage.setItem("active_company_id", activeCompanyId);
+      guardarContextoEmpresa(companyId);
       logAudit("PORTAL_SWITCH_COMPANY", { target_company: companyId });
 
       updatePortalUI();
@@ -406,7 +428,7 @@
       liveUnsubs.forEach(fn => fn());
       liveUnsubs = [];
 
-      // 1. CxC
+      // 1. CxC (Cobros pendientes)
       const qCxC = query(
         collection(db, "accounts_receivable"),
         where("company_id", "==", activeCompanyId)
@@ -416,14 +438,14 @@
         snap.forEach(d => {
           const item = d.data();
           if (item.status !== "COLLECTED") {
-            total += Number(item.balance || item.total_amount || 0);
+            total += Number(item.balance !== undefined ? item.balance : (item.total_amount || 0));
           }
         });
         document.getElementById('kpi-cxc').innerText = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
       }, err => console.warn("Query CxC:", err));
       liveUnsubs.push(unsub1);
 
-      // 2. CxP
+      // 2. CxP (Pasivos pendientes)
       const qCxP = query(
         collection(db, "accounts_payable"),
         where("company_id", "==", activeCompanyId)
@@ -433,7 +455,7 @@
         snap.forEach(d => {
           const item = d.data();
           if (item.status !== "PAID") {
-            total += Number(item.balance || item.total_amount || 0);
+            total += Number(item.balance !== undefined ? item.balance : (item.total_amount || 0));
           }
         });
         document.getElementById('kpi-cxp').innerText = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
@@ -464,21 +486,35 @@
       });
     }
 
-    // RENDERIZADO REACTIVO DINÁMICO (CERO 404s)
+    // RENDERIZADO CON FILTRADO RBAC + MULTI-TENANT
     function renderDynamicCards() {
       const grid = document.getElementById('dynamic-modules-grid');
       grid.innerHTML = '';
 
-      if (cachedModules.length === 0) {
+      const isSuper = currentUserData?.role_id === "SUPERADMIN" || userPermissions.includes("*");
+
+      // Filtrar: 1) tenant habilitado para la empresa activa y 2) permiso de lectura del usuario
+      const modulosVisibles = cachedModules.filter(mod => {
+        // Multi-tenant check
+        const tenants = mod.tenants_enabled || ["cesar_gonzalez", "hr_employment"];
+        if (!tenants.includes(activeCompanyId)) return false;
+
+        // RBAC check
+        if (isSuper) return true;
+        const readPerm = `${mod.slug}.read`;
+        return userPermissions.includes(readPerm);
+      });
+
+      if (modulosVisibles.length === 0) {
         grid.innerHTML = `
           <div class="p-8 rounded-2xl border border-slate-800 bg-slate-900/30 text-center text-slate-500 font-mono text-xs col-span-full">
-            No hay módulos dinámicos adicionales registrados. Crea uno desde ContaCore Studio.
+            No hay módulos dinámicos autorizados para tu perfil en esta razón social.
           </div>
         `;
         return;
       }
 
-      cachedModules.forEach(mod => {
+      modulosVisibles.forEach(mod => {
         const card = document.createElement('div');
         card.className = "group bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition shadow-xl flex flex-col justify-between cursor-pointer";
         
@@ -507,6 +543,8 @@
       if (confirm("¿Finalizar sesión segura en ContaCore?")) {
         await logAudit("AUTH_LOGOUT", {});
         await signOut(auth);
+        localStorage.removeItem("active_company_id");
+        sessionStorage.clear();
         window.location.replace("index.html");
       }
     };

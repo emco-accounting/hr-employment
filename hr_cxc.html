@@ -41,7 +41,7 @@
   <!-- BARRA DE NAVEGACIÓN -->
   <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
-      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+      <a href="portal_catalogo.html?empresa=hr_employment" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
         <i class="ph-bold ph-arrow-left text-lg"></i>
       </a>
       <div>
@@ -61,7 +61,7 @@
       <button onclick="exportarExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
         <i class="ph-bold ph-microsoft-excel-logo"></i> Exportar
       </button>
-      <button onclick="openModalFactura()" data-perm="cxc.write" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+      <button onclick="openModalFactura()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
         <i class="ph-bold ph-file-arrow-up"></i> + Factura Emitida a Cliente
       </button>
     </div>
@@ -94,20 +94,17 @@
     <!-- FILTROS Y CONSULTA POR PERIODO -->
     <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
       <div class="flex flex-wrap items-center gap-3">
-        <!-- Búsqueda texto -->
         <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
           <i class="ph ph-magnifying-glass text-slate-400"></i>
           <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar cliente, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-56">
         </div>
 
-        <!-- Estado -->
         <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
           <option value="ALL">Todos los Estados</option>
           <option value="PENDING">Pendientes / Por Cobrar</option>
           <option value="COLLECTED">Cobradas / Liquidadas</option>
         </select>
 
-        <!-- Filtro Rango de Fechas -->
         <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
           <span class="text-slate-400 font-mono text-[11px]">Desde:</span>
           <input type="date" id="filter-date-from" onchange="renderTable()" class="bg-transparent text-white outline-none font-mono text-xs">
@@ -163,7 +160,7 @@
           <p class="text-[10px] text-slate-500 font-mono">Lectura inteligente con Gemini 3.8 / 2.5 Flash</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
-          <i class="ph ph-spinner animate-spin text-2xl text-emerald-400 inline-block"></i>
+          <i class="ph ph-spinner animate-spin text-2xl text-rose-400 inline-block"></i>
           <p id="processing-text" class="text-xs font-mono text-emerald-300">Procesando archivo...</p>
         </div>
       </div>
@@ -290,19 +287,22 @@
     let currentUser = null;
     let rawData = [];
 
-    async function logAudit(action, details = {}) {
+    async function logAudit(action, details = {}, moduleSlug = "cxc") {
       try {
         await addDoc(collection(db, "audit_logs"), {
           timestamp: serverTimestamp(),
-          user_email: currentUser?.email || "anonimo",
+          user_email: currentUser?.email || auth.currentUser?.email || "anonimo",
+          user_name: currentUser?.name || currentUser?.full_name || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : "Operador"),
+          role_id: currentUser?.role_id || "OPERADOR",
           company_id: COMPANY_ID,
           company_name: COMPANY_NAME,
+          module_slug: moduleSlug,
           action: action,
           details: details,
           user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn("Fallo log:", e);
+        console.warn("Fallo log auditoría:", e);
       }
     }
 
@@ -327,7 +327,7 @@
 
         if (!isSuper && !allowed.includes("*") && !allowed.includes(COMPANY_ID)) {
           alert("Acceso denegado: No tienes autorización para la razón social de HR Employment.");
-          window.location.replace("portal_catalogo.html");
+          window.location.replace("portal_catalogo.html?empresa=" + encodeURIComponent(allowed[0] || "cesar_gonzalez"));
           return;
         }
 
@@ -384,7 +384,6 @@
         return true;
       });
 
-      // Recalcular KPIs dinámicamente según el periodo / filtro
       let pendTotal = 0, pendCount = 0;
       let collTotal = 0, collCount = 0;
       let grossTotal = 0;
@@ -393,10 +392,10 @@
         const amt = Number(item.total_amount || 0);
         grossTotal += amt;
         if (item.status === 'COLLECTED') {
-          collTotal += amt;
+          collTotal += Number(item.collected_amount || amt);
           collCount++;
         } else {
-          pendTotal += Number(item.balance || amt);
+          pendTotal += Number(item.balance !== undefined ? item.balance : amt);
           pendCount++;
         }
       });
@@ -520,7 +519,6 @@
       proc.classList.remove('hidden');
 
       try {
-        // 1. Resguardo de la salva en Firebase Storage primero
         procTxt.innerText = "Guardando comprobante en Storage...";
         const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxc/${Date.now()}_${cleanName}`);
@@ -531,7 +529,6 @@
         document.getElementById('uploaded-doc-name').value = file.name;
         document.getElementById('doc-status-msg').innerText = `Guardado: ${file.name}`;
 
-        // 2. Extracción de datos
         if (file.name.toLowerCase().endsWith('.xml')) {
           procTxt.innerText = "Extrayendo CFDI XML...";
           const text = await file.text();
@@ -562,7 +559,6 @@
       const doc = parser.parseFromString(xmlString, "text/xml");
       const comp = doc.getElementsByTagName("cfdi:Comprobante")[0] || doc.getElementsByTagName("Comprobante")[0];
       const timbre = doc.getElementsByTagName("tfd:TimbreFiscalDigital")[0] || doc.getElementsByTagName("TimbreFiscalDigital")[0];
-      // En CxC tomamos el RECEPTOR (Cliente)
       const receptor = doc.getElementsByTagName("cfdi:Receptor")[0] || doc.getElementsByTagName("Receptor")[0];
 
       if (comp) document.getElementById('invoice-total').value = comp.getAttribute("Total") || '';
@@ -586,7 +582,6 @@
         { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" }
       ];
 
-      // En CxC nos interesa el CLIENTE / RECEPTOR de la factura emitida
       const prompt = `Analiza la factura de CLIENTE / VENTA o cuenta por cobrar emitida por la empresa. Extrae en formato JSON plano:
 {
   "razon_social": "Nombre o Razón Social del CLIENTE o Receptor del servicio/producto",
@@ -649,7 +644,7 @@
       }
     }
 
-    // REGISTRO DE CUENTA POR COBRAR (CxC)
+    // REGISTRO DE CUENTA POR COBRAR (CxC) SINCRONIZADO
     document.getElementById('form-invoice').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-invoice');
@@ -659,6 +654,7 @@
       const total = parseFloat(document.getElementById('invoice-total').value) || 0;
       const folio = document.getElementById('invoice-folio').value.trim();
       const entity = document.getElementById('invoice-entity').value.trim();
+      const rawDate = document.getElementById('invoice-date').value;
 
       try {
         const docRef = await addDoc(collection(db, "accounts_receivable"), {
@@ -668,15 +664,19 @@
           folio: folio,
           total_amount: total,
           balance: total,
-          due_date: document.getElementById('invoice-date').value,
+          collected_amount: 0.0,
+          issue_date: rawDate,
+          due_date: rawDate,
+          collected_date: null,
           status: "PENDING",
           document_url: document.getElementById('uploaded-doc-url').value,
           document_filename: document.getElementById('uploaded-doc-name').value,
-          registered_by: auth.currentUser?.email || 'admin',
+          registered_by: currentUser?.email || auth.currentUser?.email || 'admin',
+          registered_by_name: currentUser?.name || currentUser?.full_name || 'Operador',
           created_at: serverTimestamp()
         });
 
-        await logAudit("INVOICE_CXC_CREATED", { doc_id: docRef.id, folio, entity, total });
+        await logAudit("INVOICE_CXC_CREATED", { doc_id: docRef.id, folio, entity, total }, "cxc");
         toggleModalInvoice(false);
       } catch (err) {
         alert("Error al registrar cuenta por cobrar: " + err.message);
@@ -686,13 +686,12 @@
       }
     });
 
-    // CONTROL DEL MODAL DE FECHA DE COBRO
     window.toggleModalCollectDate = (show) => {
       document.getElementById('modal-collect-date').classList.toggle('hidden', !show);
     };
 
     window.abrirModalCobro = (id, folio, currentCollectedDate, isEdit) => {
-      document.getElementById('pay-record-id').value = id;
+      document.getElementById('collect-record-id').value = id;
       document.getElementById('collect-record-desc').innerText = `Folio: ${folio}`;
       document.getElementById('collect-modal-title').innerText = isEdit ? "Editar Fecha de Cobro" : "Registrar Cobranza";
 
@@ -701,10 +700,14 @@
       toggleModalCollectDate(true);
     };
 
+    // CONFIRMAR COBRO SINCRONIZADO
     window.confirmarCobroConFecha = async () => {
-      const id = document.getElementById('pay-record-id').value;
+      const id = document.getElementById('collect-record-id').value;
       const collectDate = document.getElementById('collect-record-date').value;
       if (!collectDate) return alert("Por favor selecciona una fecha válida.");
+
+      const item = rawData.find(x => x.id === id);
+      const total = item ? Number(item.total_amount || 0) : 0;
 
       const btn = document.getElementById('btn-save-collect-date');
       btn.disabled = true;
@@ -714,12 +717,13 @@
         await updateDoc(doc(db, "accounts_receivable", id), {
           status: "COLLECTED",
           balance: 0.0,
+          collected_amount: total,
           collected_date: collectDate,
           collected_at: serverTimestamp(),
-          collected_by: auth.currentUser?.email
+          collected_by: currentUser?.email || auth.currentUser?.email
         });
 
-        await logAudit("INVOICE_CXC_COLLECT_DATE_UPDATED", { doc_id: id, collected_date: collectDate });
+        await logAudit("INVOICE_CXC_COLLECTED", { doc_id: id, folio: item?.folio, collected_date: collectDate, total }, "cxc");
         toggleModalCollectDate(false);
       } catch (e) {
         alert("Error al actualizar cobranza: " + e.message);
@@ -733,7 +737,7 @@
       if (confirm("¿Eliminar este registro de CxC permanentemente?")) {
         try {
           await deleteDoc(doc(db, "accounts_receivable", id));
-          await logAudit("INVOICE_CXC_DELETED", { doc_id: id });
+          await logAudit("INVOICE_CXC_DELETED", { doc_id: id }, "cxc");
         } catch (e) { alert(e.message); }
       }
     };
@@ -746,6 +750,7 @@
         "Vencimiento": i.due_date || '',
         "Fecha de Cobro": i.collected_date || '',
         "Monto Total MXN": Number(i.total_amount || 0),
+        "Saldo Pendiente": Number(i.balance !== undefined ? i.balance : 0),
         "Estado": i.status === 'COLLECTED' ? 'COBRADA' : 'POR COBRAR',
         "Comprobante": i.document_url ? 'SÍ' : 'NO',
         "Registrado Por": i.registered_by || ''

@@ -41,7 +41,7 @@
   <!-- BARRA DE NAVEGACIÓN -->
   <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
-      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+      <a href="portal_catalogo.html?empresa=hr_employment" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
         <i class="ph-bold ph-arrow-left text-lg"></i>
       </a>
       <div>
@@ -61,7 +61,7 @@
       <button onclick="exportarExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
         <i class="ph-bold ph-microsoft-excel-logo"></i> Exportar
       </button>
-      <button onclick="openModalFactura()" data-perm="cxp.write" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-rose-600/20">
+      <button onclick="openModalFactura()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-rose-600/20">
         <i class="ph-bold ph-file-arrow-up"></i> + Factura de Proveedor
       </button>
     </div>
@@ -94,20 +94,17 @@
     <!-- FILTROS Y CONSULTA POR PERIODO -->
     <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
       <div class="flex flex-wrap items-center gap-3">
-        <!-- Búsqueda texto -->
         <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
           <i class="ph ph-magnifying-glass text-slate-400"></i>
           <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar proveedor, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-56">
         </div>
 
-        <!-- Estado -->
         <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
           <option value="ALL">Todos los Estados</option>
           <option value="PENDING">Pendientes / Por Pagar</option>
           <option value="PAID">Pagadas / Liquidadas</option>
         </select>
 
-        <!-- Filtro Rango de Fechas -->
         <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
           <span class="text-slate-400 font-mono text-[11px]">Desde:</span>
           <input type="date" id="filter-date-from" onchange="renderTable()" class="bg-transparent text-white outline-none font-mono text-xs">
@@ -290,19 +287,22 @@
     let currentUser = null;
     let rawData = [];
 
-    async function logAudit(action, details = {}) {
+    async function logAudit(action, details = {}, moduleSlug = "cxp") {
       try {
         await addDoc(collection(db, "audit_logs"), {
           timestamp: serverTimestamp(),
-          user_email: currentUser?.email || "anonimo",
+          user_email: currentUser?.email || auth.currentUser?.email || "anonimo",
+          user_name: currentUser?.name || currentUser?.full_name || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : "Operador"),
+          role_id: currentUser?.role_id || "OPERADOR",
           company_id: COMPANY_ID,
           company_name: COMPANY_NAME,
+          module_slug: moduleSlug,
           action: action,
           details: details,
           user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn("Fallo log:", e);
+        console.warn("Fallo log auditoría:", e);
       }
     }
 
@@ -327,7 +327,7 @@
 
         if (!isSuper && !allowed.includes("*") && !allowed.includes(COMPANY_ID)) {
           alert("Acceso denegado: No tienes autorización para la razón social de HR Employment.");
-          window.location.replace("portal_catalogo.html");
+          window.location.replace("portal_catalogo.html?empresa=" + encodeURIComponent(allowed[0] || "cesar_gonzalez"));
           return;
         }
 
@@ -384,7 +384,6 @@
         return true;
       });
 
-      // Recalcular KPIs dinámicamente según el periodo / filtro
       let pendTotal = 0, pendCount = 0;
       let pagTotal = 0, pagCount = 0;
       let grossTotal = 0;
@@ -393,10 +392,10 @@
         const amt = Number(item.total_amount || 0);
         grossTotal += amt;
         if (item.status === 'PAID') {
-          pagTotal += amt;
+          pagTotal += Number(item.paid_amount || amt);
           pagCount++;
         } else {
-          pendTotal += Number(item.balance || amt);
+          pendTotal += Number(item.balance !== undefined ? item.balance : amt);
           pendCount++;
         }
       });
@@ -508,7 +507,7 @@
       }
     };
 
-    // PROCESAMIENTO GEMINI (3.8 FLASH -> 2.5 FLASH) Y ALMACENAMIENTO FÍSICO
+    // PROCESAMIENTO GEMINI (3.8 FLASH -> 2.5 FLASH) Y RESGUARDO EN STORAGE
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -520,7 +519,6 @@
       proc.classList.remove('hidden');
 
       try {
-        // 1. Resguardo de la salva en Firebase Storage primero
         procTxt.innerText = "Guardando comprobante en Storage...";
         const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxp/${Date.now()}_${cleanName}`);
@@ -531,7 +529,6 @@
         document.getElementById('uploaded-doc-name').value = file.name;
         document.getElementById('doc-status-msg').innerText = `Guardado: ${file.name}`;
 
-        // 2. Extracción de datos
         if (file.name.toLowerCase().endsWith('.xml')) {
           procTxt.innerText = "Extrayendo CFDI XML...";
           const text = await file.text();
@@ -647,7 +644,7 @@
       }
     }
 
-    // REGISTRO DE PASIVO
+    // REGISTRO DE PASIVO SINCRONIZADO
     document.getElementById('form-invoice').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-invoice');
@@ -657,6 +654,7 @@
       const total = parseFloat(document.getElementById('invoice-total').value) || 0;
       const folio = document.getElementById('invoice-folio').value.trim();
       const entity = document.getElementById('invoice-entity').value.trim();
+      const rawDate = document.getElementById('invoice-date').value;
 
       try {
         const docRef = await addDoc(collection(db, "accounts_payable"), {
@@ -666,15 +664,19 @@
           folio: folio,
           total_amount: total,
           balance: total,
-          due_date: document.getElementById('invoice-date').value,
+          paid_amount: 0.0,
+          issue_date: rawDate,
+          due_date: rawDate,
+          paid_date: null,
           status: "PENDING",
           document_url: document.getElementById('uploaded-doc-url').value,
           document_filename: document.getElementById('uploaded-doc-name').value,
-          registered_by: auth.currentUser?.email || 'admin',
+          registered_by: currentUser?.email || auth.currentUser?.email || 'admin',
+          registered_by_name: currentUser?.name || currentUser?.full_name || 'Operador',
           created_at: serverTimestamp()
         });
 
-        await logAudit("INVOICE_CXP_CREATED", { doc_id: docRef.id, folio, entity, total });
+        await logAudit("INVOICE_CXP_CREATED", { doc_id: docRef.id, folio, entity, total }, "cxp");
         toggleModalInvoice(false);
       } catch (err) {
         alert("Error al registrar pasivo: " + err.message);
@@ -684,7 +686,6 @@
       }
     });
 
-    // CONTROL DEL MODAL DE FECHA DE PAGO
     window.toggleModalPayDate = (show) => {
       document.getElementById('modal-pay-date').classList.toggle('hidden', !show);
     };
@@ -699,10 +700,14 @@
       toggleModalPayDate(true);
     };
 
+    // CONFIRMAR PAGO SINCRONIZADO
     window.confirmarPagoConFecha = async () => {
       const id = document.getElementById('pay-record-id').value;
       const payDate = document.getElementById('pay-record-date').value;
       if (!payDate) return alert("Por favor selecciona una fecha válida.");
+
+      const item = rawData.find(x => x.id === id);
+      const total = item ? Number(item.total_amount || 0) : 0;
 
       const btn = document.getElementById('btn-save-pay-date');
       btn.disabled = true;
@@ -712,12 +717,13 @@
         await updateDoc(doc(db, "accounts_payable", id), {
           status: "PAID",
           balance: 0.0,
+          paid_amount: total,
           paid_date: payDate,
           paid_at: serverTimestamp(),
-          paid_by: auth.currentUser?.email
+          paid_by: currentUser?.email || auth.currentUser?.email
         });
 
-        await logAudit("INVOICE_CXP_PAY_DATE_UPDATED", { doc_id: id, paid_date: payDate });
+        await logAudit("INVOICE_CXP_PAID", { doc_id: id, folio: item?.folio, paid_date: payDate, total }, "cxp");
         toggleModalPayDate(false);
       } catch (e) {
         alert("Error al actualizar pago: " + e.message);
@@ -731,7 +737,7 @@
       if (confirm("¿Eliminar este registro de CxP permanentemente?")) {
         try {
           await deleteDoc(doc(db, "accounts_payable", id));
-          await logAudit("INVOICE_CXP_DELETED", { doc_id: id });
+          await logAudit("INVOICE_CXP_DELETED", { doc_id: id }, "cxp");
         } catch (e) { alert(e.message); }
       }
     };
@@ -744,6 +750,7 @@
         "Vencimiento": i.due_date || '',
         "Fecha de Pago": i.paid_date || '',
         "Monto Total MXN": Number(i.total_amount || 0),
+        "Saldo Pendiente": Number(i.balance !== undefined ? i.balance : 0),
         "Estado": i.status === 'PAID' ? 'PAGADA' : 'POR PAGAR',
         "Comprobante": i.document_url ? 'SÍ' : 'NO',
         "Registrado Por": i.registered_by || ''

@@ -44,7 +44,7 @@
       </div>
 
       <nav class="p-4 space-y-1 text-sm font-medium">
-        <a href="portal_catalogo.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <a href="portal_catalogo.html" id="link-back-portal" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
           <span>Volver al Portal</span>
         </a>
@@ -71,25 +71,26 @@
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
         <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Administración</div>
 
-        <!-- BOTÓN TABLERO GERENCIAL REPARADO (ABRE VÍA MODULO_DINAMICO) -->
-        <button onclick="abrirTableroGerencialSidebar()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 text-left">
+        <!-- ENLACE DIRECTO AL TABLERO GERENCIAL -->
+        <button onclick="abrirTableroGerencialDirecto()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 text-left">
           <i class="ph-bold ph-chart-polar text-lg text-purple-400"></i>
           <span>Tablero Gerencial</span>
         </button>
 
-        <a href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <a href="modulo_logs.html" id="link-logs" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
           <span>Consola de Auditoría</span>
         </a>
-        <a href="staff.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <a href="staff.html" id="link-staff" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-users-three text-lg text-emerald-400"></i>
           <span>Staff & Gobernanza</span>
         </a>
       </nav>
     </div>
 
-    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60">
-      <span class="text-xs text-slate-500 font-mono">Base: emco-accounting</span>
+    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60 flex items-center justify-between text-xs font-mono text-slate-400">
+      <span>BD: emco-accounting</span>
+      <span id="active-tenant-tag" class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">--</span>
     </div>
   </aside>
 
@@ -125,14 +126,13 @@
       <header class="bg-slate-900/90 border-b border-slate-800 px-6 py-3 flex justify-between items-center shrink-0">
         <div class="flex items-center gap-3">
           <select id="ide-file-selector" onchange="cargarArchivoEnEditor(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 outline-none focus:border-indigo-500">
-            <optgroup label="Módulos Fijos del Sistema">
+            <optgroup label="Módulos Oficiales del Sistema">
               <option value="portal_catalogo.html">portal_catalogo.html (Catálogo Maestro)</option>
               <option value="cg_cxc.html">cg_cxc.html (CxC César Giovanni)</option>
               <option value="hr_cxc.html">hr_cxc.html (CxC HR Employment)</option>
               <option value="cg_cxp.html">cg_cxp.html (CxP César Giovanni)</option>
               <option value="hr_cxp.html">hr_cxp.html (CxP HR Employment)</option>
-              <option value="cg_activos.html">cg_activos.html (Activos César Giovanni)</option>
-              <option value="hr_activos.html">hr_activos.html (Activos HR Employment)</option>
+              <option value="modulo_gerencial.html">modulo_gerencial.html (Tablero Financiero)</option>
               <option value="modulo_dinamico.html">modulo_dinamico.html (Visor Universal)</option>
               <option value="staff.html">staff.html (Gobernanza RBAC)</option>
               <option value="modulo_logs.html">modulo_logs.html (Consola de Auditoría)</option>
@@ -193,7 +193,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Descriptivo</label>
-              <input type="text" id="mod-name" placeholder="Ej: Control de Gastos / Viáticos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <input type="text" id="mod-name" placeholder="Ej: Control de Gastos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug / Colección en Firestore</label>
@@ -216,7 +216,7 @@
             <div class="flex justify-between items-center">
               <div>
                 <span class="uppercase tracking-wider text-indigo-400 font-mono font-bold block">Campos del Formulario</span>
-                <span class="text-[10px] text-slate-500 font-mono">Se generará de forma idéntica e independiente para César Giovanni y HR Employment</span>
+                <span class="text-[10px] text-slate-500 font-mono">Partición aislada por company_id en cada registro</span>
               </div>
               <button type="button" onclick="addField()" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
                 <i class="ph-bold ph-plus"></i> Añadir Campo
@@ -267,7 +267,7 @@
             </div>
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug Clave / Archivo Base</label>
-              <input type="text" id="import-slug" placeholder="control_gastos_avanzado" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
+              <input type="text" id="import-slug" placeholder="mod_control_gastos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
             </div>
           </div>
 
@@ -330,15 +330,37 @@
     const auth = getAuth(app);
     const db = getFirestore(app, "emco-accounting");
 
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeCompanyId = urlParams.get('empresa') || localStorage.getItem("active_company_id") || sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
+
     let currentUser = null;
+    let currentUserStaff = null;
     let modulesCache = {};
     let currentFileName = "portal_catalogo.html";
     let currentImportMode = "html";
 
-    // Navegación hacia el Tablero Gerencial vía modulo_dinamico
-    window.abrirTableroGerencialSidebar = () => {
-      const activeCo = sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
-      window.location.assign(`modulo_dinamico.html?slug=modulo_gerencial&empresa=${encodeURIComponent(activeCo)}`);
+    // Actualizar enlaces con el parámetro empresa
+    function syncNavLinks() {
+      const sep = '?';
+      const backLink = document.getElementById('link-back-portal');
+      const logsLink = document.getElementById('link-logs');
+      const staffLink = document.getElementById('link-staff');
+      const tenantTag = document.getElementById('active-tenant-tag');
+
+      if (backLink) backLink.href = `portal_catalogo.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
+      if (logsLink) logsLink.href = `modulo_logs.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
+      if (staffLink) staffLink.href = `staff.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
+
+      if (tenantTag) {
+        tenantTag.innerText = activeCompanyId === 'hr_employment' ? 'HR Employment' : 'César Giovanni';
+      }
+    }
+
+    syncNavLinks();
+
+    // APERTURA DIRECTA AL TABLERO GERENCIAL
+    window.abrirTableroGerencialDirecto = () => {
+      window.location.assign(`modulo_gerencial.html?empresa=${encodeURIComponent(activeCompanyId)}`);
     };
 
     onAuthStateChanged(auth, async (user) => {
@@ -347,6 +369,12 @@
         return;
       }
       currentUser = user;
+
+      const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+      if (staffSnap.exists()) {
+        currentUserStaff = staffSnap.data();
+      }
+
       initModulesListener();
       cargarArchivoEnEditor(currentFileName);
     });
@@ -356,11 +384,17 @@
         await addDoc(collection(db, "audit_logs"), {
           timestamp: serverTimestamp(),
           user_email: currentUser?.email || "admin",
+          user_name: currentUserStaff?.full_name || currentUserStaff?.name || (currentUser?.email ? currentUser.email.split('@')[0] : "Operador"),
+          role_id: currentUserStaff?.role_id || "SUPERADMIN",
+          company_id: activeCompanyId,
+          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "César Giovanni González Contreras",
+          module_slug: "modulo_creador",
           action: action,
-          details: details
+          details: details,
+          user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn("Fallo log:", e);
+        console.warn("Fallo log auditoría:", e);
       }
     }
 
@@ -462,7 +496,6 @@
           const card = document.createElement('div');
           card.className = "bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-slate-700 transition";
           
-          // RESOLUCIÓN UNIVERSAL: Enlazar siempre a modulo_dinamico para cargar desde Firestore
           const urlCesar = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=cesar_gonzalez`;
           const urlHr = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=hr_employment`;
 
@@ -494,7 +527,6 @@
               </div>
             </div>
 
-            <!-- ENLACES BILATERALES REPARADOS (ABREN VÍA MODULO_DINAMICO) -->
             <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
               <a href="${urlCesar}" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
                 <i class="ph-bold ph-briefcase"></i> César G.
@@ -509,25 +541,36 @@
       });
     }
 
+    // INYECCIÓN INDESTRUCTIBLE DE PERMISOS EN TODOS LOS ROLES RBAC
     async function inyectarPermisosEnRoles(slug) {
       const readPerm = `${slug}.read`;
       const writePerm = `${slug}.write`;
 
-      const contadorRef = doc(db, "system_roles", "CONTADOR");
-      const contadorSnap = await getDoc(contadorRef);
-      if (contadorSnap.exists()) {
-        const perms = contadorSnap.data().permissions || [];
-        if (!perms.includes(readPerm)) perms.push(readPerm);
-        if (!perms.includes(writePerm)) perms.push(writePerm);
-        await updateDoc(contadorRef, { permissions: perms });
-      }
+      const rolesAfectados = [
+        { roleId: "CONTADOR", permsToAdd: [readPerm, writePerm] },
+        { roleId: "AUXILIAR", permsToAdd: [readPerm, writePerm] },
+        { roleId: "AUDITOR",  permsToAdd: [readPerm] }
+      ];
 
-      const auditorRef = doc(db, "system_roles", "AUDITOR");
-      const auditorSnap = await getDoc(auditorRef);
-      if (auditorSnap.exists()) {
-        const perms = auditorSnap.data().permissions || [];
-        if (!perms.includes(readPerm)) perms.push(readPerm);
-        await updateDoc(auditorRef, { permissions: perms });
+      for (const item of rolesAfectados) {
+        const roleRef = doc(db, "system_roles", item.roleId);
+        const roleSnap = await getDoc(roleRef);
+        let existingPerms = [];
+
+        if (roleSnap.exists()) {
+          existingPerms = roleSnap.data().permissions || [];
+        }
+
+        item.permsToAdd.forEach(p => {
+          if (!existingPerms.includes(p)) {
+            existingPerms.push(p);
+          }
+        });
+
+        await setDoc(roleRef, {
+          permissions: existingPerms,
+          updated_at: serverTimestamp()
+        }, { merge: true });
       }
 
       await logAudit("RBAC_PERMISSIONS_INJECTED", { slug, permissions: [readPerm, writePerm] });
@@ -586,7 +629,7 @@
         }
 
         await inyectarPermisosEnRoles(slug);
-        alert(`Módulo "${title}" guardado exitosamente.\nSe han registrado automáticamente los permisos "${slug}.read" y "${slug}.write" en la gobernanza de Staff.`);
+        alert(`Módulo "${title}" guardado exitosamente.\nSe han registrado automáticamente los permisos "${slug}.read" y "${slug}.write" en la matriz RBAC de todos los roles.`);
 
         toggleModal(false);
       } catch (err) {

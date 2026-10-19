@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inteligencia Financiera & Dirección | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- OVERLAY DE AUTORIZACIÓN -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
+      <i class="ph-bold ph-chart-polar text-indigo-400 text-3xl"></i>
+    </div>
+    <p class="text-xs text-slate-400 font-mono">Consolidando flujos de cobranza, pasivos, gastos y depreciación...</p>
+  </div>
+
+  <!-- ENCABEZADO SUPERIOR -->
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <a href="portal_catalogo.html" id="btn-back-portal" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+        <i class="ph-bold ph-arrow-left text-lg"></i>
+      </a>
+      <div>
+        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <span>Tablero de Decisiones Financieras</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20">DIRECCIÓN EJECUTIVA</span>
+        </h2>
+        <span class="text-xs text-slate-400 font-mono">Flujo Efectivo: Cobranza Real vs Pasivos Exigibles + Gastos + Desgaste</span>
+      </div>
+    </div>
+
+    <!-- SELECTOR DE CONTEXTO GERENCIAL -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+        <label class="text-[11px] font-mono uppercase text-slate-400 px-2">Razón Social:</label>
+        <select id="select-scope" onchange="cambiarEntidadAnalisis(this.value)" class="bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500">
+          <option value="cesar_gonzalez">César Giovanni González Contreras</option>
+          <option value="hr_employment">HR Employment</option>
+          <option value="CONSOLIDATED">★ Grupo Consolidado (Ambas Entidades)</option>
+        </select>
+      </div>
+
+      <button onclick="window.print()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition" title="Imprimir Informe">
+        <i class="ph-bold ph-printer text-base"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
+
+    <!-- KPI ROW 1: FLUJOS REALES Y DEPRECIACIÓN -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Ingresos Cobrados</span>
+        <p id="kpi-ingresos-totales" class="text-xl font-bold font-mono text-emerald-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-ingresos-sub">CxC Cobrada + Otros Ingresos</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Pasivos Exigibles (CxP)</span>
+        <p id="kpi-cxp-total" class="text-xl font-bold font-mono text-rose-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block">Saldo pendiente a proveedores</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Gastos Registrados</span>
+        <p id="kpi-gastos-operativos" class="text-xl font-bold font-mono text-amber-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block">Control de Gastos</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Depreciación Mensual</span>
+        <p id="kpi-depreciacion-mes" class="text-xl font-bold font-mono text-indigo-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-depreciacion-sub">Desgaste patrimonial</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Flujo Operativo / Margen</span>
+        <p id="kpi-margen-neto" class="text-xl font-bold font-mono text-white mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-margen-ratio">Ratio: 0.00x</span>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DE GRÁFICAS GERENCIALES -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div class="mb-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+            <i class="ph-bold ph-scales text-indigo-400"></i> Cobranza vs Compromisos Operativos
+          </h3>
+          <span class="text-[11px] text-slate-400">Ingresos liquidados frente a pasivos exigibles, gastos y depreciación</span>
+        </div>
+        <div class="h-64 relative">
+          <canvas id="chart-flujos-comparativos"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div class="mb-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+            <i class="ph-bold ph-chart-pie-slice text-rose-400"></i> Composición de Salidas y Desgaste
+          </h3>
+          <span class="text-[11px] text-slate-400">Proporción de Proveedores por pagar, Gastos y Depreciación</span>
+        </div>
+        <div class="h-64 relative flex items-center justify-center">
+          <canvas id="chart-egresos-donut"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div class="mb-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+            <i class="ph-bold ph-users-three text-blue-400"></i> Top 5 Clientes con Cartera Pendiente (CxC)
+          </h3>
+          <span class="text-[11px] text-slate-400">Saldo pendiente de liquidar por cliente</span>
+        </div>
+        <div class="h-64 relative">
+          <canvas id="chart-top-clients"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div class="mb-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+            <i class="ph-bold ph-laptop text-amber-400"></i> Desgaste Patrimonial por Familia de Activos
+          </h3>
+          <span class="text-[11px] text-slate-400">Depreciación mensual estimada por tipo de activo</span>
+        </div>
+        <div class="h-64 relative">
+          <canvas id="chart-depreciacion-categoria"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DICTAMEN GERENCIAL -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 flex items-start gap-4 backdrop-blur-sm">
+      <div class="p-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-xl shrink-0 text-xl">
+        <i class="ph-bold ph-trend-up"></i>
+      </div>
+      <div class="space-y-1">
+        <h4 class="text-xs font-mono font-bold uppercase text-white tracking-wider">Dictamen de Liquidez y Rentabilidad</h4>
+        <p id="executive-summary" class="text-xs text-slate-300 leading-relaxed">
+          Consolidando datos contables sincronizados...
+        </p>
+      </div>
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, doc, getDoc, onSnapshot 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let scopeCompany = urlParams.get("empresa") || localStorage.getItem("active_company_id") || sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
+
+    // Persistir contexto
+    localStorage.setItem("active_company_id", scopeCompany);
+    sessionStorage.setItem("active_company_id", scopeCompany);
+
+    // Ajustar botón de retorno
+    const btnBack = document.getElementById("btn-back-portal");
+    if (btnBack) {
+      btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(scopeCompany)}`;
+    }
+
+    let rawCxC = [];
+    let rawCxP = [];
+    let rawGastos = [];
+    let rawOtrosIngresos = [];
+    let rawActivos = [];
+
+    let chartFlujos = null;
+    let chartEgresos = null;
+    let chartClients = null;
+    let chartDeprec = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+
+      try {
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        if (staffSnap.exists() && staffSnap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        const selector = document.getElementById("select-scope");
+        selector.value = scopeCompany;
+
+        initLiveFinancialData();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error al autenticar analítica:", err);
+      }
+    });
+
+    window.cambiarEntidadAnalisis = (val) => {
+      scopeCompany = val;
+      if (val !== "CONSOLIDATED") {
+        localStorage.setItem("active_company_id", val);
+        sessionStorage.setItem("active_company_id", val);
+        if (btnBack) btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(val)}`;
+      }
+      actualizarDashboard();
+    };
+
+    function initLiveFinancialData() {
+      // 1. Cuentas por Cobrar
+      onSnapshot(collection(db, "accounts_receivable"), (snap) => {
+        rawCxC = [];
+        snap.forEach(d => rawCxC.push({ id: d.id, ...d.data() }));
+        actualizarDashboard();
+      });
+
+      // 2. Cuentas por Pagar
+      onSnapshot(collection(db, "accounts_payable"), (snap) => {
+        rawCxP = [];
+        snap.forEach(d => rawCxP.push({ id: d.id, ...d.data() }));
+        actualizarDashboard();
+      });
+
+      // 3. Control de Gastos (Módulo Dinámico)
+      onSnapshot(collection(db, "mod_control_gastos"), (snap) => {
+        rawGastos = [];
+        snap.forEach(d => rawGastos.push({ id: d.id, ...d.data() }));
+        actualizarDashboard();
+      }, err => console.warn("mod_control_gastos sin inicializar:", err));
+
+      // 4. Otros Ingresos (Módulo Dinámico)
+      onSnapshot(collection(db, "mod_otros_ingresos"), (snap) => {
+        rawOtrosIngresos = [];
+        snap.forEach(d => rawOtrosIngresos.push({ id: d.id, ...d.data() }));
+        actualizarDashboard();
+      }, err => console.warn("mod_otros_ingresos sin inicializar:", err));
+
+      // 5. Activos Fijos
+      onSnapshot(collection(db, "fixed_assets"), (snap) => {
+        rawActivos = [];
+        snap.forEach(d => rawActivos.push({ id: d.id, ...d.data() }));
+        actualizarDashboard();
+      });
+    }
+
+    function parseSafeNumber(val) {
+      const num = Number(val);
+      return (!isNaN(num) && isFinite(num)) ? num : 0;
+    }
+
+    function actualizarDashboard() {
+      const filtrarTenant = (arr) => {
+        if (scopeCompany === "CONSOLIDATED") return arr;
+        return arr.filter(i => i.company_id === scopeCompany);
+      };
+
+      const cxc = filtrarTenant(rawCxC);
+      const cxp = filtrarTenant(rawCxP);
+      const gastos = filtrarTenant(rawGastos);
+      const otrosIng = filtrarTenant(rawOtrosIngresos);
+      const activos = filtrarTenant(rawActivos);
+
+      // 1. Ingresos Cobrados Reales
+      let cxcCobrada = 0, cxcPendiente = 0;
+      cxc.forEach(i => {
+        const total = parseSafeNumber(i.total_amount);
+        const bal = parseSafeNumber(i.balance !== undefined ? i.balance : total);
+        if (i.status === "COLLECTED") {
+          cxcCobrada += parseSafeNumber(i.collected_amount || total);
+        } else {
+          cxcPendiente += bal;
+        }
+      });
+
+      let otrosIngresosTotal = 0;
+      otrosIng.forEach(i => {
+        otrosIngresosTotal += parseSafeNumber(i.monto || i.total || i.monto_total);
+      });
+
+      const totalIngresosEfectivos = cxcCobrada + otrosIngresosTotal;
+
+      // 2. Pasivos Exigibles y Gastos
+      let cxpExigible = 0;
+      cxp.forEach(i => {
+        const total = parseSafeNumber(i.total_amount);
+        const bal = parseSafeNumber(i.balance !== undefined ? i.balance : total);
+        if (i.status !== "PAID") {
+          cxpExigible += bal;
+        }
+      });
+
+      let gastosOperativosTotal = 0;
+      gastos.forEach(i => {
+        gastosOperativosTotal += parseSafeNumber(i.monto_total || i.monto || i.total);
+      });
+
+      // 3. Depreciación Mensual de Activos Fijos (LISR)
+      let depreciacionMensualTotal = 0;
+      let depHardware = 0, depNetwork = 0, depSoftware = 0;
+
+      activos.forEach(a => {
+        const costo = parseSafeNumber(a.purchase_cost);
+        let tasaAnual = 0.10;
+
+        if (a.category === "TANGIBLE_HARDWARE") {
+          tasaAnual = 0.30;
+          const depMes = (costo * tasaAnual) / 12;
+          depHardware += depMes;
+          depreciacionMensualTotal += depMes;
+        } else if (a.category === "TANGIBLE_NETWORK") {
+          tasaAnual = 0.30;
+          const depMes = (costo * tasaAnual) / 12;
+          depNetwork += depMes;
+          depreciacionMensualTotal += depMes;
+        } else if (a.category === "INTANGIBLE_SOFTWARE") {
+          tasaAnual = 0.3333;
+          const depMes = (costo * tasaAnual) / 12;
+          depSoftware += depMes;
+          depreciacionMensualTotal += depMes;
+        } else {
+          const depMes = (costo * tasaAnual) / 12;
+          depreciacionMensualTotal += depMes;
+        }
+      });
+
+      // 4. Margen Operativo Real
+      const totalCompromisos = cxpExigible + gastosOperativosTotal + depreciacionMensualTotal;
+      const margenNeto = totalIngresosEfectivos - totalCompromisos;
+      const ratio = totalCompromisos > 0 ? (totalIngresosEfectivos / totalCompromisos) : (totalIngresosEfectivos > 0 ? 99 : 1);
+
+      // Tarjetas de KPI
+      document.getElementById("kpi-ingresos-totales").innerText = `$${totalIngresosEfectivos.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-ingresos-sub").innerText = `Cobrado: $${cxcCobrada.toLocaleString("es-MX")} | Extra: $${otrosIngresosTotal.toLocaleString("es-MX")}`;
+
+      document.getElementById("kpi-cxp-total").innerText = `$${cxpExigible.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-gastos-operativos").innerText = `$${gastosOperativosTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-depreciacion-mes").innerText = `$${depreciacionMensualTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-depreciacion-sub").innerText = `${activos.length} activos en libros`;
+
+      const margenEl = document.getElementById("kpi-margen-neto");
+      margenEl.innerText = `$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      margenEl.className = `text-xl font-bold font-mono mt-2 ${margenNeto >= 0 ? "text-emerald-400" : "text-rose-400"}`;
+
+      document.getElementById("kpi-margen-ratio").innerText = `Cobertura: ${ratio.toFixed(2)}x`;
+
+      // Dictamen Automatizado
+      const dictamenEl = document.getElementById("executive-summary");
+      if (margenNeto >= 0 && ratio >= 1.25) {
+        dictamenEl.innerHTML = `<strong class="text-emerald-400">Posición Financiera Sólida:</strong> La cobranza efectiva ($${totalIngresosEfectivos.toLocaleString("es-MX")}) supera los pasivos a pagar, gastos y depreciación ($${depreciacionMensualTotal.toLocaleString("es-MX")}/mes), generando un margen neto favorable de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> con cobertura de <strong>${ratio.toFixed(2)}x</strong>.`;
+      } else if (margenNeto >= 0) {
+        dictamenEl.innerHTML = `<strong class="text-amber-400">Margen Ajustado:</strong> La entidad cubre sus salidas operativas con una reserva de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> (Cobertura: <strong>${ratio.toFixed(2)}x</strong>). Se recomienda acelerar la cobranza de $${cxcPendiente.toLocaleString("es-MX")} pendientes.`;
+      } else {
+        dictamenEl.innerHTML = `<strong class="text-rose-400">Déficit Operativo:</strong> Los compromisos a proveedores, gastos y depreciación superan la cobranza realizada por <strong>$${Math.abs(margenNeto).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong>. Se debe agilizar cobros y reprogramar pasivos.`;
+      }
+
+      renderChartFlujos(cxcCobrada, otrosIngresosTotal, cxpExigible, gastosOperativosTotal, depreciacionMensualTotal);
+      renderChartEgresos(cxpExigible, gastosOperativosTotal, depreciacionMensualTotal);
+      renderChartTopClients(cxc);
+      renderChartDepreciacion(depHardware, depNetwork, depSoftware);
+    }
+
+    function renderChartFlujos(cobros, otrosIng, cxp, gastos, dep) {
+      const ctx = document.getElementById("chart-flujos-comparativos").getContext("2d");
+      if (chartFlujos) chartFlujos.destroy();
+
+      chartFlujos = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Cobros CxC", "Otros Ingresos", "Pasivos CxP", "Gastos Operativos", "Depreciación / Mes"],
+          datasets: [{
+            data: [cobros, otrosIng, cxp, gastos, dep],
+            backgroundColor: ["#10b981", "#059669", "#f43f5e", "#f59e0b", "#6366f1"],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: "#94a3b8", font: { size: 10 } }, grid: { color: "#1e293b" } },
+            y: { ticks: { color: "#64748b" }, grid: { color: "#1e293b" } }
+          }
+        }
+      });
+    }
+
+    function renderChartEgresos(cxp, gastos, dep) {
+      const ctx = document.getElementById("chart-egresos-donut").getContext("2d");
+      if (chartEgresos) chartEgresos.destroy();
+
+      chartEgresos = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Proveedores (CxP)", "Gastos Registrados", "Depreciación de Activos"],
+          datasets: [{
+            data: [cxp, gastos, dep],
+            backgroundColor: ["#f43f5e", "#f59e0b", "#6366f1"],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "right", labels: { color: "#94a3b8", font: { family: "Plus Jakarta Sans", size: 10 } } } },
+          cutout: "65%"
+        }
+      });
+    }
+
+    function renderChartTopClients(cxc) {
+      const map = {};
+      cxc.forEach(i => {
+        if (i.status !== "COLLECTED") {
+          const name = i.entity_name || "Sin nombre";
+          map[name] = (map[name] || 0) + parseSafeNumber(i.balance !== undefined ? i.balance : i.total_amount);
+        }
+      });
+
+      const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const labels = sorted.map(s => s[0].length > 18 ? s[0].substring(0, 15) + "..." : s[0]);
+      const data = sorted.map(s => s[1]);
+
+      const ctx = document.getElementById("chart-top-clients").getContext("2d");
+      if (chartClients) chartClients.destroy();
+
+      chartClients = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels.length ? labels : ["Sin cartera pendiente"],
+          datasets: [{
+            label: "Saldo Exigible ($ MXN)",
+            data: data.length ? data : [0],
+            backgroundColor: "#3b82f6",
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: "#64748b" }, grid: { color: "#1e293b" } },
+            y: { ticks: { color: "#94a3b8", font: { size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderChartDepreciacion(hardware, network, software) {
+      const ctx = document.getElementById("chart-depreciacion-categoria").getContext("2d");
+      if (chartDeprec) chartDeprec.destroy();
+
+      chartDeprec = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Cómputo / Hardware (30%)", "Red / Módems (30%)", "Software / Licencias (33%)"],
+          datasets: [{
+            label: "Desgaste Mensual ($ MXN)",
+            data: [hardware, network, software],
+            backgroundColor: ["#8b5cf6", "#f59e0b", "#06b6d4"],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: "#94a3b8", font: { size: 10 } }, grid: { color: "#1e293b" } },
+            y: { ticks: { color: "#64748b" }, grid: { color: "#1e293b" } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

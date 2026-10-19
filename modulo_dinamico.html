@@ -43,7 +43,7 @@
   <!-- ENCABEZADO SUPERIOR -->
   <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
-      <a href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+      <a href="portal_catalogo.html" id="btn-back-portal" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
         <i class="ph-bold ph-arrow-left text-lg"></i>
       </a>
       <div>
@@ -195,19 +195,33 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const slug = urlParams.get('slug');
-    let empresaId = urlParams.get('empresa') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
+    let empresaId = urlParams.get('empresa') || localStorage.getItem('active_company_id') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
+
+    // Asegurar persistencia de la empresa activa
+    localStorage.setItem('active_company_id', empresaId);
+    sessionStorage.setItem('active_company_id', empresaId);
+
+    // Actualizar botón de regreso al portal con contexto
+    const btnBack = document.getElementById('btn-back-portal');
+    if (btnBack) {
+      btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(empresaId)}`;
+    }
 
     let schema = null;
     let currentUser = null;
     let rawRecords = [];
 
-    async function logAudit(action, details = {}) {
+    // AUDITORÍA FORENSE ENRIQUECIDA Y HOMOLOGADA
+    async function logAudit(action, details = {}, moduleSlug = slug) {
       try {
         await addDoc(collection(db, "audit_logs"), {
           timestamp: serverTimestamp(),
-          user_email: currentUser?.email || "anonimo",
+          user_email: currentUser?.email || auth.currentUser?.email || "anonimo",
+          user_name: currentUser?.name || currentUser?.full_name || currentUser?.displayName || (currentUser?.email ? currentUser.email.split('@')[0] : "Operador"),
+          role_id: currentUser?.role_id || "OPERADOR",
           company_id: empresaId,
           company_name: EMPRESAS[empresaId]?.name || empresaId,
+          module_slug: moduleSlug,
           action: action,
           details: details,
           user_agent: navigator.userAgent
@@ -236,20 +250,18 @@
         const allowed = currentUser.allowed_companies || ["*"];
         const isSuper = currentUser.role_id === "SUPERADMIN";
 
-        // 1. Validación Multi-Tenant
         if (!isSuper && !allowed.includes("*") && !allowed.includes(empresaId)) {
           alert("Acceso denegado: Tu perfil no cuenta con permisos para ver este módulo en la razón social solicitada.");
-          window.location.replace("portal_catalogo.html");
+          window.location.replace(`portal_catalogo.html?empresa=${encodeURIComponent(allowed[0] || 'cesar_gonzalez')}`);
           return;
         }
 
         if (!slug) {
           alert("Error: No se especificó el identificador del módulo a consultar.");
-          window.location.replace("portal_catalogo.html");
+          window.location.replace(`portal_catalogo.html?empresa=${encodeURIComponent(empresaId)}`);
           return;
         }
 
-        // 2. Validación RBAC Dinámico
         let userPermissions = [];
         const roleSnap = await getDoc(doc(db, "system_roles", currentUser.role_id));
         if (roleSnap.exists()) {
@@ -261,7 +273,7 @@
 
         if (!canRead) {
           alert(`Acceso denegado: Tu rol (${currentUser.role_id}) no tiene autorización de lectura en el módulo "${slug}".`);
-          window.location.replace("portal_catalogo.html");
+          window.location.replace(`portal_catalogo.html?empresa=${encodeURIComponent(empresaId)}`);
           return;
         }
 
@@ -285,7 +297,7 @@
 
       if (snap.empty) {
         alert(`El módulo con clave "${slug}" no existe o fue eliminado del sistema.`);
-        window.location.replace("portal_catalogo.html");
+        window.location.replace(`portal_catalogo.html?empresa=${encodeURIComponent(empresaId)}`);
         return;
       }
 
@@ -305,34 +317,29 @@
       const iconEl = document.getElementById('header-mod-icon');
       iconEl.className = `ph-bold ${schema.icon || 'ph-cube'} text-indigo-400`;
 
-      // ===============================================================
-      // CASO A: MÓDULO IMPORTADO CON CÓDIGO HTML AUTÓNOMO (STANDALONE)
-      // ===============================================================
       if (schema.is_standalone) {
-        // Ocultar componentes del modo esquema
         document.getElementById('dynamic-kpis-container').classList.add('hidden');
         document.getElementById('filter-controls-container').classList.add('hidden');
         document.getElementById('table-wrapper-container').classList.add('hidden');
         document.getElementById('btn-nuevo-registro').classList.add('hidden');
         document.getElementById('btn-exportar-excel').classList.add('hidden');
 
-        // Mostrar contenedor autónomo
         const standaloneContainer = document.getElementById('standalone-module-container');
         standaloneContainer.classList.remove('hidden');
 
-        // Cargar código fuente desde system_module_sources en Firestore
-        const sourceDocRef = doc(db, "system_module_sources", `${slug}.html`);
+        const sourceFileName = `${slug}.html`;
+        const sourceDocRef = doc(db, "system_module_sources", sourceFileName);
         const sourceSnap = await getDoc(sourceDocRef);
 
         if (sourceSnap.exists() && sourceSnap.data().source_code) {
           const frame = document.getElementById('standalone-frame');
           const frameDoc = frame.contentWindow.document;
           frameDoc.open();
-          // Inyección reactiva de variables de entorno para que el HTML autónomo conozca la empresa activa
           frameDoc.write(`
             <script>
               window.EMPRESA_ACTIVA = "${empresaId}";
               window.COMPANY_ID = "${empresaId}";
+              localStorage.setItem("active_company_id", "${empresaId}");
               sessionStorage.setItem("active_company_id", "${empresaId}");
             <\/script>
             ${sourceSnap.data().source_code}
@@ -341,16 +348,13 @@
         } else {
           standaloneContainer.innerHTML = `
             <div class="p-8 text-center text-rose-400 font-mono text-xs">
-              Error crítico: No se encontró el código fuente para ${slug}.html en la colección "system_module_sources". Vuelve a importarlo desde ContaCore Studio.
+              Error crítico: No se encontró el código fuente para ${sourceFileName} en "system_module_sources". Vuelve a importarlo desde ContaCore Studio.
             </div>
           `;
         }
         return;
       }
 
-      // ===============================================================
-      // CASO B: MÓDULO DE ESQUEMA DINÁMICO ESTÁNDAR (NO-CODE)
-      // ===============================================================
       buildTableHeaders();
       buildFormInputs();
       initLiveRecordsStream();
@@ -430,7 +434,8 @@
           rawRecords.push(item);
 
           if (numField) {
-            totalSum += Number(item[numField.key] || 0);
+            const parsedVal = Number(item[numField.key]);
+            totalSum += (!isNaN(parsedVal) && isFinite(parsedVal)) ? parsedVal : 0;
           }
         });
 
@@ -467,7 +472,7 @@
         return (schema.fields || []).some(f => {
           const val = String(item[f.key] || '').toLowerCase();
           return val.includes(search);
-        }) || (item.registered_by || '').toLowerCase().includes(search);
+        }) || (item.registered_by || '').toLowerCase().includes(search) || (item.registered_by_name || '').toLowerCase().includes(search);
       });
 
       document.getElementById('counter-records').innerText = `${filtered.length} registros listados`;
@@ -482,7 +487,9 @@
         let cells = (schema.fields || []).map(f => {
           const val = item[f.key] !== undefined && item[f.key] !== null ? item[f.key] : '-';
           if (f.type === 'number') {
-            return `<td class="p-4 font-mono font-semibold text-white">$${Number(val).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>`;
+            const numVal = Number(val);
+            const safeNum = (!isNaN(numVal) && isFinite(numVal)) ? numVal : 0;
+            return `<td class="p-4 font-mono font-semibold text-white">$${safeNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>`;
           }
           if (f.type === 'date') {
             return `<td class="p-4 font-mono text-slate-400 text-xs">${val}</td>`;
@@ -495,7 +502,10 @@
         html += `
           <tr class="hover:bg-slate-800/40 transition">
             ${cells}
-            <td class="p-4 font-mono text-xs text-slate-400">${item.registered_by || 'admin'}</td>
+            <td class="p-4 font-mono text-xs text-slate-400">
+              <div>${item.registered_by || 'admin'}</div>
+              <span class="text-[10px] text-slate-500">${item.registered_by_name || ''}</span>
+            </td>
             <td class="p-4 font-mono text-xs text-slate-500">${fechaReg}</td>
             <td class="p-4 text-right">
               <button onclick="eliminarRegistro('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition" title="Eliminar Registro">
@@ -513,6 +523,7 @@
       if (!show) document.getElementById('form-dynamic-record').reset();
     };
 
+    // INYECCIÓN DE REGISTRO CON PARSEO NUMÉRICO FORZOSO Y HOMOLOGACIÓN DE LLAVES MONETARIAS
     document.getElementById('form-dynamic-record').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-record');
@@ -522,20 +533,34 @@
       const payload = {
         company_id: empresaId,
         company_name: EMPRESAS[empresaId]?.name,
-        registered_by: currentUser?.email || 'admin',
+        registered_by: currentUser?.email || auth.currentUser?.email || 'admin',
+        registered_by_name: currentUser?.name || currentUser?.full_name || currentUser?.displayName || 'Operador',
         created_at: serverTimestamp()
       };
 
       (schema.fields || []).forEach(f => {
         const input = document.getElementById(`dyn_input_${f.key}`);
         if (input) {
-          payload[f.key] = f.type === 'number' ? (parseFloat(input.value) || 0) : input.value.trim();
+          if (f.type === 'number') {
+            const rawVal = parseFloat(input.value);
+            const safeNum = (!isNaN(rawVal) && isFinite(rawVal)) ? rawVal : 0;
+            payload[f.key] = safeNum;
+            
+            // Homologación de llaves para el Tablero Gerencial
+            if (f.key === 'monto_total' || f.key === 'total' || f.key === 'monto') {
+              payload['monto'] = safeNum;
+              payload['total'] = safeNum;
+              payload['monto_total'] = safeNum;
+            }
+          } else {
+            payload[f.key] = input.value.trim();
+          }
         }
       });
 
       try {
         const docRef = await addDoc(collection(db, slug), payload);
-        await logAudit("DYNAMIC_RECORD_CREATED", { module_slug: slug, doc_id: docRef.id, payload });
+        await logAudit("DYNAMIC_RECORD_CREATED", { module_slug: slug, doc_id: docRef.id, payload }, slug);
         toggleModalCaptura(false);
       } catch (err) {
         alert("Error al guardar registro: " + err.message);
@@ -549,7 +574,7 @@
       if (confirm(`¿Confirmas la eliminación permanente de este registro en ${schema.title}?`)) {
         try {
           await deleteDoc(doc(db, slug, id));
-          await logAudit("DYNAMIC_RECORD_DELETED", { module_slug: slug, doc_id: id });
+          await logAudit("DYNAMIC_RECORD_DELETED", { module_slug: slug, doc_id: id }, slug);
         } catch (err) {
           alert("Error al eliminar: " + err.message);
         }
@@ -570,6 +595,7 @@
           rowObj[f.label] = f.type === 'number' ? Number(item[f.key] || 0) : (item[f.key] || '');
         });
         rowObj["Registrado Por"] = item.registered_by || '';
+        rowObj["Operador"] = item.registered_by_name || '';
         rowObj["Fecha Registro"] = item.created_at?.toDate ? item.created_at.toDate().toISOString() : '';
         return rowObj;
       });

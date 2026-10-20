@@ -128,9 +128,9 @@
           <select id="ide-file-selector" onchange="cargarArchivoEnEditor(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 outline-none focus:border-indigo-500">
             <optgroup label="Módulos Oficiales del Sistema">
               <option value="portal_catalogo.html">portal_catalogo.html (Catálogo Maestro)</option>
-              <option value="cg_cxc.html">cg_cxc.html (CxC César Giovanni)</option>
+              <option value="cg_cxc.html">cg_cxc.html (CxC Cesar Giovanni)</option>
               <option value="hr_cxc.html">hr_cxc.html (CxC HR Employment)</option>
-              <option value="cg_cxp.html">cg_cxp.html (CxP César Giovanni)</option>
+              <option value="cg_cxp.html">cg_cxp.html (CxP Cesar Giovanni)</option>
               <option value="hr_cxp.html">hr_cxp.html (CxP HR Employment)</option>
               <option value="modulo_gerencial.html">modulo_gerencial.html (Tablero Financiero)</option>
               <option value="modulo_dinamico.html">modulo_dinamico.html (Visor Universal)</option>
@@ -387,7 +387,7 @@
           user_name: currentUserStaff?.full_name || currentUserStaff?.name || (currentUser?.email ? currentUser.email.split('@')[0] : "Operador"),
           role_id: currentUserStaff?.role_id || "SUPERADMIN",
           company_id: activeCompanyId,
-          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "César Giovanni González Contreras",
+          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Giovanni Gonzalez Contreras",
           module_slug: "modulo_creador",
           action: action,
           details: details,

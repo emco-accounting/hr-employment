@@ -175,7 +175,7 @@
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Razones Sociales Autorizadas</label>
           <select id="staff-companies" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             <option value="ALL">Acceso Global (César Giovanni & HR Employment)</option>
-            <option value="cesar_gonzalez">Solo César Giovanni González Contreras</option>
+            <option value="cesar_gonzalez">Solo Cesar Giovanni Gonzalez Contreras</option>
             <option value="hr_employment">Solo HR Employment</option>
           </select>
         </div>
@@ -468,7 +468,7 @@
     };
 
     window.cambiarEmpresas = async (uid) => {
-      const opt = prompt("Asignar Razones Sociales autorizadas:\n1 = Ambas (Acceso Global)\n2 = Solo César Giovanni González Contreras\n3 = Solo HR Employment", "1");
+      const opt = prompt("Asignar Razones Sociales autorizadas:\n1 = Ambas (Acceso Global)\n2 = Solo Cesar Giovanni Gonzalez Contreras\n3 = Solo HR Employment", "1");
       let allowed = ["*"];
       if (opt === "2") allowed = ["cesar_gonzalez"];
       if (opt === "3") allowed = ["hr_employment"];

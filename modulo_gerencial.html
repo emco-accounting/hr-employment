@@ -54,7 +54,7 @@
       <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
         <label class="text-[11px] font-mono uppercase text-slate-400 px-2">Razón Social:</label>
         <select id="select-scope" onchange="cambiarEntidadAnalisis(this.value)" class="bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500">
-          <option value="cesar_gonzalez">Cesar Giovanni Gonzalez Contreras</option>
+          <option value="cesar_gonzalez">Cesar Geovanni Gonzalez Contreras</option>
           <option value="hr_employment">HR Employment</option>
           <option value="CONSOLIDATED">★ Grupo Consolidado (Ambas Entidades)</option>
         </select>
@@ -80,7 +80,7 @@
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
         <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Pasivos Exigibles (CxP)</span>
         <p id="kpi-cxp-total" class="text-xl font-bold font-mono text-rose-400 mt-2">$0.00</p>
-        <span class="text-[10px] text-slate-500 mt-1 block">Saldo pendiente a proveedores</span>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-cxp-sub">Saldo pendiente a proveedores</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
@@ -98,7 +98,7 @@
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
         <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Flujo Operativo / Margen</span>
         <p id="kpi-margen-neto" class="text-xl font-bold font-mono text-white mt-2">$0.00</p>
-        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-margen-ratio">Ratio: 0.00x</span>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-margen-ratio">Cobertura: 0.00x</span>
       </div>
     </div>
 
@@ -146,7 +146,7 @@
           <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
             <i class="ph-bold ph-laptop text-amber-400"></i> Desgaste Patrimonial por Familia de Activos
           </h3>
-          <span class="text-[11px] text-slate-400">Depreciación mensual estimada por tipo de activo</span>
+          <span class="text-[11px] text-slate-400">Depreciación mensual calculada por tipo de activo</span>
         </div>
         <div class="h-64 relative">
           <canvas id="chart-depreciacion-categoria"></canvas>
@@ -194,14 +194,12 @@
     const urlParams = new URLSearchParams(window.location.search);
     let scopeCompany = urlParams.get("empresa") || localStorage.getItem("active_company_id") || sessionStorage.getItem("active_company_id") || "cesar_gonzalez";
 
-    // Persistir contexto
     localStorage.setItem("active_company_id", scopeCompany);
     sessionStorage.setItem("active_company_id", scopeCompany);
 
-    // Ajustar botón de retorno
     const btnBack = document.getElementById("btn-back-portal");
     if (btnBack) {
-      btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(scopeCompany)}`;
+      btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(scopeCompany === "CONSOLIDATED" ? "cesar_gonzalez" : scopeCompany)}`;
     }
 
     let rawCxC = [];
@@ -224,7 +222,7 @@
 
       try {
         const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
-        if (staffSnap.exists() && staffSnap.data().status !== "ACTIVE") {
+        if (!staffSnap.exists() || staffSnap.data().status !== "ACTIVE") {
           await signOut(auth);
           window.location.replace("index.html");
           return;
@@ -281,7 +279,7 @@
         actualizarDashboard();
       }, err => console.warn("mod_otros_ingresos sin inicializar:", err));
 
-      // 5. Activos Fijos
+      // 5. Activos Fijos con Depreciación LISR
       onSnapshot(collection(db, "fixed_assets"), (snap) => {
         rawActivos = [];
         snap.forEach(d => rawActivos.push({ id: d.id, ...d.data() }));
@@ -320,53 +318,56 @@
 
       let otrosIngresosTotal = 0;
       otrosIng.forEach(i => {
-        otrosIngresosTotal += parseSafeNumber(i.monto || i.total || i.monto_total);
+        otrosIngresosTotal += parseSafeNumber(i.monto || i.total || i.monto_total || i.importe);
       });
 
       const totalIngresosEfectivos = cxcCobrada + otrosIngresosTotal;
 
       // 2. Pasivos Exigibles y Gastos
-      let cxpExigible = 0;
+      let cxpExigible = 0, cxpPagado = 0;
       cxp.forEach(i => {
         const total = parseSafeNumber(i.total_amount);
         const bal = parseSafeNumber(i.balance !== undefined ? i.balance : total);
-        if (i.status !== "PAID") {
+        if (i.status === "PAID") {
+          cxpPagado += parseSafeNumber(i.paid_amount || total);
+        } else {
           cxpExigible += bal;
         }
       });
 
       let gastosOperativosTotal = 0;
       gastos.forEach(i => {
-        gastosOperativosTotal += parseSafeNumber(i.monto_total || i.monto || i.total);
+        gastosOperativosTotal += parseSafeNumber(i.monto_total || i.monto || i.total || i.importe);
       });
 
-      // 3. Depreciación Mensual de Activos Fijos (LISR)
+      // 3. Depreciación Mensual de Activos Fijos (LISR Art. 34/35)
       let depreciacionMensualTotal = 0;
       let depHardware = 0, depNetwork = 0, depSoftware = 0;
 
       activos.forEach(a => {
         const costo = parseSafeNumber(a.purchase_cost);
-        let tasaAnual = 0.10;
+        let tasaAnual = parseSafeNumber(a.depreciation_rate_annual);
+
+        // Si no tiene tasa específica guardada, recurrir a la tasa por categoría
+        if (tasaAnual <= 0) {
+          if (a.category === "INTANGIBLE_SOFTWARE") {
+            tasaAnual = 33.33;
+          } else {
+            tasaAnual = 30.0;
+          }
+        }
+
+        const depMes = parseSafeNumber(a.monthly_depreciation) || ((costo * (tasaAnual / 100)) / 12);
 
         if (a.category === "TANGIBLE_HARDWARE") {
-          tasaAnual = 0.30;
-          const depMes = (costo * tasaAnual) / 12;
           depHardware += depMes;
-          depreciacionMensualTotal += depMes;
         } else if (a.category === "TANGIBLE_NETWORK") {
-          tasaAnual = 0.30;
-          const depMes = (costo * tasaAnual) / 12;
           depNetwork += depMes;
-          depreciacionMensualTotal += depMes;
         } else if (a.category === "INTANGIBLE_SOFTWARE") {
-          tasaAnual = 0.3333;
-          const depMes = (costo * tasaAnual) / 12;
           depSoftware += depMes;
-          depreciacionMensualTotal += depMes;
-        } else {
-          const depMes = (costo * tasaAnual) / 12;
-          depreciacionMensualTotal += depMes;
         }
+
+        depreciacionMensualTotal += depMes;
       });
 
       // 4. Margen Operativo Real
@@ -379,6 +380,8 @@
       document.getElementById("kpi-ingresos-sub").innerText = `Cobrado: $${cxcCobrada.toLocaleString("es-MX")} | Extra: $${otrosIngresosTotal.toLocaleString("es-MX")}`;
 
       document.getElementById("kpi-cxp-total").innerText = `$${cxpExigible.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-cxp-sub").innerText = `Liquidado: $${cxpPagado.toLocaleString("es-MX")}`;
+
       document.getElementById("kpi-gastos-operativos").innerText = `$${gastosOperativosTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
       document.getElementById("kpi-depreciacion-mes").innerText = `$${depreciacionMensualTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
       document.getElementById("kpi-depreciacion-sub").innerText = `${activos.length} activos en libros`;
@@ -392,11 +395,11 @@
       // Dictamen Automatizado
       const dictamenEl = document.getElementById("executive-summary");
       if (margenNeto >= 0 && ratio >= 1.25) {
-        dictamenEl.innerHTML = `<strong class="text-emerald-400">Posición Financiera Sólida:</strong> La cobranza efectiva ($${totalIngresosEfectivos.toLocaleString("es-MX")}) supera los pasivos a pagar, gastos y depreciación ($${depreciacionMensualTotal.toLocaleString("es-MX")}/mes), generando un margen neto favorable de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> con cobertura de <strong>${ratio.toFixed(2)}x</strong>.`;
+        dictamenEl.innerHTML = `<strong class="text-emerald-400">Posición Financiera Sólida:</strong> La cobranza efectiva ($${totalIngresosEfectivos.toLocaleString("es-MX")}) supera los pasivos a pagar, gastos y depreciación ($${depreciacionMensualTotal.toLocaleString("es-MX")}/mes), generando un margen neto favorable de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> con ratio de cobertura de <strong>${ratio.toFixed(2)}x</strong>.`;
       } else if (margenNeto >= 0) {
-        dictamenEl.innerHTML = `<strong class="text-amber-400">Margen Ajustado:</strong> La entidad cubre sus salidas operativas con una reserva de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> (Cobertura: <strong>${ratio.toFixed(2)}x</strong>). Se recomienda acelerar la cobranza de $${cxcPendiente.toLocaleString("es-MX")} pendientes.`;
+        dictamenEl.innerHTML = `<strong class="text-amber-400">Margen Ajustado:</strong> La entidad cubre sus salidas con una reserva de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> (Cobertura: <strong>${ratio.toFixed(2)}x</strong>). Se aconseja acelerar la cartera pendiente de $${cxcPendiente.toLocaleString("es-MX")}.`;
       } else {
-        dictamenEl.innerHTML = `<strong class="text-rose-400">Déficit Operativo:</strong> Los compromisos a proveedores, gastos y depreciación superan la cobranza realizada por <strong>$${Math.abs(margenNeto).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong>. Se debe agilizar cobros y reprogramar pasivos.`;
+        dictamenEl.innerHTML = `<strong class="text-rose-400">Déficit Operativo:</strong> Los compromisos a proveedores, gastos y desgaste de activos superan la cobranza realizada por <strong>$${Math.abs(margenNeto).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong>. Se debe agilizar cobros y renegociar pasivos inmediatos.`;
       }
 
       renderChartFlujos(cxcCobrada, otrosIngresosTotal, cxpExigible, gastosOperativosTotal, depreciacionMensualTotal);
@@ -501,7 +504,7 @@
       chartDeprec = new Chart(ctx, {
         type: "bar",
         data: {
-          labels: ["Cómputo / Hardware (30%)", "Red / Módems (30%)", "Software / Licencias (33%)"],
+          labels: ["Hardware (30%)", "Red / Módems (30%)", "Software / Licencias (33.3%)"],
           datasets: [{
             label: "Desgaste Mensual ($ MXN)",
             data: [hardware, network, software],

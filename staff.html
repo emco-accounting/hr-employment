@@ -24,6 +24,23 @@
 </head>
 <body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-indigo-500 selection:text-white">
 
+  <!-- OVERLAY DE AUTORIZACIÓN -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
+      <i class="ph-bold ph-shield-check text-indigo-400 text-3xl"></i>
+    </div>
+    <p class="text-xs text-slate-400 font-mono">Conectando a la consola de gobernanza y roles RBAC...</p>
+  </div>
+
+  <!-- NOTIFICACIÓN TOAST -->
+  <div id="toast-notification" class="fixed bottom-6 right-6 z-50 hidden max-w-sm px-4 py-3 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl flex items-center gap-3 transition-all duration-300">
+    <i id="toast-icon" class="ph-bold ph-check-circle text-emerald-400 text-xl shrink-0"></i>
+    <div class="text-xs">
+      <p id="toast-title" class="font-bold text-white"></p>
+      <p id="toast-desc" class="text-slate-400 font-mono text-[11px]"></p>
+    </div>
+  </div>
+
   <!-- SIDEBAR DE GOBERNANZA TRANSVERSAL -->
   <aside class="w-72 bg-slate-900/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl z-20">
     <div>
@@ -38,7 +55,7 @@
       </div>
 
       <nav class="p-4 space-y-1 text-sm font-medium">
-        <a href="portal_catalogo.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <a id="link-back-portal" href="portal_catalogo.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
           <span>Portal Maestro</span>
         </a>
@@ -46,25 +63,31 @@
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
         <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Gobernanza Central</div>
 
-        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
+        <button class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm text-left">
           <i class="ph-bold ph-users-three text-lg text-indigo-400"></i>
           <span>Directorio de Staff</span>
         </button>
 
-        <a href="modulo_creador.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <button onclick="abrirMatrizPermisos()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 text-left">
+          <i class="ph-bold ph-shield-star text-lg text-amber-400"></i>
+          <span>Matriz de Roles</span>
+        </button>
+
+        <a id="link-creator" href="modulo_creador.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-cube text-lg text-indigo-400"></i>
-          <span>Creador de Módulos</span>
+          <span>Creador Studio</span>
         </a>
 
-        <a href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <a id="link-logs" href="modulo_logs.html" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
-          <span>Consola de Auditoría</span>
+          <span>Consola Auditoría</span>
         </a>
       </nav>
     </div>
 
-    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60">
-      <span class="text-xs text-slate-500 font-mono">Firestore: emco-accounting</span>
+    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60 flex items-center justify-between text-xs font-mono text-slate-500">
+      <span>emco-accounting</span>
+      <span id="active-tenant-badge" class="px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700">--</span>
     </div>
   </aside>
 
@@ -73,7 +96,7 @@
     <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
       <div>
         <h2 class="text-xl font-bold text-white tracking-tight">Directorio de Staff & Gobernanza</h2>
-        <span class="text-xs text-slate-400 font-mono">Gestión de roles RBAC, módulos dinámicos y asignación de empresas</span>
+        <span class="text-xs text-slate-400 font-mono">Control de acceso bilateral: Cesar Geovanni Gonzalez Contreras & HR Employment</span>
       </div>
       <div class="flex items-center gap-3">
         <button onclick="abrirMatrizPermisos()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
@@ -87,37 +110,46 @@
 
     <div class="p-8 flex-1 space-y-6">
 
-      <!-- TARJETAS RESUMEN -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <!-- TARJETAS DE KPIS DE USUARIOS -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
           <div class="flex justify-between items-start">
             <span class="text-xs font-mono text-slate-400 uppercase">Colaboradores Totales</span>
-            <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-users"></i></span>
+            <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-users text-lg"></i></span>
           </div>
           <p id="kpi-total-users" class="text-2xl font-bold font-mono text-white mt-2">0</p>
-          <span class="text-[11px] text-slate-500 mt-1 block">Usuarios registrados</span>
+          <span class="text-[11px] text-slate-500 mt-1 block">Usuarios en sistema</span>
         </div>
 
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
           <div class="flex justify-between items-start">
-            <span class="text-xs font-mono text-slate-400 uppercase">Acceso Global (Ambas)</span>
-            <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-buildings"></i></span>
+            <span class="text-xs font-mono text-slate-400 uppercase">Acceso Global Dual</span>
+            <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-buildings text-lg"></i></span>
           </div>
           <p id="kpi-global-users" class="text-2xl font-bold font-mono text-emerald-400 mt-2">0</p>
-          <span class="text-[11px] text-slate-500 mt-1 block">Operadores con acceso dual</span>
+          <span class="text-[11px] text-slate-500 mt-1 block">Cesar Geovanni & HR Empl.</span>
         </div>
 
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
           <div class="flex justify-between items-start">
-            <span class="text-xs font-mono text-slate-400 uppercase">Usuarios Activos</span>
-            <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="ph-bold ph-check-circle"></i></span>
+            <span class="text-xs font-mono text-slate-400 uppercase">Sesiones Activas</span>
+            <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="ph-bold ph-check-circle text-lg"></i></span>
           </div>
           <p id="kpi-active-users" class="text-2xl font-bold font-mono text-white mt-2">0</p>
-          <span class="text-[11px] text-slate-500 mt-1 block">Sesiones habilitadas</span>
+          <span class="text-[11px] text-slate-500 mt-1 block">Estado ACTIVE</span>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-mono text-slate-400 uppercase">Roles Definidos</span>
+            <span class="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20"><i class="ph-bold ph-tag text-lg"></i></span>
+          </div>
+          <p id="kpi-total-roles" class="text-2xl font-bold font-mono text-purple-400 mt-2">0</p>
+          <span class="text-[11px] text-slate-500 mt-1 block">Perfiles RBAC configurados</span>
         </div>
       </div>
 
-      <!-- TABLA DE STAFF -->
+      <!-- TABLA PRINCIPAL DE STAFF -->
       <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
         <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
           <div class="flex items-center gap-3">
@@ -126,72 +158,82 @@
           </div>
           <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
             <i class="ph ph-magnifying-glass text-slate-400"></i>
-            <input type="text" id="filter-staff-search" oninput="renderStaffTable()" placeholder="Buscar colaborador, correo..." class="bg-transparent text-white focus:outline-none text-xs w-60">
+            <input type="text" id="filter-staff-search" oninput="renderStaffTable()" placeholder="Buscar colaborador, correo, rol..." class="bg-transparent text-white focus:outline-none text-xs w-64">
           </div>
         </div>
 
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
-            <tr>
-              <th class="p-4">Colaborador</th>
-              <th class="p-4">Correo Corporativo</th>
-              <th class="p-4">Razones Sociales Asignadas</th>
-              <th class="p-4">Rol RBAC</th>
-              <th class="p-4">Estatus</th>
-              <th class="p-4 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="table-staff" class="divide-y divide-slate-800/60 font-sans text-xs">
-            <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando personal...</td></tr>
-          </tbody>
-        </table>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+              <tr>
+                <th class="p-4">Colaborador</th>
+                <th class="p-4">Correo Corporativo</th>
+                <th class="p-4">Razones Sociales Asignadas</th>
+                <th class="p-4">Rol RBAC</th>
+                <th class="p-4">Estatus</th>
+                <th class="p-4 text-right">Acciones de Seguridad</th>
+              </tr>
+            </thead>
+            <tbody id="table-staff" class="divide-y divide-slate-800/60 font-sans text-xs">
+              <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando personal...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
   </main>
 
-  <!-- MODAL: REGISTRAR COLABORADOR -->
+  <!-- MODAL: REGISTRAR COLABORADOR CON VISOR DE CONTRASEÑA -->
   <div id="modal-staff" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h4 class="text-base font-bold text-white">Inyectar Nuevo Colaborador</h4>
+        <h4 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="ph-bold ph-user-plus text-indigo-400"></i> Inyectar Nuevo Colaborador
+        </h4>
         <button onclick="toggleModalStaff(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
 
       <form id="form-staff" class="space-y-4 text-xs font-medium text-slate-300">
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Completo</label>
-          <input type="text" id="staff-name" placeholder="Ej: Lic. Antonio Valladares" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+          <input type="text" id="staff-name" placeholder="Ej: Lic. Antonio Valladares" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-sans">
         </div>
+
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Correo Corporativo</label>
-          <input type="email" id="staff-email" placeholder="usuario@hremploy..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+          <input type="email" id="staff-email" placeholder="usuario@empresa.com" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
         </div>
+
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Contraseña Inicial</label>
-          <input type="password" id="staff-password" minlength="6" placeholder="Mínimo 6 caracteres" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+          <div class="relative flex items-center">
+            <input type="password" id="staff-password" minlength="6" placeholder="Mínimo 6 caracteres" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono pr-10">
+            <button type="button" onclick="togglePasswordVisibility('staff-password', 'toggle-pass-icon')" class="absolute right-3 text-slate-400 hover:text-white p-1">
+              <i id="toggle-pass-icon" class="ph ph-eye text-base"></i>
+            </button>
+          </div>
         </div>
+
         <div>
           <label class="block uppercase tracking-wider text-slate-400 mb-1">Razones Sociales Autorizadas</label>
-          <select id="staff-companies" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
-            <option value="ALL">Acceso Global (César Giovanni & HR Employment)</option>
-            <option value="cesar_gonzalez">Solo Cesar Giovanni Gonzalez Contreras</option>
+          <select id="staff-companies" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-sans">
+            <option value="ALL">Acceso Global (Cesar Geovanni & HR Employment)</option>
+            <option value="cesar_gonzalez">Solo Cesar Geovanni Gonzalez Contreras</option>
             <option value="hr_employment">Solo HR Employment</option>
           </select>
         </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Rol RBAC</label>
-            <select id="staff-role" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
-              <option value="SUPERADMIN">SUPERADMIN</option>
-              <option value="CONTADOR">CONTADOR</option>
-              <option value="AUXILIAR">AUXILIAR</option>
-              <option value="AUDITOR">AUDITOR</option>
+            <select id="staff-role" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
+              <!-- Cargado dinámicamente desde system_roles -->
             </select>
           </div>
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Estatus</label>
-            <select id="staff-status" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Estatus Inicial</label>
+            <select id="staff-status" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
               <option value="ACTIVE">ACTIVE</option>
               <option value="SUSPENDED">SUSPENDED</option>
             </select>
@@ -206,50 +248,131 @@
     </div>
   </div>
 
-  <!-- MODAL: MATRIZ DE PERMISOS DINÁMICOS POR ROL -->
+  <!-- MODAL: MATRIZ DE GOBERNANZA RBAC DINÁMICA (CRUD DE ROLES) -->
   <div id="modal-roles" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4 max-h-[90vh] flex flex-col">
+    <div class="bg-slate-900 rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4 max-h-[92vh] flex flex-col">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
         <div>
           <h4 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="ph-bold ph-shield-star text-amber-400"></i> Matriz de Permisos RBAC (Dinámica)
+            <i class="ph-bold ph-shield-star text-amber-400"></i> Matriz Dinámica de Gobernanza RBAC
           </h4>
-          <span class="text-xs text-slate-400 font-mono">Configura los accesos para módulos nativos y creados</span>
+          <span class="text-xs text-slate-400 font-mono">Alta, edición, baja de roles y asignación de permisos sobre módulos</span>
         </div>
         <button onclick="toggleModalRoles(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
 
-      <div class="flex items-center gap-3 bg-slate-950 p-2 rounded-xl border border-slate-800 shrink-0">
-        <label class="text-xs font-mono uppercase text-slate-400">Seleccionar Rol:</label>
-        <select id="select-role-edit" onchange="cargarPermisosDelRol(this.value)" class="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-700 outline-none">
-          <option value="CONTADOR">CONTADOR</option>
-          <option value="AUXILIAR">AUXILIAR</option>
-          <option value="AUDITOR">AUDITOR</option>
-        </select>
-        <span class="text-[10px] text-slate-500 font-mono ml-auto">SUPERADMIN siempre tiene acceso total (*)</span>
-      </div>
-
-      <div class="overflow-y-auto flex-1 space-y-3 pr-1" id="permissions-container">
-        <!-- Renderizado dinámico de checkboxes de permisos -->
-      </div>
-
-      <div class="flex justify-between items-center pt-3 border-t border-slate-800 shrink-0">
-        <button type="button" onclick="sembrarRoles()" class="text-xs text-slate-400 hover:text-white font-mono flex items-center gap-1">
-          <i class="ph ph-arrow-counter-clockwise"></i> Restaurar Valores Predeterminados
-        </button>
-        <div class="flex gap-2">
-          <button type="button" onclick="toggleModalRoles(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 text-xs">Cerrar</button>
-          <button type="button" onclick="guardarPermisosRol()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20">Guardar Permisos</button>
+      <!-- BARRA DE GESTIÓN DE ROLES -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800 shrink-0 text-xs">
+        <div class="flex items-center gap-3">
+          <label class="font-mono uppercase text-slate-400">Rol en Edición:</label>
+          <select id="select-role-edit" onchange="seleccionarRolParaEdicion(this.value)" class="bg-slate-900 text-white font-bold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500 font-mono">
+            <!-- Cargado dinámicamente -->
+          </select>
         </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="abrirModalCrearRol()" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg font-semibold flex items-center gap-1 transition">
+            <i class="ph-bold ph-plus"></i> + Nuevo Rol
+          </button>
+          <button id="btn-delete-role" onclick="eliminarRolActual()" class="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 rounded-lg font-semibold flex items-center gap-1 transition">
+            <i class="ph-bold ph-trash"></i> Dar de Baja Rol
+          </button>
+        </div>
+      </div>
+
+      <!-- DESCRIPCIÓN DEL ROL -->
+      <div class="shrink-0 flex items-center gap-3">
+        <span class="text-[11px] font-mono text-slate-400 uppercase">Descripción:</span>
+        <input type="text" id="role-description-input" placeholder="Propósito del perfil contable o administrativo..." class="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-white outline-none focus:border-indigo-500 text-xs">
+      </div>
+
+      <!-- CONTENEDOR DE PERMISOS -->
+      <div class="overflow-y-auto flex-1 space-y-4 pr-1" id="permissions-container">
+        <!-- Renderizado dinámico de módulos nativos y creados -->
+      </div>
+
+      <!-- BOTONES INFERIORES -->
+      <div class="flex justify-between items-center pt-3 border-t border-slate-800 shrink-0 text-xs">
+        <div class="flex items-center gap-3 font-mono">
+          <button type="button" onclick="marcarTodosPermisos(true)" class="text-indigo-400 hover:text-indigo-300">Marcar Todos</button>
+          <span class="text-slate-600">|</span>
+          <button type="button" onclick="marcarTodosPermisos(false)" class="text-slate-400 hover:text-white">Desmarcar Todos</button>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="toggleModalRoles(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300">Cerrar</button>
+          <button type="button" onclick="guardarPermisosRol()" id="btn-save-role-perms" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="ph-bold ph-floppy-disk"></i> Guardar Permisos del Rol
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR NUEVO ROL RBAC -->
+  <div id="modal-create-role" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-700/80 space-y-4 text-xs">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h4 class="text-sm font-bold text-white flex items-center gap-2">
+          <i class="ph-bold ph-tag text-indigo-400"></i> Alta de Nuevo Rol RBAC
+        </h4>
+        <button onclick="toggleModalCreateRole(false)" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Clave de Rol (Sin espacios)</label>
+          <input type="text" id="new-role-id" placeholder="EJ: TESORERIA" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono uppercase">
+        </div>
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción de Alcance</label>
+          <input type="text" id="new-role-desc" placeholder="Control de dispersiones y pagos..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-sans">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+        <button type="button" onclick="toggleModalCreateRole(false)" class="px-3 py-1.5 border border-slate-700 rounded-xl text-slate-300">Cancelar</button>
+        <button type="button" onclick="ejecutarCreacionRol()" id="btn-submit-new-role" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold">Crear Rol</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMACIÓN PARA RESTABLECER CONTRASEÑA -->
+  <div id="modal-reset-pass" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-700/80 space-y-4 text-xs">
+      <div class="flex items-center gap-3 text-amber-400 border-b border-slate-800 pb-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+          <i class="ph-bold ph-key text-xl"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-white text-sm">Restablecer Contraseña</h4>
+          <span class="text-[10px] font-mono text-slate-400">Firebase Authentication</span>
+        </div>
+      </div>
+
+      <p class="text-slate-300 leading-relaxed">
+        Se enviará un correo electrónico oficial de recuperación con un enlace seguro para que el colaborador redefina su clave:
+      </p>
+
+      <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center font-mono text-indigo-300 text-xs break-all" id="reset-target-email">
+        usuario@empresa.com
+      </div>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+        <button type="button" onclick="toggleModalResetPass(false)" class="px-3.5 py-1.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800">Cancelar</button>
+        <button type="button" onclick="ejecutarEnvioResetPass()" id="btn-confirm-reset" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition shadow-lg shadow-emerald-600/20">
+          Enviar Correo
+        </button>
       </div>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
-      getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, 
+      getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, 
       onSnapshot, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -267,34 +390,119 @@
     const auth = getAuth(mainApp);
     const db = getFirestore(mainApp, "emco-accounting");
 
-    const secondaryApp = initializeApp(firebaseConfig, "SecondaryStaffApp");
+    // Instancia secundaria para registrar nuevos colaboradores sin cerrar la sesión del admin
+    const secondaryApp = initializeApp(firebaseConfig, "SecondaryStaffAdmin");
     const secondaryAuth = getAuth(secondaryApp);
 
-    let currentAdmin = null;
-    let rawStaffList = [];
-    let systemModulesList = [];
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeCompanyId = urlParams.get('empresa') || localStorage.getItem('active_company_id') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.replace("index.html");
-        return;
+    let currentAdmin = null;
+    let currentAdminData = null;
+    let rawStaffList = [];
+    let rolesCache = {};
+    let systemModulesList = [];
+    let targetEmailForReset = "";
+
+    function syncNavLinks() {
+      const sep = '?';
+      const backLink = document.getElementById('link-back-portal');
+      const creatorLink = document.getElementById('link-creator');
+      const logsLink = document.getElementById('link-logs');
+      const tenantTag = document.getElementById('active-tenant-badge');
+
+      if (backLink) backLink.href = `portal_catalogo.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
+      if (creatorLink) creatorLink.href = `modulo_creador.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
+      if (logsLink) logsLink.href = `modulo_logs.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
+
+      if (tenantTag) {
+        tenantTag.innerText = activeCompanyId === 'hr_employment' ? 'HR Employment' : 'Cesar Geovanni';
       }
-      currentAdmin = user;
-      initStaffListener();
-    });
+    }
+
+    syncNavLinks();
+
+    function showToast(title, desc, isError = false) {
+      const toast = document.getElementById('toast-notification');
+      const icon = document.getElementById('toast-icon');
+      document.getElementById('toast-title').innerText = title;
+      document.getElementById('toast-desc').innerText = desc;
+
+      if (isError) {
+        icon.className = "ph-bold ph-warning-circle text-rose-400 text-xl shrink-0";
+      } else {
+        icon.className = "ph-bold ph-check-circle text-emerald-400 text-xl shrink-0";
+      }
+
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
 
     async function logAudit(action, details = {}) {
       try {
         await addDoc(collection(db, "audit_logs"), {
           timestamp: serverTimestamp(),
           user_email: currentAdmin?.email || "admin",
+          user_name: currentAdminData?.full_name || currentAdminData?.name || "Administrador",
+          role_id: currentAdminData?.role_id || "SUPERADMIN",
+          company_id: activeCompanyId,
+          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Geovanni Gonzalez Contreras",
+          module_slug: "staff",
           action: action,
-          details: details
+          details: details,
+          user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn("Fallo log:", e);
+        console.warn("Fallo log auditoría:", e);
       }
     }
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+      currentAdmin = user;
+
+      try {
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        if (!staffSnap.exists() || staffSnap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        currentAdminData = staffSnap.data();
+        if (currentAdminData.role_id !== "SUPERADMIN") {
+          alert("Acceso denegado: El área de gobernanza y staff es de acceso exclusivo para SUPERADMIN.");
+          window.location.replace(`portal_catalogo.html?empresa=${encodeURIComponent(activeCompanyId)}`);
+          return;
+        }
+
+        initRolesStream();
+        initStaffListener();
+        initSystemModulesListener();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error validando sesión de staff:", err);
+      }
+    });
+
+    // VISOR INTERACTIVO DE CONTRASEÑA
+    window.togglePasswordVisibility = (inputId, iconId) => {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.className = "ph ph-eye-slash text-base text-indigo-400";
+      } else {
+        input.type = "password";
+        icon.className = "ph ph-eye text-base text-slate-400";
+      }
+    };
 
     window.toggleModalStaff = (show) => {
       document.getElementById('modal-staff').classList.toggle('hidden', !show);
@@ -305,27 +513,66 @@
       document.getElementById('modal-roles').classList.toggle('hidden', !show);
     };
 
-    // SEMBRAR ROLES RBAC
-    window.sembrarRoles = async () => {
-      const roles = {
-        "SUPERADMIN": { permissions: ["*"], description: "Control total multi-tenant y gobernanza" },
-        "CONTADOR": { permissions: ["cxc.read", "cxc.write", "cxp.read", "cxp.write", "assets.read", "assets.write"], description: "Operaciones completas" },
-        "AUXILIAR": { permissions: ["cxc.read", "cxc.write", "cxp.read", "assets.read"], description: "Captura y balances" },
-        "AUDITOR": { permissions: ["cxc.read", "cxp.read", "assets.read", "audit.read"], description: "Inspección sin mutación" }
-      };
-
-      try {
-        for (const [roleId, data] of Object.entries(roles)) {
-          await setDoc(doc(db, "system_roles", roleId), data);
-        }
-        await logAudit("ROLES_SEEDED", { roles: Object.keys(roles) });
-        alert("Roles RBAC restaurados con éxito.");
-        cargarPermisosDelRol(document.getElementById('select-role-edit').value);
-      } catch (err) {
-        alert("Error al sembrar roles: " + err.message);
+    window.toggleModalCreateRole = (show) => {
+      document.getElementById('modal-create-role').classList.toggle('hidden', !show);
+      if (show) {
+        document.getElementById('new-role-id').value = "";
+        document.getElementById('new-role-desc').value = "";
       }
     };
 
+    window.toggleModalResetPass = (show) => {
+      document.getElementById('modal-reset-pass').classList.toggle('hidden', !show);
+    };
+
+    // ESCUCHA REACTIVA DE ROLES EN FIRESTORE
+    function initRolesStream() {
+      onSnapshot(collection(db, "system_roles"), (snap) => {
+        rolesCache = {};
+        const selectModal = document.getElementById('staff-role');
+        const selectMatrix = document.getElementById('select-role-edit');
+
+        selectModal.innerHTML = '';
+        selectMatrix.innerHTML = '';
+
+        snap.forEach(d => {
+          rolesCache[d.id] = { id: d.id, ...d.data() };
+
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.innerText = d.id;
+          selectModal.appendChild(opt);
+
+          const optM = document.createElement('option');
+          optM.value = d.id;
+          optM.innerText = d.id;
+          selectMatrix.appendChild(optM);
+        });
+
+        // Asegurar SUPERADMIN en caso de base de datos vacía
+        if (!rolesCache["SUPERADMIN"]) {
+          setDoc(doc(db, "system_roles", "SUPERADMIN"), {
+            permissions: ["*"],
+            description: "Control absoluto multitenant y gobernanza del sistema"
+          });
+        }
+
+        document.getElementById('kpi-total-roles').innerText = Object.keys(rolesCache).length;
+        seleccionarRolParaEdicion(selectMatrix.value || "SUPERADMIN");
+      });
+    }
+
+    // ESCUCHA REACTIVA DE MÓDULOS CREADOS E IMPORTADOS
+    function initSystemModulesListener() {
+      onSnapshot(collection(db, "system_modules"), (snap) => {
+        systemModulesList = [];
+        snap.forEach(d => systemModulesList.push({ id: d.id, ...d.data() }));
+        const currentRole = document.getElementById('select-role-edit')?.value;
+        if (currentRole) renderMatrizPermisos(currentRole);
+      });
+    }
+
+    // DIRECTORIO DE PERSONAL EN TIEMPO REAL
     function initStaffListener() {
       onSnapshot(collection(db, "staff_users"), (snap) => {
         rawStaffList = [];
@@ -368,7 +615,7 @@
       });
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono text-xs">Sin colaboradores coincidentes.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono text-xs">Sin colaboradores coincidentes con el criterio de búsqueda.</td></tr>';
         return;
       }
 
@@ -379,30 +626,44 @@
 
         let companiesBadge = '';
         if (allowed.includes("*")) {
-          companiesBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">AMBAS (GLOBAL)</span>`;
+          companiesBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-bold">AMBAS (GLOBAL)</span>`;
         } else {
           companiesBadge = allowed.map(c => {
-            if (c === "cesar_gonzalez") return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 mr-1">CÉSAR G.</span>`;
-            if (c === "hr_employment") return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mr-1">HR EMPL.</span>`;
+            if (c === "cesar_gonzalez") return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 mr-1 font-bold">CESAR G.</span>`;
+            if (c === "hr_employment") return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mr-1 font-bold">HR EMPL.</span>`;
             return '';
           }).join('');
         }
 
         html += `
           <tr class="hover:bg-slate-800/40 transition">
-            <td class="p-4 font-semibold text-white">${u.full_name || 'Sin nombre'}</td>
+            <td class="p-4 font-semibold text-white">
+              <div>${u.full_name || 'Sin nombre'}</div>
+              <span class="text-[10px] font-mono text-slate-500">UID: ${u.id.substring(0, 8)}...</span>
+            </td>
             <td class="p-4 text-slate-400 font-mono text-xs">${u.email}</td>
             <td class="p-4">${companiesBadge}</td>
-            <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-slate-800 text-slate-300 border border-slate-700">${u.role_id}</span></td>
+            <td class="p-4">
+              <span class="px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-slate-800 text-slate-200 border border-slate-700">
+                ${u.role_id}
+              </span>
+            </td>
             <td class="p-4">
               <span class="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium ${isActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">
                 ${isActive ? 'ACTIVO' : 'SUSPENDIDO'}
               </span>
             </td>
-            <td class="p-4 text-right space-x-2">
-              <button onclick="cambiarEmpresas('${u.id}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">Empresas</button>
-              <button onclick="cambiarRol('${u.id}', '${u.role_id}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">Rol</button>
-              <button onclick="cambiarEstado('${u.id}', '${isActive ? 'SUSPENDED' : 'ACTIVE'}')" class="text-xs px-2.5 py-1 rounded-lg border ${isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/20' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'} transition">
+            <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
+              <button onclick="solicitarResetPassword('${u.email}')" class="text-xs px-2.5 py-1 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition" title="Enviar enlace de restablecimiento de contraseña">
+                <i class="ph-bold ph-key"></i> Clave
+              </button>
+              <button onclick="cambiarEmpresas('${u.id}', '${u.full_name}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">
+                Empresas
+              </button>
+              <button onclick="cambiarRol('${u.id}', '${u.role_id}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">
+                Rol
+              </button>
+              <button onclick="cambiarEstado('${u.id}', '${isActive ? 'SUSPENDED' : 'ACTIVE'}', '${u.full_name}')" class="text-xs px-2.5 py-1 rounded-lg border ${isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/20' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'} transition">
                 ${isActive ? 'Suspender' : 'Activar'}
               </button>
             </td>
@@ -412,7 +673,7 @@
       tbody.innerHTML = html;
     };
 
-    // INYECCIÓN DE USUARIO
+    // INYECCIÓN DE NUEVO COLABORADOR CON FIREBASE AUTH & FIRESTORE
     document.getElementById('form-staff').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-staff');
@@ -425,7 +686,7 @@
       const roleId = document.getElementById('staff-role').value;
       const status = document.getElementById('staff-status').value;
       const compSelect = document.getElementById('staff-companies').value;
-      let allowed = compSelect === "ALL" ? ["*"] : [compSelect];
+      const allowed = compSelect === "ALL" ? ["*"] : [compSelect];
 
       try {
         const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
@@ -438,120 +699,210 @@
           created_at: serverTimestamp()
         });
 
-        await logAudit("STAFF_USER_CREATED", { email, roleId, allowed, uid: cred.user.uid });
-        alert(`Colaborador ${fullName} inyectado exitosamente.`);
+        await logAudit("STAFF_USER_CREATED", { email, fullName, roleId, allowed, uid: cred.user.uid });
+        showToast("Colaborador Creado", `${fullName} ha sido inyectado con rol ${roleId}.`);
         toggleModalStaff(false);
       } catch (err) {
-        alert("Error al inyectar colaborador: " + err.message);
+        showToast("Error de Inyección", err.message, true);
       } finally {
         btn.disabled = false;
         btn.innerText = "Crear & Inyectar";
       }
     });
 
-    window.cambiarEstado = async (uid, newStatus) => {
+    // GESTIÓN DE CONTRASEÑAS CON FIREBASE AUTH
+    window.solicitarResetPassword = (email) => {
+      targetEmailForReset = email;
+      document.getElementById('reset-target-email').innerText = email;
+      toggleModalResetPass(true);
+    };
+
+    window.ejecutarEnvioResetPass = async () => {
+      const btn = document.getElementById('btn-confirm-reset');
+      btn.disabled = true;
+      btn.innerText = "Enviando...";
+
+      try {
+        await sendPasswordResetEmail(auth, targetEmailForReset);
+        await logAudit("STAFF_PASSWORD_RESET_SENT", { email: targetEmailForReset });
+        toggleModalResetPass(false);
+        showToast("Correo Enviado", `Enlace de recuperación enviado a ${targetEmailForReset}.`);
+      } catch (err) {
+        showToast("Fallo al Enviar", err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Enviar Correo";
+      }
+    };
+
+    window.cambiarEstado = async (uid, newStatus, userName) => {
       try {
         await updateDoc(doc(db, "staff_users", uid), { status: newStatus });
-        await logAudit("STAFF_STATUS_MUTATED", { uid, newStatus });
-      } catch (err) { alert(err.message); }
+        await logAudit("STAFF_STATUS_MUTATED", { uid, userName, newStatus });
+        showToast("Estatus Actualizado", `${userName} ahora está en estatus ${newStatus}.`);
+      } catch (err) {
+        showToast("Error al Cambiar Estado", err.message, true);
+      }
     };
 
     window.cambiarRol = async (uid, currentRole) => {
-      const nuevo = prompt("Selecciona nuevo Rol RBAC:\n1 = SUPERADMIN\n2 = CONTADOR\n3 = AUXILIAR\n4 = AUDITOR", "2");
-      const mapping = { "1": "SUPERADMIN", "2": "CONTADOR", "3": "AUXILIAR", "4": "AUDITOR" };
-      if (!mapping[nuevo]) return;
+      const rolesDisponibles = Object.keys(rolesCache);
+      const msg = `Selecciona nuevo Rol RBAC:\n` + rolesDisponibles.map((r, i) => `${i + 1} = ${r}`).join('\n');
+      const opt = prompt(msg, "1");
+      if (!opt) return;
+
+      const idx = parseInt(opt) - 1;
+      const nuevoRol = rolesDisponibles[idx];
+      if (!nuevoRol) return alert("Selección de rol no válida.");
 
       try {
-        await updateDoc(doc(db, "staff_users", uid), { role_id: mapping[nuevo] });
-        await logAudit("STAFF_ROLE_MUTATED", { uid, old_role: currentRole, new_role: mapping[nuevo] });
-      } catch (err) { alert(err.message); }
+        await updateDoc(doc(db, "staff_users", uid), { role_id: nuevoRol });
+        await logAudit("STAFF_ROLE_MUTATED", { uid, old_role: currentRole, new_role: nuevoRol });
+        showToast("Rol Modificado", `El usuario ahora tiene asignado el rol ${nuevoRol}.`);
+      } catch (err) {
+        showToast("Error al Cambiar Rol", err.message, true);
+      }
     };
 
-    window.cambiarEmpresas = async (uid) => {
-      const opt = prompt("Asignar Razones Sociales autorizadas:\n1 = Ambas (Acceso Global)\n2 = Solo Cesar Giovanni Gonzalez Contreras\n3 = Solo HR Employment", "1");
+    window.cambiarEmpresas = async (uid, userName) => {
+      const opt = prompt(
+        `Asignar Razones Sociales autorizadas para ${userName}:\n1 = Ambas (Acceso Global)\n2 = Solo Cesar Geovanni Gonzalez Contreras\n3 = Solo HR Employment`, 
+        "1"
+      );
+      if (!opt) return;
+
       let allowed = ["*"];
       if (opt === "2") allowed = ["cesar_gonzalez"];
       if (opt === "3") allowed = ["hr_employment"];
 
       try {
         await updateDoc(doc(db, "staff_users", uid), { allowed_companies: allowed });
-        await logAudit("STAFF_COMPANIES_UPDATED", { uid, allowed });
-      } catch (err) { alert(err.message); }
+        await logAudit("STAFF_COMPANIES_UPDATED", { uid, userName, allowed });
+        showToast("Empresas Asignadas", `Acceso actualizado correctamente para ${userName}.`);
+      } catch (err) {
+        showToast("Error al Asignar Empresa", err.message, true);
+      }
     };
 
-    // ==========================================
-    // MATRIZ DE PERMISOS DINÁMICOS
-    // ==========================================
-    window.abrirMatrizPermisos = async () => {
+    // =========================================================================
+    // MATRIZ DE GOBERNANZA RBAC DINÁMICA (CRUD COMPLETO DE ROLES)
+    // =========================================================================
+    window.abrirMatrizPermisos = () => {
       toggleModalRoles(true);
-      // Cargar lista de módulos dinámicos desde system_modules
-      const snap = await getDocs(collection(db, "system_modules"));
-      systemModulesList = [];
-      snap.forEach(d => systemModulesList.push(d.data()));
-
-      cargarPermisosDelRol(document.getElementById('select-role-edit').value);
+      const selectMatrix = document.getElementById('select-role-edit');
+      seleccionarRolParaEdicion(selectMatrix.value || "SUPERADMIN");
     };
 
-    window.cargarPermisosDelRol = async (roleId) => {
+    window.seleccionarRolParaEdicion = (roleId) => {
+      const role = rolesCache[roleId] || { permissions: [], description: "" };
+      document.getElementById('role-description-input').value = role.description || "";
+
+      // Protección de eliminación de SUPERADMIN
+      const btnDelete = document.getElementById('btn-delete-role');
+      if (roleId === "SUPERADMIN") {
+        btnDelete.classList.add("hidden");
+      } else {
+        btnDelete.classList.remove("hidden");
+      }
+
+      renderMatrizPermisos(roleId);
+    };
+
+    function renderMatrizPermisos(roleId) {
       const container = document.getElementById('permissions-container');
-      container.innerHTML = '<p class="text-xs text-slate-400 font-mono">Cargando permisos...</p>';
+      const role = rolesCache[roleId] || { permissions: [] };
+      const perms = role.permissions || [];
+      const isSuper = roleId === "SUPERADMIN";
 
-      const roleDoc = await getDoc(doc(db, "system_roles", roleId));
-      const currentPerms = roleDoc.exists() ? (roleDoc.data().permissions || []) : [];
+      let html = '';
 
-      let html = `
-        <div class="border border-slate-800 rounded-xl p-3 bg-slate-950/60 space-y-2">
-          <span class="text-xs font-mono font-bold uppercase text-indigo-400">Módulos Nativos del Núcleo</span>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <label class="flex items-center gap-2 text-slate-300">
-              <input type="checkbox" value="cxc.read" ${currentPerms.includes('cxc.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver CxC (Cobrar)
-            </label>
-            <label class="flex items-center gap-2 text-slate-300">
-              <input type="checkbox" value="cxc.write" ${currentPerms.includes('cxc.write') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Registrar / Cobrar CxC
-            </label>
-            <label class="flex items-center gap-2 text-slate-300">
-              <input type="checkbox" value="cxp.read" ${currentPerms.includes('cxp.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver CxP (Pagar)
-            </label>
-            <label class="flex items-center gap-2 text-slate-300">
-              <input type="checkbox" value="cxp.write" ${currentPerms.includes('cxp.write') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Registrar / Pagar CxP
-            </label>
-            <label class="flex items-center gap-2 text-slate-300">
-              <input type="checkbox" value="assets.read" ${currentPerms.includes('assets.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver Activos Fijos
-            </label>
-            <label class="flex items-center gap-2 text-slate-300">
-              <input type="checkbox" value="assets.write" ${currentPerms.includes('assets.write') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Registrar Activos
-            </label>
-            <label class="flex items-center gap-2 text-slate-300">
-              <input type="checkbox" value="audit.read" ${currentPerms.includes('audit.read') ? 'checked' : ''} class="perm-check rounded border-slate-700"> Ver Auditoría Forense
-            </label>
+      // 1. Módulos Nativos del Núcleo Contable
+      const modulosNativos = [
+        { label: "Cuentas por Cobrar (CxC)", slug: "cxc" },
+        { label: "Cuentas por Pagar (CxP)", slug: "cxp" },
+        { label: "Activos & Hardware LISR", slug: "assets" },
+        { label: "Tablero Gerencial", slug: "gerencial" },
+        { label: "Consola de Auditoría (Logs)", slug: "audit" },
+        { label: "Creador Studio & IDE", slug: "creator" }
+      ];
+
+      html += `
+        <div class="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-mono font-bold uppercase text-indigo-400 flex items-center gap-2">
+              <i class="ph-bold ph-shield-check"></i> Módulos Nativos del Núcleo
+            </span>
+            ${isSuper ? '<span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Acceso Universal (*)</span>' : ''}
           </div>
-        </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
       `;
 
-      // Renderizado de permisos para módulos dinámicos
+      modulosNativos.forEach(m => {
+        const rKey = `${m.slug}.read`;
+        const wKey = `${m.slug}.write`;
+        const dKey = `${m.slug}.delete`;
+
+        const checkR = isSuper || perms.includes("*") || perms.includes(rKey);
+        const checkW = isSuper || perms.includes("*") || perms.includes(wKey);
+        const checkD = isSuper || perms.includes("*") || perms.includes(dKey);
+
+        html += `
+          <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between gap-2">
+            <span class="font-bold text-white">${m.label}</span>
+            <div class="flex items-center gap-3 font-mono text-[11px] text-slate-300">
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" value="${rKey}" ${checkR ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-indigo-600 focus:ring-0"> Ver
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" value="${wKey}" ${checkW ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-emerald-600 focus:ring-0"> Captura
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <input type="checkbox" value="${dKey}" ${checkD ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-rose-600 focus:ring-0"> Baja
+              </label>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div></div>`;
+
+      // 2. Módulos Dinámicos Creados e Importados
       if (systemModulesList.length > 0) {
         html += `
-          <div class="border border-slate-800 rounded-xl p-3 bg-slate-950/60 space-y-2 mt-3">
-            <span class="text-xs font-mono font-bold uppercase text-emerald-400">Módulos Creados en Caliente (Bilateral)</span>
-            <div class="space-y-2">
+          <div class="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-mono font-bold uppercase text-emerald-400 flex items-center gap-2">
+                <i class="ph-bold ph-cube"></i> Módulos Dinámicos & Creados en Caliente
+              </span>
+              <span class="text-[10px] font-mono text-slate-500">${systemModulesList.length} Extensiones</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
         `;
 
         systemModulesList.forEach(m => {
           const rKey = `${m.slug}.read`;
           const wKey = `${m.slug}.write`;
+          const dKey = `${m.slug}.delete`;
+
+          const checkR = isSuper || perms.includes("*") || perms.includes(rKey);
+          const checkW = isSuper || perms.includes("*") || perms.includes(wKey);
+          const checkD = isSuper || perms.includes("*") || perms.includes(dKey);
 
           html += `
-            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-900 border border-slate-800/80">
+            <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between gap-2">
               <div>
-                <span class="text-xs font-bold text-white block">${m.title}</span>
+                <span class="font-bold text-white block">${m.title}</span>
                 <span class="text-[10px] font-mono text-slate-500">${m.slug}</span>
               </div>
-              <div class="flex items-center gap-4 text-xs">
-                <label class="flex items-center gap-1.5 text-slate-300">
-                  <input type="checkbox" value="${rKey}" ${currentPerms.includes(rKey) ? 'checked' : ''} class="perm-check rounded border-slate-700"> Lectura
+              <div class="flex items-center gap-3 font-mono text-[11px] text-slate-300">
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" value="${rKey}" ${checkR ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-indigo-600 focus:ring-0"> Ver
                 </label>
-                <label class="flex items-center gap-1.5 text-slate-300">
-                  <input type="checkbox" value="${wKey}" ${currentPerms.includes(wKey) ? 'checked' : ''} class="perm-check rounded border-slate-700"> Captura
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" value="${wKey}" ${checkW ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-emerald-600 focus:ring-0"> Captura
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <input type="checkbox" value="${dKey}" ${checkD ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-rose-600 focus:ring-0"> Baja
                 </label>
               </div>
             </div>
@@ -562,20 +913,94 @@
       }
 
       container.innerHTML = html;
+    }
+
+    window.marcarTodosPermisos = (estado) => {
+      const currentRole = document.getElementById('select-role-edit').value;
+      if (currentRole === "SUPERADMIN") return;
+      document.querySelectorAll('.perm-check').forEach(chk => chk.checked = estado);
     };
 
-    window.guardarPermisosRol = async () => {
-      const roleId = document.getElementById('select-role-edit').value;
-      const checks = document.querySelectorAll('.perm-check:checked');
-      const permissions = Array.from(checks).map(c => c.value);
+    // ALTA DE NUEVO ROL
+    window.abrirModalCrearRol = () => {
+      toggleModalCreateRole(true);
+    };
+
+    window.ejecutarCreacionRol = async () => {
+      const roleId = document.getElementById('new-role-id').value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+      const desc = document.getElementById('new-role-desc').value.trim();
+
+      if (!roleId) return alert("Por favor ingresa una clave de rol válida.");
+      if (rolesCache[roleId]) return alert(`El rol "${roleId}" ya existe en el sistema.`);
 
       try {
-        await updateDoc(doc(db, "system_roles", roleId), { permissions });
-        await logAudit("RBAC_ROLE_PERMISSIONS_SAVED", { roleId, permissions });
-        alert(`Permisos actualizados con éxito para el rol ${roleId}.`);
-        toggleModalRoles(false);
+        await setDoc(doc(db, "system_roles", roleId), {
+          permissions: [],
+          description: desc || "Rol administrativo configurado"
+        });
+
+        await logAudit("RBAC_ROLE_CREATED", { roleId, description: desc });
+        showToast("Rol Creado", `El rol ${roleId} ha sido registrado en Firestore.`);
+        toggleModalCreateRole(false);
       } catch (err) {
-        alert("Error al guardar permisos: " + err.message);
+        showToast("Error al Crear Rol", err.message, true);
+      }
+    };
+
+    // BAJA DE ROL
+    window.eliminarRolActual = async () => {
+      const roleId = document.getElementById('select-role-edit').value;
+      if (roleId === "SUPERADMIN") {
+        return alert("El rol SUPERADMIN es el pilar de seguridad y no puede ser eliminado.");
+      }
+
+      // Validar si existen colaboradores asignados a este rol
+      const usuariosAsignados = rawStaffList.filter(u => u.role_id === roleId);
+      if (usuariosAsignados.length > 0) {
+        return alert(`No se puede eliminar el rol "${roleId}" porque tiene ${usuariosAsignados.length} colaborador(es) asignado(s). Reasigna sus roles primero.`);
+      }
+
+      if (confirm(`¿Confirmas la eliminación permanente del rol "${roleId}" del sistema?`)) {
+        try {
+          await deleteDoc(doc(db, "system_roles", roleId));
+          await logAudit("RBAC_ROLE_DELETED", { roleId });
+          showToast("Rol Eliminado", `El rol ${roleId} fue dado de baja exitosamente.`);
+        } catch (err) {
+          showToast("Error al Eliminar Rol", err.message, true);
+        }
+      }
+    };
+
+    // GUARDAR PERMISOS Y DESCRIPCIÓN DEL ROL
+    window.guardarPermisosRol = async () => {
+      const roleId = document.getElementById('select-role-edit').value;
+      const desc = document.getElementById('role-description-input').value.trim();
+      const btn = document.getElementById('btn-save-role-perms');
+
+      btn.disabled = true;
+      btn.innerText = "Guardando...";
+
+      try {
+        let permissions = [];
+        if (roleId === "SUPERADMIN") {
+          permissions = ["*"];
+        } else {
+          const checks = document.querySelectorAll('.perm-check:checked');
+          permissions = Array.from(checks).map(c => c.value);
+        }
+
+        await setDoc(doc(db, "system_roles", roleId), {
+          permissions: permissions,
+          description: desc
+        }, { merge: true });
+
+        await logAudit("RBAC_ROLE_PERMISSIONS_SAVED", { roleId, permissionsCount: permissions.length });
+        showToast("Permisos Guardados", `Matriz actualizada para el rol ${roleId}.`);
+      } catch (err) {
+        showToast("Error al Guardar Permisos", err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph-bold ph-floppy-disk"></i> Guardar Permisos del Rol';
       }
     };
   </script>

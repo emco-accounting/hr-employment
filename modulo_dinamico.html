@@ -182,8 +182,8 @@
 
     const EMPRESAS = {
       "cesar_gonzalez": {
-        name: "Cesar Giovanni Gonzalez Contreras",
-        short: "CESAR GIOVANNI",
+        name: "Cesar Geovanni Gonzalez Contreras",
+        short: "CESAR GEOVANNI",
         badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20"
       },
       "hr_employment": {
@@ -197,11 +197,9 @@
     const slug = urlParams.get('slug');
     let empresaId = urlParams.get('empresa') || localStorage.getItem('active_company_id') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
 
-    // Asegurar persistencia de la empresa activa
     localStorage.setItem('active_company_id', empresaId);
     sessionStorage.setItem('active_company_id', empresaId);
 
-    // Actualizar botón de regreso al portal con contexto
     const btnBack = document.getElementById('btn-back-portal');
     if (btnBack) {
       btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(empresaId)}`;
@@ -211,7 +209,6 @@
     let currentUser = null;
     let rawRecords = [];
 
-    // AUDITORÍA FORENSE ENRIQUECIDA Y HOMOLOGADA
     async function logAudit(action, details = {}, moduleSlug = slug) {
       try {
         await addDoc(collection(db, "audit_logs"), {
@@ -317,6 +314,7 @@
       const iconEl = document.getElementById('header-mod-icon');
       iconEl.className = `ph-bold ${schema.icon || 'ph-cube'} text-indigo-400`;
 
+      // CASO MÓDULO AUTÓNOMO: INYECCIÓN CON CONTEXTO COMPLETO
       if (schema.is_standalone) {
         document.getElementById('dynamic-kpis-container').classList.add('hidden');
         document.getElementById('filter-controls-container').classList.add('hidden');
@@ -339,6 +337,13 @@
             <script>
               window.EMPRESA_ACTIVA = "${empresaId}";
               window.COMPANY_ID = "${empresaId}";
+              window.COMPANY_NAME = "${empInfo.name.replace(/"/g, '\\"')}";
+              window.CONTACORE_CONTEXT = {
+                company_id: "${empresaId}",
+                company_name: "${empInfo.name.replace(/"/g, '\\"')}",
+                user_email: "${currentUser?.email || 'admin'}",
+                user_role: "${currentUser?.role_id || 'OPERADOR'}"
+              };
               localStorage.setItem("active_company_id", "${empresaId}");
               sessionStorage.setItem("active_company_id", "${empresaId}");
             <\/script>
@@ -348,13 +353,14 @@
         } else {
           standaloneContainer.innerHTML = `
             <div class="p-8 text-center text-rose-400 font-mono text-xs">
-              Error crítico: No se encontró el código fuente para ${sourceFileName} en "system_module_sources". Vuelve a importarlo desde ContaCore Studio.
+              Error crítico: No se encontró el código fuente para ${sourceFileName} en Firestore. Vuelve a importarlo desde ContaCore Studio.
             </div>
           `;
         }
         return;
       }
 
+      // CASO MÓDULO ESQUEMA NO-CODE
       buildTableHeaders();
       buildFormInputs();
       initLiveRecordsStream();
@@ -459,7 +465,7 @@
 
         renderTable();
       }, (err) => {
-        console.warn(`Query reactivo en colección ${slug} requiere índice o está esperando:`, err);
+        console.warn(`Query reactivo en colección ${slug} en espera:`, err);
       });
     }
 
@@ -523,7 +529,7 @@
       if (!show) document.getElementById('form-dynamic-record').reset();
     };
 
-    // INYECCIÓN DE REGISTRO CON PARSEO NUMÉRICO FORZOSO Y HOMOLOGACIÓN DE LLAVES MONETARIAS
+    // GUARDAR REGISTRO CON HOMOLOGACIÓN CONTABLE
     document.getElementById('form-dynamic-record').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-record');
@@ -546,8 +552,8 @@
             const safeNum = (!isNaN(rawVal) && isFinite(rawVal)) ? rawVal : 0;
             payload[f.key] = safeNum;
             
-            // Homologación de llaves para el Tablero Gerencial
-            if (f.key === 'monto_total' || f.key === 'total' || f.key === 'monto') {
+            // Homologación universal para alimentar el Tablero Gerencial
+            if (['monto', 'total', 'monto_total', 'importe', 'gasto', 'ingreso'].includes(f.key.toLowerCase())) {
               payload['monto'] = safeNum;
               payload['total'] = safeNum;
               payload['monto_total'] = safeNum;

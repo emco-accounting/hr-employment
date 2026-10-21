@@ -62,33 +62,42 @@
   <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
 
-    <!-- FILA DE KPIS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <!-- FILA DE KPIS PATRIMONIALES Y DEPRECIACIÓN -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
         <div class="flex justify-between items-start">
-          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Valor Patrimonial en Libros</span>
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Valor Histórico Bruto</span>
           <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20"><i class="ph-bold ph-vault text-lg"></i></span>
         </div>
-        <p id="kpi-valor-libros" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
-        <span class="text-[11px] text-slate-500 mt-1 block">Inversión acumulada en activos</span>
+        <p id="kpi-valor-adquisicion" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block">Inversión original en activos</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
         <div class="flex justify-between items-start">
-          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Parque de Hardware Total</span>
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Valor Neto en Libros</span>
+          <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-trend-up text-lg"></i></span>
+        </div>
+        <p id="kpi-valor-libros" class="text-2xl font-bold font-mono text-emerald-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-valor-remanente-sub">Patrimonio residual deducible</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Depreciación Acumulada</span>
+          <span class="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20"><i class="ph-bold ph-chart-line-down text-lg"></i></span>
+        </div>
+        <p id="kpi-deprec-acumulada" class="text-2xl font-bold font-mono text-rose-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-deprec-mes-sub">Desgaste recurrente: $0.00/mes</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Parque de Hardware</span>
           <span class="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><i class="ph-bold ph-laptop text-lg"></i></span>
         </div>
         <p id="kpi-total-equipos" class="text-2xl font-bold font-mono text-emerald-400 mt-2">0</p>
-        <span class="text-[11px] text-slate-500 mt-1 block">Laptops, módems y licencias</span>
-      </div>
-
-      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-        <div class="flex justify-between items-start">
-          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Equipos en Resguardo</span>
-          <span class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"><i class="ph-bold ph-user-check text-lg"></i></span>
-        </div>
-        <p id="kpi-asignados" class="text-2xl font-bold font-mono text-indigo-400 mt-2">0</p>
-        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-disponibles-sub">0 disponibles para asignación</span>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-asignados-sub">0 en resguardo | 0 almacén</span>
       </div>
     </div>
 
@@ -102,9 +111,9 @@
 
         <select id="filter-category" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs">
           <option value="ALL">Todas las Categorías</option>
-          <option value="TANGIBLE_HARDWARE">Hardware (Laptop / PC)</option>
-          <option value="TANGIBLE_NETWORK">Red (Módem Móvil 4G/5G)</option>
-          <option value="INTANGIBLE_SOFTWARE">Software / Licencias</option>
+          <option value="TANGIBLE_HARDWARE">Hardware (30% Anual - LISR)</option>
+          <option value="TANGIBLE_NETWORK">Red / Módems (30% Anual - LISR)</option>
+          <option value="INTANGIBLE_SOFTWARE">Software / Licencias (33.3% Anual)</option>
         </select>
       </div>
 
@@ -113,27 +122,30 @@
 
     <!-- TABLA DE ACTIVOS -->
     <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl backdrop-blur-sm">
-      <table class="w-full text-left text-sm text-slate-300">
-        <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
-          <tr>
-            <th class="p-4">Código</th>
-            <th class="p-4">Descripción / Modelo</th>
-            <th class="p-4">Categoría</th>
-            <th class="p-4">Serie / MAC / IMEI</th>
-            <th class="p-4">Colaborador en Resguardo</th>
-            <th class="p-4">Costo Adquisición</th>
-            <th class="p-4 text-right">Acción</th>
-          </tr>
-        </thead>
-        <tbody id="table-activos" class="divide-y divide-slate-800/60 font-sans text-xs">
-          <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Sincronizando inventario de HR Employment...</td></tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+            <tr>
+              <th class="p-4">Código</th>
+              <th class="p-4">Descripción / Serie</th>
+              <th class="p-4">Categoría / Tasa</th>
+              <th class="p-4">Colaborador en Resguardo</th>
+              <th class="p-4">Costo Adquisición</th>
+              <th class="p-4">Deprec. Acumulada</th>
+              <th class="p-4">Valor Neto Libros</th>
+              <th class="p-4 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="table-activos" class="divide-y divide-slate-800/60 font-sans text-xs">
+            <tr><td colspan="8" class="p-8 text-center text-slate-500 font-mono">Sincronizando inventario de HR Employment...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </main>
 
-  <!-- MODAL: REGISTRAR ACTIVO -->
+  <!-- MODAL: REGISTRAR ACTIVO CON DEPRECIACIÓN LISR -->
   <div id="modal-activo" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -151,11 +163,11 @@
             <input type="text" id="asset-code" placeholder="LAP-HR-01" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 uppercase font-mono">
           </div>
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Categoría</label>
-            <select id="asset-type" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
-              <option value="TANGIBLE_HARDWARE">Hardware (Laptop / PC)</option>
-              <option value="TANGIBLE_NETWORK">Red (Módem Móvil 4G/5G)</option>
-              <option value="INTANGIBLE_SOFTWARE">Software / Licencia</option>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Categoría Fiscal (LISR)</label>
+            <select id="asset-type" onchange="actualizarTasaSugerida()" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+              <option value="TANGIBLE_HARDWARE" data-rate="30">Hardware / PC (30% anual)</option>
+              <option value="TANGIBLE_NETWORK" data-rate="30">Red / Módems (30% anual)</option>
+              <option value="INTANGIBLE_SOFTWARE" data-rate="33.33">Software / Licencias (33.3% anual)</option>
             </select>
           </div>
         </div>
@@ -171,9 +183,26 @@
             <input type="text" id="asset-serial" placeholder="Identificador físico único" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono">
           </div>
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Costo ($ MXN)</label>
-            <input type="number" step="0.01" id="asset-cost" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono">
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Adquisición</label>
+            <input type="date" id="asset-date" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono">
           </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Costo Adquisición ($ MXN)</label>
+            <input type="number" step="0.01" id="asset-cost" oninput="calcularPrevisualizacionDeprec()" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Tasa Anual Fiscal (%)</label>
+            <input type="number" step="0.01" id="asset-rate" oninput="calcularPrevisualizacionDeprec()" value="30.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 font-mono">
+          </div>
+        </div>
+
+        <!-- Previsualizador de depreciación -->
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
+          <span class="text-slate-400">Desgaste fiscal estimado:</span>
+          <span id="preview-deprec-mes" class="text-emerald-400 font-bold">$0.00 / mes</span>
         </div>
 
         <div>
@@ -240,7 +269,6 @@
     let currentUser = null;
     let rawData = [];
 
-    // AUDITORÍA FORENSE ENRIQUECIDA Y HOMOLOGADA
     async function logAudit(action, details = {}, moduleSlug = "assets") {
       try {
         await addDoc(collection(db, "audit_logs"), {
@@ -294,6 +322,39 @@
       }
     });
 
+    // CÁLCULO FISCAL LISR DINÁMICO EN VIVO
+    function calcularMetricasActivo(item) {
+      const costo = Number(item.purchase_cost || 0);
+      let tasaAnual = Number(item.depreciation_rate_annual || 30.0);
+      if (isNaN(tasaAnual) || tasaAnual <= 0) tasaAnual = 30.0;
+
+      const depMes = (costo * (tasaAnual / 100)) / 12;
+
+      let meses = 0;
+      if (item.acquisition_date) {
+        const adq = new Date(item.acquisition_date);
+        const hoy = new Date();
+        meses = (hoy.getFullYear() - adq.getFullYear()) * 12 + (hoy.getMonth() - adq.getMonth());
+        if (meses < 0) meses = 0;
+      } else {
+        meses = 1;
+      }
+
+      let depAcumulada = depMes * meses;
+      if (depAcumulada > costo) depAcumulada = costo;
+
+      const valorNeto = Math.max(0, costo - depAcumulada);
+
+      return {
+        costoOriginal: costo,
+        tasaAnual: tasaAnual,
+        depMensual: depMes,
+        mesesDepreciados: meses,
+        depAcumulada: depAcumulada,
+        valorNeto: valorNeto
+      };
+    }
+
     function initLiveStream() {
       const q = query(
         collection(db, "fixed_assets"),
@@ -304,14 +365,22 @@
       onSnapshot(q, (snap) => {
         rawData = [];
         let totalCosto = 0;
+        let totalDepAcum = 0;
+        let totalValorNeto = 0;
+        let totalDepMes = 0;
         let asignados = 0;
 
         snap.forEach(d => {
           const item = { id: d.id, ...d.data() };
+          const metrics = calcularMetricasActivo(item);
+          item._metrics = metrics;
           rawData.push(item);
 
-          const costNum = Number(item.purchase_cost);
-          totalCosto += (!isNaN(costNum) && isFinite(costNum)) ? costNum : 0;
+          totalCosto += metrics.costoOriginal;
+          totalDepAcum += metrics.depAcumulada;
+          totalValorNeto += metrics.valorNeto;
+          totalDepMes += metrics.depMensual;
+
           if (item.assigned_to && item.assigned_to.trim() !== "") {
             asignados++;
           }
@@ -320,10 +389,15 @@
         const totalEquipos = rawData.length;
         const disponibles = totalEquipos - asignados;
 
-        document.getElementById('kpi-valor-libros').innerText = `$${totalCosto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        document.getElementById('kpi-valor-adquisicion').innerText = `$${totalCosto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        document.getElementById('kpi-valor-libros').innerText = `$${totalValorNeto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        document.getElementById('kpi-valor-remanente-sub').innerText = `${((totalValorNeto / (totalCosto || 1)) * 100).toFixed(1)}% remanente activo`;
+
+        document.getElementById('kpi-deprec-acumulada').innerText = `$${totalDepAcum.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        document.getElementById('kpi-deprec-mes-sub').innerText = `Desgaste recurrente: $${totalDepMes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}/mes`;
+
         document.getElementById('kpi-total-equipos').innerText = totalEquipos;
-        document.getElementById('kpi-asignados').innerText = asignados;
-        document.getElementById('kpi-disponibles-sub').innerText = `${disponibles} disponibles para asignación`;
+        document.getElementById('kpi-asignados-sub').innerText = `${asignados} en resguardo | ${disponibles} almacén`;
 
         renderTable();
       });
@@ -349,20 +423,22 @@
       const tbody = document.getElementById('table-activos');
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin activos registrados con los filtros aplicados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500 font-mono text-xs">Sin activos registrados con los filtros aplicados.</td></tr>';
         return;
       }
 
       let html = '';
       filtered.forEach(i => {
+        const m = i._metrics;
         let badge = "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
-        let label = "Hardware";
+        let label = `Hardware (${m.tasaAnual}%)`;
+
         if (i.category === "TANGIBLE_NETWORK") {
           badge = "bg-amber-500/10 text-amber-400 border border-amber-500/20";
-          label = "Red / Módem";
+          label = `Red (${m.tasaAnual}%)`;
         } else if (i.category === "INTANGIBLE_SOFTWARE") {
           badge = "bg-purple-500/10 text-purple-400 border border-purple-500/20";
-          label = "Licencia";
+          label = `Software (${m.tasaAnual}%)`;
         }
 
         const asignadoText = i.assigned_to && i.assigned_to.trim() !== ""
@@ -372,11 +448,18 @@
         html += `
           <tr class="hover:bg-slate-800/40 transition">
             <td class="p-4 font-mono font-bold text-white text-xs">${i.asset_code || 'S/C'}</td>
-            <td class="p-4 text-slate-200 font-medium">${i.name}</td>
+            <td class="p-4">
+              <div class="text-slate-200 font-medium">${i.name}</div>
+              <span class="text-[10px] font-mono text-slate-500">${i.serial_number}</span>
+            </td>
             <td class="p-4"><span class="px-2.5 py-0.5 rounded text-[10px] font-mono ${badge}">${label}</span></td>
-            <td class="p-4 font-mono text-xs text-slate-400">${i.serial_number}</td>
             <td class="p-4">${asignadoText}</td>
-            <td class="p-4 font-mono text-white font-semibold">$${Number(i.purchase_cost || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4 font-mono text-white font-semibold">$${m.costoOriginal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+            <td class="p-4 font-mono text-rose-400 text-xs">
+              <div>-$${m.depAcumulada.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
+              <span class="text-[10px] text-slate-500">($${m.depMensual.toFixed(2)}/mes)</span>
+            </td>
+            <td class="p-4 font-mono text-emerald-400 font-bold">$${m.valorNeto.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
             <td class="p-4 text-right space-x-2">
               <button onclick="abrirModalReasignar('${i.id}', '${i.asset_code}', '${(i.assigned_to || '').replace(/'/g, "\\'")}')" class="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition" title="Reasignar Resguardo">
                 <i class="ph ph-user-switch text-base"></i>
@@ -391,9 +474,29 @@
       tbody.innerHTML = html;
     };
 
+    window.actualizarTasaSugerida = () => {
+      const select = document.getElementById('asset-type');
+      const opt = select.options[select.selectedIndex];
+      const rate = opt.getAttribute('data-rate') || '30.00';
+      document.getElementById('asset-rate').value = rate;
+      calcularPrevisualizacionDeprec();
+    };
+
+    window.calcularPrevisualizacionDeprec = () => {
+      const cost = parseFloat(document.getElementById('asset-cost').value) || 0;
+      const rate = parseFloat(document.getElementById('asset-rate').value) || 30;
+      const depMes = (cost * (rate / 100)) / 12;
+      document.getElementById('preview-deprec-mes').innerText = `$${depMes.toLocaleString('es-MX', { minimumFractionDigits: 2 })} / mes`;
+    };
+
     window.toggleModalActivo = (show) => {
       document.getElementById('modal-activo').classList.toggle('hidden', !show);
-      if (!show) document.getElementById('form-activo').reset();
+      if (show) {
+        document.getElementById('asset-date').value = new Date().toISOString().split('T')[0];
+        actualizarTasaSugerida();
+      } else {
+        document.getElementById('form-activo').reset();
+      }
     };
 
     window.toggleModalReasignar = (show) => {
@@ -442,9 +545,13 @@
       const category = document.getElementById('asset-type').value;
       const name = document.getElementById('asset-name').value.trim();
       const serial = document.getElementById('asset-serial').value.trim();
+      const acqDate = document.getElementById('asset-date').value;
       const rawCost = parseFloat(document.getElementById('asset-cost').value);
       const cost = (!isNaN(rawCost) && isFinite(rawCost)) ? rawCost : 0;
+      const rate = parseFloat(document.getElementById('asset-rate').value) || 30.0;
       const assigned = document.getElementById('asset-assigned').value.trim();
+
+      const depMes = (cost * (rate / 100)) / 12;
 
       try {
         const docRef = await addDoc(collection(db, "fixed_assets"), {
@@ -454,7 +561,10 @@
           category: category,
           name: name,
           serial_number: serial,
+          acquisition_date: acqDate,
           purchase_cost: cost,
+          depreciation_rate_annual: rate,
+          monthly_depreciation: depMes,
           assigned_to: assigned,
           status: assigned ? "ASSIGNED" : "AVAILABLE",
           registered_by: currentUser?.email || auth.currentUser?.email || 'admin',
@@ -462,7 +572,7 @@
           created_at: serverTimestamp()
         });
 
-        await logAudit("ASSET_CREATED", { doc_id: docRef.id, code, name, cost, assigned }, "assets");
+        await logAudit("ASSET_CREATED", { doc_id: docRef.id, code, name, cost, rate, depMes, assigned }, "assets");
         toggleModalActivo(false);
       } catch (err) {
         alert("Error al registrar activo: " + err.message);
@@ -485,16 +595,24 @@
 
     window.exportarExcel = () => {
       if (rawData.length === 0) return alert("Sin activos para exportar.");
-      const rows = rawData.map(i => ({
-        "Código": i.asset_code || '',
-        "Descripción / Modelo": i.name || '',
-        "Categoría": i.category || '',
-        "Número de Serie": i.serial_number || '',
-        "Colaborador en Resguardo": i.assigned_to || 'Disponible',
-        "Costo Adquisición MXN": Number(i.purchase_cost || 0),
-        "Estatus": i.status || 'AVAILABLE',
-        "Registrado Por": i.registered_by || ''
-      }));
+      const rows = rawData.map(i => {
+        const m = i._metrics;
+        return {
+          "Código": i.asset_code || '',
+          "Descripción / Modelo": i.name || '',
+          "Categoría": i.category || '',
+          "Número de Serie": i.serial_number || '',
+          "Fecha Adquisición": i.acquisition_date || '',
+          "Tasa Fiscal Anual %": m.tasaAnual,
+          "Costo Adquisición MXN": m.costoOriginal,
+          "Depreciación Mensual MXN": m.depMensual,
+          "Depreciación Acumulada MXN": m.depAcumulada,
+          "Valor Neto en Libros MXN": m.valorNeto,
+          "Colaborador en Resguardo": i.assigned_to || 'Disponible en almacén',
+          "Estatus": i.status || 'AVAILABLE',
+          "Registrado Por": i.registered_by || ''
+        };
+      });
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();

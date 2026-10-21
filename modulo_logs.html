@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -49,7 +50,7 @@
         <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
           <i class="ph-bold ph-shield-check text-amber-400"></i> Consola Central de Auditoría Forense
         </h2>
-        <span class="text-xs text-slate-400 font-mono">Registro inmutable multi-entidad | BD: <span class="text-slate-300 font-semibold">emco-accounting</span></span>
+        <span class="text-xs text-slate-400 font-mono">Registro inmutable multientidad | BD: <span class="text-slate-300 font-semibold">emco-accounting</span></span>
       </div>
     </div>
 
@@ -79,7 +80,7 @@
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
         <div class="flex justify-between items-start">
-          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">César Giovanni</span>
+          <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Cesar Geovanni</span>
           <span class="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="ph-bold ph-briefcase"></i></span>
         </div>
         <p id="kpi-cg-logs" class="text-2xl font-bold font-mono text-blue-400 mt-2">0</p>
@@ -115,7 +116,7 @@
 
         <select id="filter-company" onchange="renderLogs()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs">
           <option value="ALL">Todas las Razones Sociales</option>
-          <option value="cesar_gonzalez">Cesar Giovanni Gonzalez</option>
+          <option value="cesar_gonzalez">Cesar Geovanni Gonzalez</option>
           <option value="hr_employment">HR Employment</option>
           <option value="GLOBAL">Global / Sistema Transversal</option>
         </select>
@@ -124,11 +125,11 @@
           <option value="ALL">Todas las Categorías de Evento</option>
           <option value="AUTH">Sesiones (Login / Logout)</option>
           <option value="INVOICE">Facturas (CxC / CxP)</option>
-          <option value="ASSET">Activos & Hardware</option>
-          <option value="MODULE">Módulos & Esquemas (Creación / Importación)</option>
+          <option value="ASSET">Activos & Depreciación</option>
+          <option value="MODULE">Módulos & Esquemas (Studio / Importación)</option>
           <option value="DYNAMIC">Registros de Módulos Dinámicos</option>
           <option value="STAFF">Gobernanza de Staff & RBAC</option>
-          <option value="DELETED">Eliminaciones (Bajas)</option>
+          <option value="DELETED">Bajas & Eliminaciones Críticas</option>
         </select>
       </div>
 
@@ -144,21 +145,23 @@
         <span id="logs-counter" class="text-xs font-mono font-medium bg-slate-800 text-slate-400 border border-slate-700/60 px-2.5 py-0.5 rounded-full">0 eventos</span>
       </div>
 
-      <table class="w-full text-left text-sm text-slate-300">
-        <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
-          <tr>
-            <th class="p-4">Fecha y Hora</th>
-            <th class="p-4">Usuario Operador</th>
-            <th class="p-4">Acción Auditada</th>
-            <th class="p-4">Razón Social Implicada</th>
-            <th class="p-4">Resumen del Evento</th>
-            <th class="p-4 text-right">Inspección</th>
-          </tr>
-        </thead>
-        <tbody id="table-logs" class="divide-y divide-slate-800/60 font-sans text-xs">
-          <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando pistas de auditoría forense...</td></tr>
-        </tbody>
-      </table>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+            <tr>
+              <th class="p-4">Fecha y Hora</th>
+              <th class="p-4">Usuario Operador</th>
+              <th class="p-4">Acción Auditada</th>
+              <th class="p-4">Razón Social Implicada</th>
+              <th class="p-4">Resumen del Evento</th>
+              <th class="p-4 text-right">Inspección</th>
+            </tr>
+          </thead>
+          <tbody id="table-logs" class="divide-y divide-slate-800/60 font-sans text-xs">
+            <tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono">Cargando pistas de auditoría forense...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </main>
@@ -227,14 +230,13 @@
     const db = getFirestore(app, "emco-accounting");
 
     const EMPRESAS = {
-      "cesar_gonzalez": "Cesar Giovanni Gonzalez Contreras",
+      "cesar_gonzalez": "Cesar Geovanni Gonzalez Contreras",
       "hr_employment": "HR Employment"
     };
 
     const urlParams = new URLSearchParams(window.location.search);
     let activeCompanyId = urlParams.get('empresa') || localStorage.getItem('active_company_id') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
 
-    // Sincronizar enlace de retorno
     const btnBack = document.getElementById('btn-back-portal');
     if (btnBack) {
       btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(activeCompanyId)}`;
@@ -268,7 +270,7 @@
     });
 
     function initAuditStream() {
-      const q = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(250));
+      const q = query(collection(db, "audit_logs"), orderBy("timestamp", "desc"), limit(300));
 
       onSnapshot(q, (snap) => {
         rawLogs = [];
@@ -356,7 +358,7 @@
 
         let companyTag = `<span class="text-slate-400 font-mono text-[11px]">Sistema Global</span>`;
         if (l.company_id === "cesar_gonzalez") {
-          companyTag = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CÉSAR GIOVANNI</span>`;
+          companyTag = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CESAR GEOVANNI</span>`;
         } else if (l.company_id === "hr_employment") {
           companyTag = `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">HR EMPLOYMENT</span>`;
         }

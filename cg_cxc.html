@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CxC Clientes | Cesar Giovanni Gonzalez Contreras</title>
+  <title>CxC Clientes | Cesar Geovanni Gonzalez Contreras</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,7 @@
     <div class="w-16 h-16 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 animate-pulse flex items-center justify-center">
       <i class="ph-bold ph-hand-coins text-emerald-400 text-3xl"></i>
     </div>
-    <p class="text-xs text-slate-400 font-mono">Conectando a activos y cobranza de Cesar Giovanni...</p>
+    <p class="text-xs text-slate-400 font-mono">Conectando a cuentas por cobrar de Cesar Geovanni...</p>
   </div>
 
   <!-- BARRA DE NAVEGACIÓN -->
@@ -47,9 +47,9 @@
       <div>
         <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
           <span>Cuentas por Cobrar (CxC)</span>
-          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CÉSAR GIOVANNI</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CESAR GEOVANNI</span>
         </h2>
-        <span class="text-xs text-slate-400 font-mono">Emisor: <strong class="text-slate-200">Cesar Giovanni Gonzalez Contreras</strong> | BD: emco-accounting</span>
+        <span class="text-xs text-slate-400 font-mono">Emisor: <strong class="text-slate-200">Cesar Geovanni Gonzalez Contreras</strong> | BD: emco-accounting</span>
       </div>
     </div>
 
@@ -87,25 +87,75 @@
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
         <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total Facturación Emitida</span>
         <p id="kpi-total" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
-        <span class="text-[11px] text-slate-500 mt-1 block">Cesar Giovanni Gonzalez Contreras</span>
+        <span class="text-[11px] text-slate-500 mt-1 block">Cesar Geovanni Gonzalez Contreras</span>
       </div>
     </div>
 
-    <!-- FILTROS Y CONSULTA POR PERIODO -->
-    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-3 items-center justify-between text-xs backdrop-blur-sm">
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-          <i class="ph ph-magnifying-glass text-slate-400"></i>
-          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar cliente, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-56">
+    <!-- PANEL DE CONTROL ERGONÓMICO: FILTROS Y PERIODOS -->
+    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3 backdrop-blur-sm text-xs">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- Búsqueda y estado -->
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+            <i class="ph ph-magnifying-glass text-slate-400"></i>
+            <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar cliente, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-56">
+          </div>
+
+          <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
+            <option value="ALL">Todos los Estados</option>
+            <option value="PENDING">Pendientes / Por Cobrar</option>
+            <option value="COLLECTED">Cobradas / Liquidadas</option>
+          </select>
         </div>
 
-        <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
-          <option value="ALL">Todos los Estados</option>
-          <option value="PENDING">Pendientes / Por Cobrar</option>
-          <option value="COLLECTED">Cobradas / Liquidadas</option>
-        </select>
+        <!-- Presets ergonómicos rápidos -->
+        <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 font-mono text-[11px]">
+          <button onclick="setPresetPeriod('today')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Hoy</button>
+          <button onclick="setPresetPeriod('this_week')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Semana</button>
+          <button onclick="setPresetPeriod('this_month')" class="px-2.5 py-1 rounded-lg text-emerald-400 bg-emerald-500/10 font-bold border border-emerald-500/20 transition">Mes</button>
+          <button onclick="setPresetPeriod('quarter')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Trimestre</button>
+          <button onclick="setPresetPeriod('year')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Año</button>
+          <button onclick="setPresetPeriod('all')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Todo</button>
+        </div>
 
-        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+        <span id="counter-records" class="font-mono text-slate-500 text-xs">0 facturas</span>
+      </div>
+
+      <!-- Selector por Año / Mes y Rango Libre -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-mono text-[11px]">Mes:</span>
+            <select id="select-filter-month" onchange="aplicarSelectorMesAno()" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-300 text-xs outline-none">
+              <option value="">(Cualquiera)</option>
+              <option value="01">Enero</option>
+              <option value="02">Febrero</option>
+              <option value="03">Marzo</option>
+              <option value="04">Abril</option>
+              <option value="05">Mayo</option>
+              <option value="06">Junio</option>
+              <option value="07">Julio</option>
+              <option value="08">Agosto</option>
+              <option value="09">Septiembre</option>
+              <option value="10">Octubre</option>
+              <option value="11">Noviembre</option>
+              <option value="12">Diciembre</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-mono text-[11px]">Año:</span>
+            <select id="select-filter-year" onchange="aplicarSelectorMesAno()" class="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-slate-300 text-xs outline-none font-mono">
+              <option value="">(Cualquiera)</option>
+              <option value="2027">2027</option>
+              <option value="2026" selected>2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1 rounded-xl border border-slate-800">
           <span class="text-slate-400 font-mono text-[11px]">Desde:</span>
           <input type="date" id="filter-date-from" onchange="renderTable()" class="bg-transparent text-white outline-none font-mono text-xs">
           <span class="text-slate-400 font-mono text-[11px] ml-1">Hasta:</span>
@@ -115,8 +165,6 @@
           </button>
         </div>
       </div>
-
-      <span id="counter-records" class="font-mono text-slate-500 text-xs">0 facturas</span>
     </div>
 
     <!-- TABLA DE ACTIVOS CXC -->
@@ -134,7 +182,7 @@
           </tr>
         </thead>
         <tbody id="table-cxc" class="divide-y divide-slate-800/60 font-sans text-xs">
-          <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Cargando cuentas por cobrar de César Giovanni...</td></tr>
+          <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Cargando cuentas por cobrar de Cesar Geovanni...</td></tr>
         </tbody>
       </table>
     </div>
@@ -147,7 +195,7 @@
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
           <h4 class="text-base font-bold text-white">Importar Factura de Venta / Cliente (CxC)</h4>
-          <span class="text-[11px] font-mono text-emerald-400">Emisor: Cesar Giovanni Gonzalez Contreras</span>
+          <span class="text-[11px] font-mono text-emerald-400">Emisor: Cesar Geovanni Gonzalez Contreras</span>
         </div>
         <button onclick="toggleModalInvoice(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
@@ -157,10 +205,10 @@
         <div id="upload-idle" class="space-y-1">
           <i class="ph-bold ph-file-arrow-up text-2xl text-emerald-400 inline-block"></i>
           <p class="text-xs font-semibold text-slate-200">Arrastra factura emitida a cliente (PDF o XML)</p>
-          <p class="text-[10px] text-slate-500 font-mono">Lectura inteligente con Gemini 3.8 / 2.5 Flash</p>
+          <p class="text-[10px] text-slate-500 font-mono">Lectura inteligente blindada: Gemini 3.8 / 2.5 / 2.0</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
-          <i class="ph ph-spinner animate-spin text-2xl text-rose-400 inline-block"></i>
+          <i class="ph ph-spinner animate-spin text-2xl text-emerald-400 inline-block"></i>
           <p id="processing-text" class="text-xs font-mono text-emerald-300">Procesando archivo...</p>
         </div>
       </div>
@@ -249,6 +297,7 @@
   <div id="modal-api-key" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
       <h4 class="text-base font-bold text-white">Gemini API Key</h4>
+      <p class="text-xs text-slate-400">Motor blindado multimodelo (3.8 Flash &bull; 2.5 Flash &bull; 2.0 Pro)</p>
       <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono text-xs outline-none focus:border-emerald-500">
       <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
         <button onclick="toggleApiKeyModal(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 text-xs">Cerrar</button>
@@ -282,7 +331,7 @@
     const storage = getStorage(app);
 
     const COMPANY_ID = "cesar_gonzalez";
-    const COMPANY_NAME = "Cesar Giovanni Gonzalez Contreras";
+    const COMPANY_NAME = "Cesar Geovanni Gonzalez Contreras";
 
     let currentUser = null;
     let rawData = [];
@@ -326,7 +375,7 @@
         const isSuper = currentUser.role_id === "SUPERADMIN";
 
         if (!isSuper && !allowed.includes("*") && !allowed.includes(COMPANY_ID)) {
-          alert("Acceso denegado: No tienes autorización para la razón social de César Giovanni.");
+          alert("Acceso denegado: No tienes autorización para la razón social de Cesar Geovanni.");
           window.location.replace("portal_catalogo.html?empresa=" + encodeURIComponent(allowed[0] || "hr_employment"));
           return;
         }
@@ -357,9 +406,79 @@
       });
     }
 
+    // MANIPULACIÓN ERGONÓMICA DE PERIODOS
+    window.setPresetPeriod = (preset) => {
+      const now = new Date();
+      let from = "";
+      let to = "";
+
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+
+      if (preset === 'today') {
+        from = `${y}-${m}-${d}`;
+        to = `${y}-${m}-${d}`;
+      } else if (preset === 'this_week') {
+        const curr = new Date();
+        const first = curr.getDate() - curr.getDay() + 1;
+        const last = first + 6;
+        const firstDay = new Date(curr.setDate(first));
+        const lastDay = new Date(curr.setDate(last));
+        from = firstDay.toISOString().split('T')[0];
+        to = lastDay.toISOString().split('T')[0];
+      } else if (preset === 'this_month') {
+        from = `${y}-${m}-01`;
+        const lastDate = new Date(y, now.getMonth() + 1, 0).getDate();
+        to = `${y}-${m}-${String(lastDate).padStart(2, '0')}`;
+        document.getElementById('select-filter-month').value = m;
+        document.getElementById('select-filter-year').value = String(y);
+      } else if (preset === 'quarter') {
+        const qMonth = Math.floor(now.getMonth() / 3) * 3;
+        const startQ = new Date(y, qMonth, 1);
+        const endQ = new Date(y, qMonth + 3, 0);
+        from = startQ.toISOString().split('T')[0];
+        to = endQ.toISOString().split('T')[0];
+      } else if (preset === 'year') {
+        from = `${y}-01-01`;
+        to = `${y}-12-31`;
+        document.getElementById('select-filter-year').value = String(y);
+        document.getElementById('select-filter-month').value = "";
+      } else if (preset === 'all') {
+        from = "";
+        to = "";
+        document.getElementById('select-filter-month').value = "";
+        document.getElementById('select-filter-year').value = "";
+      }
+
+      document.getElementById('filter-date-from').value = from;
+      document.getElementById('filter-date-to').value = to;
+      renderTable();
+    };
+
+    window.aplicarSelectorMesAno = () => {
+      const m = document.getElementById('select-filter-month').value;
+      const y = document.getElementById('select-filter-year').value;
+
+      if (!y && !m) {
+        document.getElementById('filter-date-from').value = '';
+        document.getElementById('filter-date-to').value = '';
+      } else if (y && !m) {
+        document.getElementById('filter-date-from').value = `${y}-01-01`;
+        document.getElementById('filter-date-to').value = `${y}-12-31`;
+      } else if (y && m) {
+        const lastDate = new Date(Number(y), Number(m), 0).getDate();
+        document.getElementById('filter-date-from').value = `${y}-${m}-01`;
+        document.getElementById('filter-date-to').value = `${y}-${m}-${String(lastDate).padStart(2, '0')}`;
+      }
+      renderTable();
+    };
+
     window.limpiarFiltroFechas = () => {
       document.getElementById('filter-date-from').value = '';
       document.getElementById('filter-date-to').value = '';
+      document.getElementById('select-filter-month').value = '';
+      document.getElementById('select-filter-year').value = '';
       renderTable();
     };
 
@@ -372,7 +491,7 @@
       const filtered = rawData.filter(i => {
         if (st !== 'ALL' && i.status !== st) return false;
 
-        const targetDate = (i.status === 'COLLECTED' && i.collected_date) ? i.collected_date : (i.due_date || '');
+        const targetDate = (i.status === 'COLLECTED' && i.collected_date) ? i.collected_date : (i.due_date || i.issue_date || '');
         if (dateFrom && targetDate && targetDate < dateFrom) return false;
         if (dateTo && targetDate && targetDate > dateTo) return false;
 
@@ -507,7 +626,7 @@
       }
     };
 
-    // PROCESAMIENTO GEMINI (3.8 FLASH -> 2.5 FLASH) Y ALMACENAMIENTO FÍSICO
+    // PROCESAMIENTO HÍBRIDO BLINDADO (XML UNIVERSAL + PRE-EXTRACCIÓN PDF + GEMINI 3.8/2.5/2.0)
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -529,10 +648,16 @@
         document.getElementById('uploaded-doc-name').value = file.name;
         document.getElementById('doc-status-msg').innerText = `Guardado: ${file.name}`;
 
-        if (file.name.toLowerCase().endsWith('.xml')) {
-          procTxt.innerText = "Extrayendo CFDI XML...";
+        const isXml = file.name.toLowerCase().endsWith('.xml');
+        const isPdf = file.name.toLowerCase().endsWith('.pdf');
+
+        if (isXml) {
+          procTxt.innerText = "Extrayendo CFDI XML (3.3 / 4.0)...";
           const text = await file.text();
-          parseXML(text);
+          const parsedOk = parseXMLUniversal(text);
+          if (!parsedOk) {
+            alert("No se pudieron extraer todos los campos del XML. Revisa la integridad del comprobante.");
+          }
         } else {
           const key = localStorage.getItem('GEMINI_API_KEY');
           if (!key) {
@@ -540,8 +665,21 @@
             toggleApiKeyModal(true);
             return;
           }
-          const b64 = await fileToBase64(file);
-          await parseWithGeminiDual(b64, file.type, key, procTxt);
+
+          let textExtracted = "";
+          if (isPdf && window.pdfjsLib) {
+            procTxt.innerText = "Extrayendo texto del PDF...";
+            textExtracted = await extractPdfText(file);
+          }
+
+          if (textExtracted && textExtracted.trim().length > 60) {
+            procTxt.innerText = "Analizando texto con Gemini...";
+            await parseWithGeminiTextCascada(textExtracted, key, procTxt);
+          } else {
+            procTxt.innerText = "Procesando imagen con Gemini Visión...";
+            const b64 = await fileToBase64(file);
+            await parseWithGeminiVisionCascada(b64, file.type || 'application/pdf', key, procTxt);
+          }
         }
       } catch (err) {
         console.error("Error en procesamiento:", err);
@@ -554,17 +692,73 @@
       }
     };
 
-    function parseXML(xmlString) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xmlString, "text/xml");
-      const comp = doc.getElementsByTagName("cfdi:Comprobante")[0] || doc.getElementsByTagName("Comprobante")[0];
-      const timbre = doc.getElementsByTagName("tfd:TimbreFiscalDigital")[0] || doc.getElementsByTagName("TimbreFiscalDigital")[0];
-      const receptor = doc.getElementsByTagName("cfdi:Receptor")[0] || doc.getElementsByTagName("Receptor")[0];
+    // PARSER XML UNIVERSAL COMPATIBLE CFDI 3.3 Y 4.0 SIN IMPORTAR NAMESPACE
+    function parseXMLUniversal(xmlString) {
+      try {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, "text/xml");
 
-      if (comp) document.getElementById('invoice-total').value = comp.getAttribute("Total") || '';
-      if (timbre) document.getElementById('invoice-folio').value = timbre.getAttribute("UUID") || '';
-      if (receptor) document.getElementById('invoice-entity').value = receptor.getAttribute("Nombre") || receptor.getAttribute("Rfc") || '';
-      if (comp?.getAttribute("Fecha")) document.getElementById('invoice-date').value = comp.getAttribute("Fecha").split('T')[0];
+        const getFirstNodeByLocal = (tag) => {
+          const all = xmlDoc.getElementsByTagName("*");
+          for (let i = 0; i < all.length; i++) {
+            if (all[i].localName === tag) return all[i];
+          }
+          return null;
+        };
+
+        const compNode = getFirstNodeByLocal("Comprobante");
+        const timbreNode = getFirstNodeByLocal("TimbreFiscalDigital");
+        const receptorNode = getFirstNodeByLocal("Receptor");
+
+        let total = "";
+        let folio = "";
+        let receptor = "";
+        let fecha = "";
+
+        if (compNode) {
+          total = compNode.getAttribute("Total") || compNode.getAttribute("total") || "";
+          fecha = compNode.getAttribute("Fecha") || compNode.getAttribute("fecha") || "";
+        }
+
+        if (timbreNode) {
+          folio = timbreNode.getAttribute("UUID") || timbreNode.getAttribute("uuid") || "";
+        } else if (compNode) {
+          folio = compNode.getAttribute("Folio") || compNode.getAttribute("folio") || "";
+        }
+
+        if (receptorNode) {
+          receptor = receptorNode.getAttribute("Nombre") || receptorNode.getAttribute("nombre") || receptorNode.getAttribute("Rfc") || receptorNode.getAttribute("rfc") || "";
+        }
+
+        if (total) document.getElementById('invoice-total').value = parseFloat(total).toFixed(2);
+        if (folio) document.getElementById('invoice-folio').value = folio;
+        if (receptor) document.getElementById('invoice-entity').value = receptor;
+        if (fecha) document.getElementById('invoice-date').value = fecha.split('T')[0];
+
+        return !!(total || folio || receptor);
+      } catch (e) {
+        console.warn("Fallo parser XML universal:", e);
+        return false;
+      }
+    }
+
+    async function extractPdfText(file) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        const maxPages = Math.min(pdf.numPages, 3);
+        for (let i = 1; i <= maxPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const strings = content.items.map(item => item.str);
+          fullText += strings.join(" ") + "\n";
+        }
+        return fullText;
+      } catch (e) {
+        console.warn("PDF no contiene texto seleccionable:", e);
+        return "";
+      }
     }
 
     function fileToBase64(file) {
@@ -576,42 +770,72 @@
       });
     }
 
-    async function parseWithGeminiDual(base64Data, mimeType, apiKey, statusElement) {
-      const models = [
-        { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
-        { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" }
-      ];
+    // CASCADA DE MODELOS ACTIVOS GEMINI: 3.8 FLASH -> 2.5 FLASH -> 2.0 PRO
+    const ACTIVE_GEMINI_MODELS = [
+      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
+      { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+      { id: "gemini-2.0-pro", label: "Gemini 2.0 Pro" }
+    ];
 
-      const prompt = `Analiza la factura de CLIENTE / VENTA o cuenta por cobrar emitida por la empresa. Extrae en formato JSON plano:
+    async function parseWithGeminiTextCascada(extractedText, apiKey, statusEl) {
+      const prompt = `Analiza el siguiente texto de una FACTURA DE CLIENTE / VENTA o cuenta por cobrar (CxC) emitida por la empresa a su cliente.
+Extrae estrictamente en formato JSON plano:
+{
+  "razon_social": "Nombre o Razón Social del CLIENTE / RECEPTOR de la factura",
+  "folio": "UUID fiscal de 36 caracteres o folio impreso de factura",
+  "monto_total": 0.00,
+  "fecha_emision": "YYYY-MM-DD"
+}
+
+Texto de la factura:
+${extractedText.substring(0, 10000)}`;
+
+      await executeGeminiRequest(apiKey, statusEl, (modelId) => ({
+        url: `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
+        body: {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { response_mime_type: "application/json" }
+        }
+      }));
+    }
+
+    async function parseWithGeminiVisionCascada(base64Data, mimeType, apiKey, statusEl) {
+      const prompt = `Analiza la imagen/documento de la FACTURA DE CLIENTE / VENTA o cuenta por cobrar (CxC) emitida a un cliente.
+Extrae estrictamente en formato JSON plano:
 {
   "razon_social": "Nombre o Razón Social del CLIENTE o Receptor del servicio/producto",
-  "folio": "UUID fiscal de 36 caracteres o folio impreso de factura",
+  "folio": "UUID fiscal de 36 caracteres o folio impreso de la factura",
   "monto_total": 0.00,
   "fecha_emision": "YYYY-MM-DD"
 }`;
 
+      await executeGeminiRequest(apiKey, statusEl, (modelId) => ({
+        url: `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
+        body: {
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mimeType, data: base64Data } }
+            ]
+          }],
+          generationConfig: { response_mime_type: "application/json" }
+        }
+      }));
+    }
+
+    async function executeGeminiRequest(apiKey, statusEl, requestFactory) {
       let success = false;
       let lastError = null;
 
-      for (const m of models) {
+      for (const m of ACTIVE_GEMINI_MODELS) {
         try {
-          if (statusElement) statusElement.innerText = `Analizando con ${m.label}...`;
-          
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${m.id}:generateContent?key=${apiKey}`;
-          const resp = await fetch(url, {
+          if (statusEl) statusEl.innerText = `Consultando ${m.label}...`;
+          const req = requestFactory(m.id);
+
+          const resp = await fetch(req.url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  { inline_data: { mime_type: mimeType, data: base64Data } }
-                ]
-              }],
-              generationConfig: {
-                response_mime_type: "application/json"
-              }
-            })
+            body: JSON.stringify(req.body)
           });
 
           if (!resp.ok) {
@@ -628,23 +852,23 @@
 
           if (p.razon_social) document.getElementById('invoice-entity').value = p.razon_social;
           if (p.folio) document.getElementById('invoice-folio').value = p.folio;
-          if (p.monto_total) document.getElementById('invoice-total').value = p.monto_total;
+          if (p.monto_total) document.getElementById('invoice-total').value = parseFloat(p.monto_total).toFixed(2);
           if (p.fecha_emision) document.getElementById('invoice-date').value = p.fecha_emision;
 
           success = true;
           break;
         } catch (err) {
-          console.warn(`Fallo con ${m.label}:`, err.message);
+          console.warn(`Fallback: ${m.label} no disponible:`, err.message);
           lastError = err;
         }
       }
 
       if (!success) {
-        throw new Error(`Fallo de comunicación con Gemini: ${lastError?.message || "Servicio no disponible"}`);
+        throw new Error(`Los motores Gemini (3.8 / 2.5 / 2.0) no pudieron completar la extracción: ${lastError?.message}`);
       }
     }
 
-    // REGISTRO DE CUENTA POR COBRAR (CxC) SINCRONIZADO
+    // REGISTRO DE CUENTA POR COBRAR (CxC)
     document.getElementById('form-invoice').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-invoice');
@@ -700,7 +924,7 @@
       toggleModalCollectDate(true);
     };
 
-    // CONFIRMAR COBRO SINCRONIZADO
+    // CONFIRMAR COBRO
     window.confirmarCobroConFecha = async () => {
       const id = document.getElementById('collect-record-id').value;
       const collectDate = document.getElementById('collect-record-date').value;
@@ -758,8 +982,8 @@
 
       const ws = XLSX.utils.json_to_sheet(rows);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "CxC_Cesar_Giovanni");
-      XLSX.writeFile(wb, `CxC_Cesar_Giovanni_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "CxC_Cesar_Geovanni");
+      XLSX.writeFile(wb, `CxC_Cesar_Geovanni_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
     window.toggleApiKeyModal = (show) => {

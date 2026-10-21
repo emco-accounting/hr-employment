@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso Administrativo | ContaCore EMCO</title>
+  <title>Acceso Seguro | ContaCore EMCO</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -22,95 +23,128 @@
     };
   </script>
 </head>
-<body class="h-full bg-gradient-to-b from-slate-900 to-slate-950 text-slate-100 flex items-center justify-center p-4 font-sans selection:bg-indigo-500 selection:text-white">
+<body class="h-full text-slate-100 flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 font-sans antialiased selection:bg-indigo-500 selection:text-white p-4">
 
-  <div class="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl shadow-2xl p-8 backdrop-blur-xl relative overflow-hidden">
-    
-    <!-- Efecto ambiental de fondo -->
-    <div class="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+  <!-- TOAST DE NOTIFICACIÓN -->
+  <div id="toast" class="fixed top-6 right-6 z-50 hidden max-w-sm px-4 py-3 rounded-2xl bg-slate-900/90 border border-slate-700 shadow-2xl flex items-center gap-3 backdrop-blur-md transition-all duration-300">
+    <i id="toast-icon" class="ph-bold ph-check-circle text-emerald-400 text-xl shrink-0"></i>
+    <div class="text-xs">
+      <p id="toast-title" class="font-bold text-white"></p>
+      <p id="toast-desc" class="text-slate-400 font-mono text-[11px]"></p>
+    </div>
+  </div>
 
-    <div class="text-center space-y-2 mb-8 relative z-10">
-      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-400 border border-indigo-500/30 text-white shadow-lg shadow-indigo-500/20 mb-2">
-        <i class="ph-bold ph-scales text-3xl"></i>
+  <!-- TARJETA PRINCIPAL DE ACCESO -->
+  <div class="w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+    <!-- Efecto de luz ambiental -->
+    <div class="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="space-y-6 relative z-10">
+      
+      <!-- LOGO Y TÍTULO -->
+      <div class="text-center space-y-2">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="ph-bold ph-shield-check text-white text-3xl"></i>
+        </div>
+        <h1 class="text-2xl font-extrabold text-white tracking-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
+        <p class="text-xs text-slate-400 font-mono">Consola Unificada & Gobernanza Financiera</p>
       </div>
-      <h1 class="text-2xl font-bold tracking-tight text-white leading-tight">ContaCore <span class="text-indigo-400 font-light">EMCO</span></h1>
-      <p class="text-xs text-slate-400 font-mono tracking-wide uppercase">Acceso al Portal Maestro Multi-Empresa</p>
-    </div>
 
-    <!-- Alertas -->
-    <div id="alert-box" class="hidden p-3.5 mb-6 rounded-2xl text-xs font-medium border flex items-start gap-2.5 relative z-10 transition">
-      <i id="alert-icon" class="ph-bold text-base shrink-0 mt-0.5"></i>
-      <span id="alert-msg"></span>
-    </div>
+      <!-- BADGES DE TENANTS -->
+      <div class="flex items-center justify-center gap-2 text-[10px] font-mono">
+        <span class="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-semibold">Cesar Geovanni</span>
+        <span class="text-slate-600">&bull;</span>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">HR Employment</span>
+      </div>
 
-    <form id="form-login" class="space-y-4 relative z-10">
-      <div>
-        <label for="email" class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-400 mb-1.5">Correo Corporativo</label>
-        <div class="relative">
-          <i class="ph ph-envelope-simple absolute left-3.5 top-3 text-slate-500 text-lg"></i>
-          <input 
-            type="email" 
-            id="email" 
-            required 
-            placeholder="usuario@hremploy..." 
-            class="w-full pl-10 pr-4 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition font-sans"
-          >
+      <!-- FORMULARIO DE INICIO DE SESIÓN -->
+      <form id="form-login" class="space-y-4 text-xs font-medium text-slate-300">
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1.5 font-mono text-[11px]">Correo Corporativo</label>
+          <div class="relative flex items-center">
+            <i class="ph ph-envelope absolute left-3.5 text-slate-500 text-base"></i>
+            <input type="email" id="login-email" placeholder="operador@empresa.com" required 
+                   class="w-full pl-10 pr-3 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono transition">
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <label class="uppercase tracking-wider text-slate-400 font-mono text-[11px]">Contraseña</label>
+            <button type="button" onclick="abrirModalRecuperacion()" class="text-indigo-400 hover:text-indigo-300 transition text-[11px] font-mono">
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+          <div class="relative flex items-center">
+            <i class="ph ph-lock-key absolute left-3.5 text-slate-500 text-base"></i>
+            <input type="password" id="login-password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required 
+                   class="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono transition">
+            
+            <!-- OJITO VISUAL PARA VISUALIZAR CLAVE -->
+            <button type="button" onclick="togglePasswordVisibility('login-password', 'eye-icon-login')" class="absolute right-3 text-slate-400 hover:text-white p-1" title="Mostrar/Ocultar contraseña">
+              <i id="eye-icon-login" class="ph ph-eye text-base"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-login" class="w-full mt-2 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2">
+          <span>Ingresar al Sistema</span>
+          <i class="ph-bold ph-sign-in"></i>
+        </button>
+      </form>
+
+      <div class="pt-4 border-t border-slate-800/80 text-center text-[11px] font-mono text-slate-500">
+        <span>ContaCore Security Layer &bull; Firestore RBAC</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: RECUPERACIÓN DE CONTRASEÑA DIRECTA VÍA FIREBASE AUTH -->
+  <div id="modal-recovery" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-700/80 space-y-4 text-xs">
+      <div class="flex items-center gap-3 border-b border-slate-800 pb-3 text-amber-400">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+          <i class="ph-bold ph-key text-2xl"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-white text-sm">Recuperación de Acceso</h4>
+          <span class="text-[10px] font-mono text-slate-400">Inyección directa Firebase Auth</span>
         </div>
       </div>
 
-      <div>
-        <label for="password" class="block text-xs font-semibold uppercase font-mono tracking-wider text-slate-400 mb-1.5">Contraseña de Seguridad</label>
-        <div class="relative">
-          <i class="ph ph-lock-key absolute left-3.5 top-3 text-slate-500 text-lg"></i>
-          <input 
-            type="password" 
-            id="password" 
-            required 
-            placeholder="••••••••••••" 
-            class="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition font-sans"
-          >
-          <button 
-            type="button" 
-            id="toggle-pwd" 
-            class="absolute right-3.5 top-3 text-slate-500 hover:text-slate-300 transition"
-          >
-            <i class="ph ph-eye" id="toggle-pwd-icon"></i>
+      <p class="text-slate-300 leading-relaxed">
+        Ingresa tu correo corporativo. Te enviaremos un correo con un enlace oficial de confirmación para restablecer tu clave:
+      </p>
+
+      <form id="form-recovery" class="space-y-3">
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1 font-mono text-[10px]">Correo Electrónico</label>
+          <input type="email" id="recovery-email" placeholder="usuario@empresa.com" required 
+                 class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono text-xs">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="cerrarModalRecuperacion()" class="px-3.5 py-1.5 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 transition">
+            Cancelar
+          </button>
+          <button type="submit" id="btn-submit-recovery" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="ph-bold ph-paper-plane-tilt"></i>
+            <span>Enviar Correo</span>
           </button>
         </div>
-      </div>
-
-      <button 
-        type="submit" 
-        id="btn-login" 
-        class="w-full mt-2 py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-lg shadow-indigo-600/25 transition flex items-center justify-center gap-2"
-      >
-        <span>Ingresar al Catálogo Maestro</span>
-        <i class="ph-bold ph-arrow-right"></i>
-      </button>
-    </form>
-
-    <div class="mt-8 pt-4 border-t border-slate-800/80 text-center relative z-10">
-      <p class="text-[11px] text-slate-500 font-mono">
-        Base de datos: <span class="text-slate-400">emco-accounting</span> | Sesión Protegida
-      </p>
+      </form>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      signOut 
+      getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
-      getFirestore, 
-      doc, 
-      getDoc, 
-      collection, 
-      addDoc, 
-      serverTimestamp 
+      getFirestore, doc, getDoc, addDoc, collection, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -125,116 +159,150 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    // CONEXIÓN DIRECTA A BASE NOMBRADA emco-accounting
     const db = getFirestore(app, "emco-accounting");
 
-    const alertBox = document.getElementById("alert-box");
-    const alertMsg = document.getElementById("alert-msg");
-    const alertIcon = document.getElementById("alert-icon");
+    function showToast(title, desc, isError = false) {
+      const toast = document.getElementById('toast');
+      const icon = document.getElementById('toast-icon');
+      document.getElementById('toast-title').innerText = title;
+      document.getElementById('toast-desc').innerText = desc;
 
-    function showAlert(message, type = "error") {
-      alertBox.classList.remove("hidden", "bg-rose-950/60", "border-rose-800", "text-rose-200", "bg-amber-950/60", "border-amber-800", "text-amber-200");
-      if (type === "error") {
-        alertBox.classList.add("bg-rose-950/60", "border-rose-800", "text-rose-200");
-        alertIcon.className = "ph-bold ph-warning-circle text-rose-400 text-base shrink-0 mt-0.5";
+      if (isError) {
+        icon.className = "ph-bold ph-warning-circle text-rose-400 text-xl shrink-0";
       } else {
-        alertBox.classList.add("bg-amber-950/60", "border-amber-800", "text-amber-200");
-        alertIcon.className = "ph-bold ph-shield-warning text-amber-400 text-base shrink-0 mt-0.5";
+        icon.className = "ph-bold ph-check-circle text-emerald-400 text-xl shrink-0";
       }
-      alertMsg.innerText = message;
+
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4500);
     }
 
-    function clearAlert() {
-      alertBox.classList.add("hidden");
-      alertMsg.innerText = "";
-    }
+    // TOGGLE OJITO VISUAL DE CONTRASEÑA
+    window.togglePasswordVisibility = (inputId, iconId) => {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.className = "ph ph-eye-slash text-base text-indigo-400";
+      } else {
+        input.type = "password";
+        icon.className = "ph ph-eye text-base text-slate-400";
+      }
+    };
 
-    const toggleBtn = document.getElementById("toggle-pwd");
-    const pwdInput = document.getElementById("password");
-    const pwdIcon = document.getElementById("toggle-pwd-icon");
-    toggleBtn.addEventListener("click", () => {
-      const isPassword = pwdInput.type === "password";
-      pwdInput.type = isPassword ? "text" : "password";
-      pwdIcon.className = isPassword ? "ph ph-eye-slash" : "ph ph-eye";
-    });
+    // MODAL DE RECUPERACIÓN DE CLAVE
+    window.abrirModalRecuperacion = () => {
+      const currentEmail = document.getElementById('login-email').value.trim();
+      if (currentEmail) {
+        document.getElementById('recovery-email').value = currentEmail;
+      }
+      document.getElementById('modal-recovery').classList.remove('hidden');
+    };
 
-    const form = document.getElementById("form-login");
-    const btnLogin = document.getElementById("btn-login");
+    window.cerrarModalRecuperacion = () => {
+      document.getElementById('modal-recovery').classList.add('hidden');
+      document.getElementById('form-recovery').reset();
+    };
 
-    form.addEventListener("submit", async (e) => {
+    // ENVÍO DE EMAIL DE RESTABLECIMIENTO DIRECTO CON FIREBASE AUTH
+    document.getElementById('form-recovery').addEventListener('submit', async (e) => {
       e.preventDefault();
-      clearAlert();
+      const email = document.getElementById('recovery-email').value.trim().toLowerCase();
+      const btn = document.getElementById('btn-submit-recovery');
 
-      const email = document.getElementById("email").value.trim().toLowerCase();
-      const password = pwdInput.value;
-
-      btnLogin.disabled = true;
-      btnLogin.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> <span>Verificando perfil...</span>`;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ph ph-spinner animate-spin text-sm"></i> Enviando...`;
 
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        await sendPasswordResetEmail(auth, email);
+        
+        // Log de auditoría
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: email,
+          action: "AUTH_PASSWORD_RESET_REQUESTED",
+          details: { requested_from: "index.html" },
+          user_agent: navigator.userAgent
+        }).catch(() => null);
+
+        cerrarModalRecuperacion();
+        showToast("Correo Enviado", `Revisa la bandeja de ${email} con el enlace para restablecer tu contraseña.`);
+      } catch (err) {
+        let msg = "No se pudo enviar el correo de recuperación.";
+        if (err.code === "auth/user-not-found") msg = "No existe ninguna cuenta registrada con este correo.";
+        if (err.code === "auth/invalid-email") msg = "El correo electrónico no tiene un formato válido.";
+        showToast("Error", msg, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph-bold ph-paper-plane-tilt"></i> <span>Enviar Correo</span>`;
+      }
+    });
+
+    // INICIO DE SESIÓN CON COMPROBACIÓN DE GOBERNANZA RBAC
+    document.getElementById('form-login').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const pass = document.getElementById('login-password').value;
+      const btn = document.getElementById('btn-login');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base"></i> Validando credenciales...`;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
 
-        // Comprobación de credenciales y permisos en staff_users
-        const staffRef = doc(db, "staff_users", user.uid);
-        const staffDoc = await getDoc(staffRef);
-
-        if (!staffDoc.exists()) {
+        // Comprobación de estatus en staff_users
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        
+        if (!staffSnap.exists()) {
           await signOut(auth);
-          showAlert(`El usuario existe en Authentication pero no está registrado en staff_users (UID: ${user.uid.substring(0,8)}...). Inyéctalo desde staff.html.`, "warning");
-          return;
+          throw new Error("Usuario no registrado en la matriz de Staff.");
         }
 
-        const staffData = staffDoc.data();
-
+        const staffData = staffSnap.data();
         if (staffData.status !== "ACTIVE") {
           await signOut(auth);
-          showAlert(`Acceso denegado: El usuario se encuentra en estatus "${staffData.status}".`, "error");
-          return;
+          throw new Error("Tu cuenta se encuentra SUSPENDIDA. Contacta a Gobernanza.");
         }
 
-        // Determinar permisos multi-empresa
+        // Definir empresa inicial permitida
         const allowed = staffData.allowed_companies || ["*"];
-        sessionStorage.setItem("active_user_name", staffData.full_name || user.email);
-        sessionStorage.setItem("active_user_role", staffData.role_id || "GUEST");
-        sessionStorage.setItem("allowed_companies", JSON.stringify(allowed));
-
-        // Asignación de Razón Social inicial según privilegios
-        if (!allowed.includes("*") && allowed.length === 1) {
-          sessionStorage.setItem("active_company_id", allowed[0]);
-        } else if (!sessionStorage.getItem("active_company_id")) {
-          sessionStorage.setItem("active_company_id", "cesar_gonzalez");
+        let defaultTenant = "cesar_gonzalez";
+        if (!allowed.includes("*") && !allowed.includes("cesar_gonzalez")) {
+          defaultTenant = allowed[0] || "hr_employment";
         }
 
-        // Registro de Auditoría de Login Exitoso
-        try {
-          await addDoc(collection(db, "audit_logs"), {
-            timestamp: serverTimestamp(),
-            user_email: email,
-            user_name: staffData.full_name || email,
-            role_id: staffData.role_id || "GUEST",
-            company_id: sessionStorage.getItem("active_company_id"),
-            action: "AUTH_LOGIN_SUCCESS",
-            details: { uid: user.uid, allowed_companies: allowed },
-            user_agent: navigator.userAgent
-          });
-        } catch (logErr) {
-          console.warn("No se pudo escribir log de login:", logErr);
-        }
+        localStorage.setItem("active_company_id", defaultTenant);
+        sessionStorage.setItem("active_company_id", defaultTenant);
 
-        // Redirección directa al Catálogo Maestro
-        window.location.href = "portal_catalogo.html";
+        // Registro de log de auditoría
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: email,
+          user_name: staffData.full_name || staffData.name || "Operador",
+          role_id: staffData.role_id || "GUEST",
+          company_id: defaultTenant,
+          company_name: defaultTenant === "hr_employment" ? "HR Employment" : "Cesar Geovanni Gonzalez Contreras",
+          module_slug: "auth",
+          action: "AUTH_LOGIN_SUCCESS",
+          details: { login_time: new Date().toISOString() },
+          user_agent: navigator.userAgent
+        }).catch(() => null);
 
-      } catch (error) {
-        console.error("Error al iniciar sesión:", error);
-        let errorMsg = "Credenciales incorrectas o problema de comunicación con el servidor.";
-        if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
-          errorMsg = "Correo o contraseña incorrectos.";
+        showToast("Acceso Concedido", `Bienvenido(a) ${staffData.full_name || 'Operador'}.`);
+        setTimeout(() => {
+          window.location.replace(`portal_catalogo.html?empresa=${encodeURIComponent(defaultTenant)}`);
+        }, 600);
+
+      } catch (err) {
+        let msg = err.message;
+        if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
+          msg = "Credenciales incorrectas. Verifica tu correo y contraseña.";
         }
-        showAlert(errorMsg, "error");
-      } finally {
-        btnLogin.disabled = false;
-        btnLogin.innerHTML = `<span>Ingresar al Catálogo Maestro</span> <i class="ph-bold ph-arrow-right"></i>`;
+        showToast("Error de Acceso", msg, true);
+        btn.disabled = false;
+        btn.innerHTML = `<span>Ingresar al Sistema</span> <i class="ph-bold ph-sign-in"></i>`;
       }
     });
   </script>

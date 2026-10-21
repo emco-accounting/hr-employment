@@ -69,9 +69,8 @@
         </button>
 
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
-        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Administración</div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Administración & Auditoría</div>
 
-        <!-- ENLACE DIRECTO AL TABLERO GERENCIAL -->
         <button onclick="abrirTableroGerencialDirecto()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 text-left">
           <i class="ph-bold ph-chart-polar text-lg text-purple-400"></i>
           <span>Tablero Gerencial</span>
@@ -102,7 +101,7 @@
       <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
         <div>
           <h2 class="text-xl font-bold text-white tracking-tight">Diseñador & Gestor de Módulos</h2>
-          <span class="text-xs text-slate-400 font-mono">Diseña en caliente o inyecta módulos externos para César Giovanni y HR Employment</span>
+          <span class="text-xs text-slate-400 font-mono">Crea esquemas dinámicos o inyecta módulos externos para Cesar Geovanni y HR Employment</span>
         </div>
         <div class="flex items-center gap-3">
           <button onclick="abrirModalImportacion()" class="bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-500/10">
@@ -126,12 +125,14 @@
       <header class="bg-slate-900/90 border-b border-slate-800 px-6 py-3 flex justify-between items-center shrink-0">
         <div class="flex items-center gap-3">
           <select id="ide-file-selector" onchange="cargarArchivoEnEditor(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 outline-none focus:border-indigo-500">
-            <optgroup label="Módulos Oficiales del Sistema">
+            <optgroup label="Módulos Oficiales del Núcleo">
               <option value="portal_catalogo.html">portal_catalogo.html (Catálogo Maestro)</option>
-              <option value="cg_cxc.html">cg_cxc.html (CxC Cesar Giovanni)</option>
+              <option value="cg_cxc.html">cg_cxc.html (CxC Cesar Geovanni)</option>
               <option value="hr_cxc.html">hr_cxc.html (CxC HR Employment)</option>
-              <option value="cg_cxp.html">cg_cxp.html (CxP Cesar Giovanni)</option>
+              <option value="cg_cxp.html">cg_cxp.html (CxP Cesar Geovanni)</option>
               <option value="hr_cxp.html">hr_cxp.html (CxP HR Employment)</option>
+              <option value="cg_activos.html">cg_activos.html (Activos Cesar Geovanni)</option>
+              <option value="hr_activos.html">hr_activos.html (Activos HR Employment)</option>
               <option value="modulo_gerencial.html">modulo_gerencial.html (Tablero Financiero)</option>
               <option value="modulo_dinamico.html">modulo_dinamico.html (Visor Universal)</option>
               <option value="staff.html">staff.html (Gobernanza RBAC)</option>
@@ -193,7 +194,7 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Descriptivo</label>
-              <input type="text" id="mod-name" placeholder="Ej: Control de Gastos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <input type="text" id="mod-name" placeholder="Ej: Control de Gastos Operativos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug / Colección en Firestore</label>
@@ -208,7 +209,7 @@
             </div>
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Descripción de Alcance</label>
-              <input type="text" id="mod-desc" placeholder="Control administrativo bilateral..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <input type="text" id="mod-desc" placeholder="Registro administrativo multilateral..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
           </div>
 
@@ -216,7 +217,7 @@
             <div class="flex justify-between items-center">
               <div>
                 <span class="uppercase tracking-wider text-indigo-400 font-mono font-bold block">Campos del Formulario</span>
-                <span class="text-[10px] text-slate-500 font-mono">Partición aislada por company_id en cada registro</span>
+                <span class="text-[10px] text-slate-500 font-mono">Aislamiento por company_id en cada registro</span>
               </div>
               <button type="button" onclick="addField()" class="px-2.5 py-1 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-semibold flex items-center gap-1 transition">
                 <i class="ph-bold ph-plus"></i> Añadir Campo
@@ -266,7 +267,7 @@
               <input type="text" id="import-title" placeholder="Ej: Control de Gastos Avanzado" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
             <div>
-              <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug Clave / Archivo Base</label>
+              <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug Clave / Colección</label>
               <input type="text" id="import-slug" placeholder="mod_control_gastos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
             </div>
           </div>
@@ -286,12 +287,12 @@
             <input type="file" id="import-file-input" accept=".html, .json, .txt" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="leerArchivoExterno(event)">
             <i class="ph-bold ph-upload-simple text-2xl text-indigo-400 group-hover:scale-110 transition-transform inline-block mb-1"></i>
             <p class="text-xs font-semibold text-slate-200" id="import-file-label">Arrastra o selecciona el archivo .html o .json</p>
-            <p class="text-[10px] text-slate-500 font-mono">El contenido se cargará automáticamente en el editor de abajo</p>
+            <p class="text-[10px] text-slate-500 font-mono">El contenido se inyectará automáticamente en el editor de abajo</p>
           </div>
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="block uppercase tracking-wider text-slate-400 font-mono text-[10px]" id="import-payload-label">Código Fuente HTML / JS del Módulo</label>
+              <label class="block uppercase tracking-wider text-slate-400 font-mono text-[10px]" id="import-payload-label">Código Fuente HTML / JS del Módulo Autónomo</label>
               <span class="text-[10px] text-emerald-400 font-mono" id="import-size-badge"></span>
             </div>
             <textarea id="import-payload-textarea" rows="8" required class="code-area w-full p-3 bg-slate-950 border border-slate-800 rounded-xl font-mono text-xs text-slate-200 outline-none focus:border-indigo-500 selection:bg-indigo-500/40" placeholder="Pega aquí el código HTML o el JSON del módulo..."></textarea>
@@ -339,7 +340,6 @@
     let currentFileName = "portal_catalogo.html";
     let currentImportMode = "html";
 
-    // Actualizar enlaces con el parámetro empresa
     function syncNavLinks() {
       const sep = '?';
       const backLink = document.getElementById('link-back-portal');
@@ -352,13 +352,12 @@
       if (staffLink) staffLink.href = `staff.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
 
       if (tenantTag) {
-        tenantTag.innerText = activeCompanyId === 'hr_employment' ? 'HR Employment' : 'César Giovanni';
+        tenantTag.innerText = activeCompanyId === 'hr_employment' ? 'HR Employment' : 'Cesar Geovanni';
       }
     }
 
     syncNavLinks();
 
-    // APERTURA DIRECTA AL TABLERO GERENCIAL
     window.abrirTableroGerencialDirecto = () => {
       window.location.assign(`modulo_gerencial.html?empresa=${encodeURIComponent(activeCompanyId)}`);
     };
@@ -387,7 +386,7 @@
           user_name: currentUserStaff?.full_name || currentUserStaff?.name || (currentUser?.email ? currentUser.email.split('@')[0] : "Operador"),
           role_id: currentUserStaff?.role_id || "SUPERADMIN",
           company_id: activeCompanyId,
-          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Giovanni Gonzalez Contreras",
+          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Geovanni Gonzalez Contreras",
           module_slug: "modulo_creador",
           action: action,
           details: details,
@@ -431,10 +430,10 @@
       toggleModal(true);
       document.getElementById('modal-title').innerText = "Especificación de Nuevo Módulo Bilateral";
       document.getElementById('mod-slug').disabled = false;
-      addField("Concepto del Gasto", "text", true);
+      addField("Concepto Operativo", "text", true);
       addField("Monto Total ($ MXN)", "number", true);
-      addField("Fecha de Comprobante", "date", true);
-      addField("Proveedor / Beneficiario", "text", false);
+      addField("Fecha de Registro", "date", true);
+      addField("Observaciones", "textarea", false);
     };
 
     window.addField = (defLabel = "", defType = "text", defReq = false) => {
@@ -485,13 +484,13 @@
 
           const opt = document.createElement('option');
           opt.value = `dynamic:${mod.slug}`;
-          opt.innerText = `[${mod.is_standalone ? 'Autónomo' : 'Dinámico'}] ${mod.title} (${mod.slug})`;
+          opt.innerText = `[${mod.is_standalone ? 'Autónomo' : 'Esquema'}] ${mod.title} (${mod.slug})`;
           optgroup.appendChild(opt);
 
           const fieldCount = mod.fields ? mod.fields.length : 0;
           const badgeType = mod.is_standalone
             ? `<span class="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">HTML Autónomo</span>`
-            : `<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Bilateral Activo</span>`;
+            : `<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Esquema Bilateral</span>`;
 
           const card = document.createElement('div');
           card.className = "bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-slate-700 transition";
@@ -529,7 +528,7 @@
 
             <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
               <a href="${urlCesar}" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
-                <i class="ph-bold ph-briefcase"></i> César G.
+                <i class="ph-bold ph-briefcase"></i> Cesar G.
               </a>
               <a href="${urlHr}" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition flex items-center justify-center gap-1">
                 <i class="ph-bold ph-buildings"></i> HR Empl.
@@ -541,18 +540,21 @@
       });
     }
 
-    // INYECCIÓN INDESTRUCTIBLE DE PERMISOS EN TODOS LOS ROLES RBAC
+    // INYECCIÓN BLINDADA DE PERMISOS EN LA MATRIZ RBAC PARA TODOS LOS ROLES
     async function inyectarPermisosEnRoles(slug) {
       const readPerm = `${slug}.read`;
       const writePerm = `${slug}.write`;
+      const deletePerm = `${slug}.delete`;
 
-      const rolesAfectados = [
-        { roleId: "CONTADOR", permsToAdd: [readPerm, writePerm] },
-        { roleId: "AUXILIAR", permsToAdd: [readPerm, writePerm] },
-        { roleId: "AUDITOR",  permsToAdd: [readPerm] }
+      const rolesConfig = [
+        { roleId: "SUPERADMIN", perms: ["*"] },
+        { roleId: "CONTADOR", perms: [readPerm, writePerm, deletePerm] },
+        { roleId: "AUXILIAR", perms: [readPerm, writePerm] },
+        { roleId: "AUDITOR",  perms: [readPerm] }
       ];
 
-      for (const item of rolesAfectados) {
+      for (const item of rolesConfig) {
+        if (item.roleId === "SUPERADMIN") continue; // Siempre mantiene comodín total
         const roleRef = doc(db, "system_roles", item.roleId);
         const roleSnap = await getDoc(roleRef);
         let existingPerms = [];
@@ -561,10 +563,8 @@
           existingPerms = roleSnap.data().permissions || [];
         }
 
-        item.permsToAdd.forEach(p => {
-          if (!existingPerms.includes(p)) {
-            existingPerms.push(p);
-          }
+        item.perms.forEach(p => {
+          if (!existingPerms.includes(p)) existingPerms.push(p);
         });
 
         await setDoc(roleRef, {
@@ -573,9 +573,10 @@
         }, { merge: true });
       }
 
-      await logAudit("RBAC_PERMISSIONS_INJECTED", { slug, permissions: [readPerm, writePerm] });
+      await logAudit("RBAC_PERMISSIONS_INJECTED", { slug, permissions: [readPerm, writePerm, deletePerm] });
     }
 
+    // GUARDAR ESQUEMA NO-CODE
     document.getElementById('form-module').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit');
@@ -615,7 +616,7 @@
           fields: fields,
           is_standalone: false,
           tenants_enabled: ["cesar_gonzalez", "hr_employment"],
-          created_by: currentUser?.email,
+          created_by: currentUser?.email || 'admin',
           updated_at: serverTimestamp()
         };
 
@@ -629,7 +630,7 @@
         }
 
         await inyectarPermisosEnRoles(slug);
-        alert(`Módulo "${title}" guardado exitosamente.\nSe han registrado automáticamente los permisos "${slug}.read" y "${slug}.write" en la matriz RBAC de todos los roles.`);
+        alert(`Módulo "${title}" desplegado exitosamente.\nLos permisos "${slug}.read" y "${slug}.write" han sido inyectados en la matriz de Staff.`);
 
         toggleModal(false);
       } catch (err) {
@@ -663,7 +664,7 @@
     };
 
     window.eliminarModulo = async (docId, slug, title) => {
-      if (confirm(`¿Confirmas la eliminación del módulo "${title}" (${slug}) para ambas empresas?`)) {
+      if (confirm(`¿Confirmas la eliminación permanente del módulo "${title}" (${slug}) para ambas empresas?`)) {
         try {
           await deleteDoc(doc(db, "system_modules", docId));
           await logAudit("MODULE_SCHEMA_DELETED", { docId, slug, title });
@@ -728,6 +729,7 @@
       reader.readAsText(file);
     };
 
+    // INYECCIÓN DE MÓDULO EXTERNO (HTML AUTÓNOMO O JSON)
     document.getElementById('form-import').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-import');
@@ -748,14 +750,14 @@
       }
 
       try {
-        let isStandalone = (currentImportMode === 'html');
+        const isStandalone = (currentImportMode === 'html');
         let fieldsArray = [];
 
         if (currentImportMode === 'json') {
           try {
             const parsed = JSON.parse(payloadContent);
             fieldsArray = parsed.fields || parsed;
-            if (!Array.isArray(fieldsArray)) throw new Error("El JSON debe contener un arreglo de campos 'fields'.");
+            if (!Array.isArray(fieldsArray)) throw new Error("El JSON debe contener un arreglo de 'fields'.");
           } catch (jsonErr) {
             throw new Error(`JSON no válido: ${jsonErr.message}`);
           }
@@ -783,7 +785,7 @@
           standalone_file: isStandalone ? `${slug}.html` : null,
           imported: true,
           tenants_enabled: ["cesar_gonzalez", "hr_employment"],
-          created_by: currentUser?.email,
+          created_by: currentUser?.email || 'admin',
           created_at: serverTimestamp(),
           updated_at: serverTimestamp()
         };
@@ -799,7 +801,7 @@
           fileName: isStandalone ? `${slug}.html` : null
         });
 
-        alert(`¡Módulo "${title}" inyectado exitosamente!\n\n• Colección registrada: ${slug}\n• Permisos RBAC auto-configurados: ${slug}.read y ${slug}.write\n• Disponible para César Giovanni y HR Employment.`);
+        alert(`¡Módulo "${title}" inyectado exitosamente!\n\n• Colección registrada: ${slug}\n• Permisos RBAC auto-configurados en Staff.\n• Disponible para Cesar Geovanni y HR Employment.`);
         toggleModalImport(false);
 
       } catch (err) {
@@ -844,12 +846,12 @@
         if (fileKey.startsWith('dynamic:')) {
           const slugKey = fileKey.replace('dynamic:', '');
           const modDef = Object.values(modulesCache).find(m => m.slug === slugKey);
-          textarea.value = `<!-- ESQUEMA DINÁMICO EN PRODUCCIÓN: ${slugKey} -->\n` + JSON.stringify(modDef || {}, null, 2);
+          textarea.value = `<!-- ESQUEMA DINÁMICO: ${slugKey} -->\n` + JSON.stringify(modDef || {}, null, 2);
           statusTag.innerText = "Esquema JSON Dinámico";
           statusTag.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20";
         }
       } catch (err) {
-        textarea.value = `<!-- Editor en blanco para ${fileKey} -->\n<!-- Puedes escribir o pegar tu código y guardarlo directamente en Firestore -->\n<!-- Error al leer local: ${err.message} -->`;
+        textarea.value = `<!-- Editor listo para ${fileKey} -->\n<!-- Error al leer local: ${err.message} -->`;
         statusTag.innerText = "Editor en Blanco";
       }
     };

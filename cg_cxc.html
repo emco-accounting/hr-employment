@@ -91,10 +91,9 @@
       </div>
     </div>
 
-    <!-- PANEL DE CONTROL ERGONÓMICO: FILTROS Y PERIODOS -->
+    <!-- PANEL DE CONTROL ERGONÓMICO -->
     <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 space-y-3 backdrop-blur-sm text-xs">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <!-- Búsqueda y estado -->
         <div class="flex flex-wrap items-center gap-3">
           <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
             <i class="ph ph-magnifying-glass text-slate-400"></i>
@@ -108,7 +107,6 @@
           </select>
         </div>
 
-        <!-- Presets ergonómicos rápidos -->
         <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 font-mono text-[11px]">
           <button onclick="setPresetPeriod('today')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Hoy</button>
           <button onclick="setPresetPeriod('this_week')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Semana</button>
@@ -121,7 +119,6 @@
         <span id="counter-records" class="font-mono text-slate-500 text-xs">0 facturas</span>
       </div>
 
-      <!-- Selector por Año / Mes y Rango Libre -->
       <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-2">
@@ -216,6 +213,8 @@
       <form id="form-invoice" class="space-y-4 text-xs font-medium text-slate-300">
         <input type="hidden" id="uploaded-doc-url" value="">
         <input type="hidden" id="uploaded-doc-name" value="">
+        <!-- Metadatos fiscales capturados -->
+        <input type="hidden" id="raw-fiscal-data" value="">
 
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -335,6 +334,7 @@
 
     let currentUser = null;
     let rawData = [];
+    let currentExtractedFiscal = null;
 
     async function logAudit(action, details = {}, moduleSlug = "cxc") {
       try {
@@ -406,7 +406,6 @@
       });
     }
 
-    // MANIPULACIÓN ERGONÓMICA DE PERIODOS
     window.setPresetPeriod = (preset) => {
       const now = new Date();
       let from = "";
@@ -537,16 +536,22 @@
       let html = '';
       filtered.forEach(i => {
         const isCollected = i.status === "COLLECTED";
+        
+        // RESOLUCIÓN DE COMPROBANTE: Si no hay archivo físico, genera el link directo al acuse fiscal oficial
+        const acuseUrl = `acuse_fiscal.html?id=${i.id}&col=accounts_receivable&empresa=${COMPANY_ID}`;
+        
         const docBtn = i.document_url
           ? `<div class="flex items-center gap-1.5">
                <button onclick="verDocumento('${i.document_url}', 'CxC: ${i.folio}')" class="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 font-mono text-xs border border-emerald-500/20 hover:bg-emerald-500/20 transition">
                  <i class="ph ph-eye"></i> Salva
                </button>
-               <a href="${i.document_url}" target="_blank" rel="noopener noreferrer" class="p-1 text-slate-400 hover:text-white" title="Abrir en pestaña nueva">
-                 <i class="ph ph-arrow-square-out text-sm"></i>
+               <a href="${acuseUrl}" target="_blank" rel="noopener noreferrer" class="p-1 text-slate-400 hover:text-emerald-400" title="Ver Acuse Fiscal SAT / PDF">
+                 <i class="ph ph-file-text text-sm"></i>
                </a>
              </div>`
-          : `<span class="text-slate-600 font-mono text-xs">Sin archivo</span>`;
+          : `<a href="${acuseUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition font-mono text-xs font-semibold">
+               <i class="ph ph-qr-code"></i> Acuse Fiscal
+             </a>`;
 
         const statusBadge = isCollected 
           ? `<div class="flex flex-col">
@@ -571,9 +576,10 @@
             <td class="p-4 font-mono text-white font-semibold">$${Number(i.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
             <td class="p-4">${docBtn}</td>
             <td class="p-4">${statusBadge}</td>
-            <td class="p-4 text-right space-x-2">
+            <td class="p-4 text-right space-x-1.5">
               ${actionBtn}
-              <button onclick="eliminarFactura('${i.id}')" class="text-slate-500 hover:text-rose-400 p-1"><i class="ph ph-trash text-base"></i></button>
+              <a href="${acuseUrl}" target="_blank" class="text-slate-400 hover:text-blue-400 p-1 inline-block" title="Imprimir o Descargar Acuse Contable"><i class="ph ph-printer text-base"></i></a>
+              <button onclick="eliminarFactura('${i.id}')" class="text-slate-500 hover:text-rose-400 p-1 inline-block" title="Eliminar Registro"><i class="ph ph-trash text-base"></i></button>
             </td>
           </tr>
         `;
@@ -585,6 +591,8 @@
       document.getElementById('form-invoice').reset();
       document.getElementById('uploaded-doc-url').value = '';
       document.getElementById('uploaded-doc-name').value = '';
+      document.getElementById('raw-fiscal-data').value = '';
+      currentExtractedFiscal = null;
       document.getElementById('doc-status-msg').innerText = 'Sin archivo seleccionado';
       document.getElementById('invoice-date').value = new Date().toISOString().split('T')[0];
       toggleModalInvoice(true);
@@ -626,7 +634,7 @@
       }
     };
 
-    // PROCESAMIENTO HÍBRIDO BLINDADO (XML UNIVERSAL + PRE-EXTRACCIÓN PDF + GEMINI 3.8/2.5/2.0)
+    // PROCESAMIENTO HÍBRIDO BLINDADO CON EXTRACCIÓN FISCAL SAT
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -638,15 +646,21 @@
       proc.classList.remove('hidden');
 
       try {
-        procTxt.innerText = "Guardando comprobante en Storage...";
-        const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxc/${Date.now()}_${cleanName}`);
-        const upRes = await uploadBytes(sRef, file);
-        const downloadUrl = await getDownloadURL(upRes.ref);
+        procTxt.innerText = "Guardando respaldo en Storage...";
+        try {
+          const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxc/${Date.now()}_${cleanName}`);
+          const upRes = await uploadBytes(sRef, file);
+          const downloadUrl = await getDownloadURL(upRes.ref);
+          document.getElementById('uploaded-doc-url').value = downloadUrl;
+          document.getElementById('uploaded-doc-name').value = file.name;
+        } catch (storageErr) {
+          console.warn("Storage no disponible o omitido, se generará acuse digital nativo:", storageErr);
+          document.getElementById('uploaded-doc-url').value = "";
+          document.getElementById('uploaded-doc-name').value = file.name;
+        }
 
-        document.getElementById('uploaded-doc-url').value = downloadUrl;
-        document.getElementById('uploaded-doc-name').value = file.name;
-        document.getElementById('doc-status-msg').innerText = `Guardado: ${file.name}`;
+        document.getElementById('doc-status-msg').innerText = `Procesando: ${file.name}`;
 
         const isXml = file.name.toLowerCase().endsWith('.xml');
         const isPdf = file.name.toLowerCase().endsWith('.pdf');
@@ -661,7 +675,7 @@
         } else {
           const key = localStorage.getItem('GEMINI_API_KEY');
           if (!key) {
-            alert("Archivo guardado físicamente, pero debes configurar tu Gemini API Key para autocompletar campos.");
+            alert("Para autocompletar cadenas SAT mediante Gemini, debes configurar tu Gemini API Key.");
             toggleApiKeyModal(true);
             return;
           }
@@ -673,7 +687,7 @@
           }
 
           if (textExtracted && textExtracted.trim().length > 60) {
-            procTxt.innerText = "Analizando texto con Gemini...";
+            procTxt.innerText = "Analizando datos fiscales con Gemini...";
             await parseWithGeminiTextCascada(textExtracted, key, procTxt);
           } else {
             procTxt.innerText = "Procesando imagen con Gemini Visión...";
@@ -692,7 +706,7 @@
       }
     };
 
-    // PARSER XML UNIVERSAL COMPATIBLE CFDI 3.3 Y 4.0 SIN IMPORTAR NAMESPACE
+    // PARSER XML UNIVERSAL COMPATIBLE CFDI 3.3 Y 4.0 CON CAPTURA CRIPTOGRÁFICA
     function parseXMLUniversal(xmlString) {
       try {
         const parser = new DOMParser();
@@ -708,34 +722,70 @@
 
         const compNode = getFirstNodeByLocal("Comprobante");
         const timbreNode = getFirstNodeByLocal("TimbreFiscalDigital");
+        const emisorNode = getFirstNodeByLocal("Emisor");
         const receptorNode = getFirstNodeByLocal("Receptor");
 
-        let total = "";
-        let folio = "";
-        let receptor = "";
-        let fecha = "";
+        let total = compNode?.getAttribute("Total") || compNode?.getAttribute("total") || "";
+        let subtotal = compNode?.getAttribute("SubTotal") || compNode?.getAttribute("subTotal") || "";
+        let fecha = compNode?.getAttribute("Fecha") || compNode?.getAttribute("fecha") || "";
+        let serie = compNode?.getAttribute("Serie") || compNode?.getAttribute("serie") || "";
+        let folioComp = compNode?.getAttribute("Folio") || compNode?.getAttribute("folio") || "";
+        let formaPago = compNode?.getAttribute("FormaPago") || compNode?.getAttribute("formaPago") || "99";
+        let metodoPago = compNode?.getAttribute("MetodoPago") || compNode?.getAttribute("metodoPago") || "PPD";
+        let lugarExpedicion = compNode?.getAttribute("LugarExpedicion") || compNode?.getAttribute("lugarExpedicion") || "";
 
-        if (compNode) {
-          total = compNode.getAttribute("Total") || compNode.getAttribute("total") || "";
-          fecha = compNode.getAttribute("Fecha") || compNode.getAttribute("fecha") || "";
-        }
+        let uuid = timbreNode?.getAttribute("UUID") || timbreNode?.getAttribute("uuid") || folioComp;
+        let fechaTimbrado = timbreNode?.getAttribute("FechaTimbrado") || timbreNode?.getAttribute("fechaTimbrado") || fecha;
+        let rfcProvCertif = timbreNode?.getAttribute("RfcProvCertif") || timbreNode?.getAttribute("rfcProvCertif") || "";
+        let noCertificadoSAT = timbreNode?.getAttribute("NoCertificadoSAT") || timbreNode?.getAttribute("noCertificadoSAT") || "";
+        let selloSAT = timbreNode?.getAttribute("SelloSAT") || timbreNode?.getAttribute("selloSAT") || "";
+        let selloCFD = timbreNode?.getAttribute("SelloCFD") || timbreNode?.getAttribute("selloCFD") || compNode?.getAttribute("Sello") || "";
 
-        if (timbreNode) {
-          folio = timbreNode.getAttribute("UUID") || timbreNode.getAttribute("uuid") || "";
-        } else if (compNode) {
-          folio = compNode.getAttribute("Folio") || compNode.getAttribute("folio") || "";
-        }
+        let rfcEmisor = emisorNode?.getAttribute("Rfc") || emisorNode?.getAttribute("rfc") || "";
+        let nombreEmisor = emisorNode?.getAttribute("Nombre") || emisorNode?.getAttribute("nombre") || COMPANY_NAME;
+        let regimenFiscalEmisor = emisorNode?.getAttribute("RegimenFiscal") || emisorNode?.getAttribute("regimenFiscal") || "612";
 
-        if (receptorNode) {
-          receptor = receptorNode.getAttribute("Nombre") || receptorNode.getAttribute("nombre") || receptorNode.getAttribute("Rfc") || receptorNode.getAttribute("rfc") || "";
-        }
+        let rfcReceptor = receptorNode?.getAttribute("Rfc") || receptorNode?.getAttribute("rfc") || "";
+        let nombreReceptor = receptorNode?.getAttribute("Nombre") || receptorNode?.getAttribute("nombre") || rfcReceptor;
+        let usoCFDI = receptorNode?.getAttribute("UsoCFDI") || receptorNode?.getAttribute("usoCFDI") || "G03";
 
         if (total) document.getElementById('invoice-total').value = parseFloat(total).toFixed(2);
-        if (folio) document.getElementById('invoice-folio').value = folio;
-        if (receptor) document.getElementById('invoice-entity').value = receptor;
+        if (uuid) document.getElementById('invoice-folio').value = uuid;
+        if (nombreReceptor) document.getElementById('invoice-entity').value = nombreReceptor;
         if (fecha) document.getElementById('invoice-date').value = fecha.split('T')[0];
 
-        return !!(total || folio || receptor);
+        // Construcción de la cadena original canónica del complemento
+        const versionTFD = timbreNode?.getAttribute("Version") || "1.1";
+        const cadenaOriginal = `||${versionTFD}|${uuid}|${fechaTimbrado}|${rfcProvCertif}|${selloCFD}|${noCertificadoSAT}||`;
+
+        currentExtractedFiscal = {
+          uuid: uuid,
+          folio: folioComp,
+          serie: serie,
+          fecha_emision: fecha,
+          fecha_timbrado: fechaTimbrado,
+          lugar_expedicion: lugarExpedicion,
+          forma_pago: formaPago,
+          metodo_pago: metodoPago,
+          tipo_comprobante: "I - Ingreso",
+          rfc_emisor: rfcEmisor,
+          nombre_emisor: nombreEmisor,
+          regimen_emisor: regimenFiscalEmisor,
+          rfc_receptor: rfcReceptor,
+          nombre_receptor: nombreReceptor,
+          uso_cfdi: usoCFDI,
+          subtotal: parseFloat(subtotal || total),
+          iva: (parseFloat(total) - parseFloat(subtotal || total)) > 0 ? (parseFloat(total) - parseFloat(subtotal || total)) : 0,
+          total: parseFloat(total),
+          no_certificado_sat: noCertificadoSAT,
+          rfc_prov_certif: rfcProvCertif,
+          sello_cfdi: selloCFD,
+          sello_sat: selloSAT,
+          cadena_original: cadenaOriginal
+        };
+
+        document.getElementById('raw-fiscal-data').value = JSON.stringify(currentExtractedFiscal);
+        return !!(total || uuid || nombreReceptor);
       } catch (e) {
         console.warn("Fallo parser XML universal:", e);
         return false;
@@ -770,7 +820,6 @@
       });
     }
 
-    // CASCADA DE MODELOS ACTIVOS GEMINI: 3.8 FLASH -> 2.5 FLASH -> 2.0 PRO
     const ACTIVE_GEMINI_MODELS = [
       { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
       { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
@@ -778,16 +827,25 @@
     ];
 
     async function parseWithGeminiTextCascada(extractedText, apiKey, statusEl) {
-      const prompt = `Analiza el siguiente texto de una FACTURA DE CLIENTE / VENTA o cuenta por cobrar (CxC) emitida por la empresa a su cliente.
-Extrae estrictamente en formato JSON plano:
+      const prompt = `Analiza el texto de esta FACTURA DE VENTA / CLIENTE (CxC) emitida en México.
+Extrae los datos fiscales estrictamente en formato JSON plano:
 {
-  "razon_social": "Nombre o Razón Social del CLIENTE / RECEPTOR de la factura",
-  "folio": "UUID fiscal de 36 caracteres o folio impreso de factura",
+  "razon_social": "Nombre o Razón Social del CLIENTE / RECEPTOR",
+  "rfc_receptor": "RFC del cliente (12 o 13 caracteres)",
+  "rfc_emisor": "RFC de la empresa emisora",
+  "folio": "UUID fiscal de 36 caracteres (ej. 602B1C8B-...)",
   "monto_total": 0.00,
-  "fecha_emision": "YYYY-MM-DD"
+  "subtotal": 0.00,
+  "iva": 0.00,
+  "fecha_emision": "YYYY-MM-DD",
+  "fecha_timbrado": "YYYY-MM-DDTHH:mm:ss",
+  "no_certificado_sat": "Número de 20 dígitos del SAT si existe",
+  "sello_cfdi": "Cadena alfanumérica del Sello Digital CFDI",
+  "sello_sat": "Cadena alfanumérica del Sello del SAT",
+  "cadena_original": "Cadena original del timbre si está visible"
 }
 
-Texto de la factura:
+Texto:
 ${extractedText.substring(0, 10000)}`;
 
       await executeGeminiRequest(apiKey, statusEl, (modelId) => ({
@@ -800,13 +858,22 @@ ${extractedText.substring(0, 10000)}`;
     }
 
     async function parseWithGeminiVisionCascada(base64Data, mimeType, apiKey, statusEl) {
-      const prompt = `Analiza la imagen/documento de la FACTURA DE CLIENTE / VENTA o cuenta por cobrar (CxC) emitida a un cliente.
-Extrae estrictamente en formato JSON plano:
+      const prompt = `Analiza la imagen de la FACTURA DE VENTA / CLIENTE (CxC) emitida en México.
+Extrae los datos fiscales estrictamente en formato JSON plano:
 {
-  "razon_social": "Nombre o Razón Social del CLIENTE o Receptor del servicio/producto",
-  "folio": "UUID fiscal de 36 caracteres o folio impreso de la factura",
+  "razon_social": "Nombre o Razón Social del CLIENTE o Receptor",
+  "rfc_receptor": "RFC del cliente (12 o 13 caracteres)",
+  "rfc_emisor": "RFC del emisor",
+  "folio": "UUID fiscal de 36 caracteres",
   "monto_total": 0.00,
-  "fecha_emision": "YYYY-MM-DD"
+  "subtotal": 0.00,
+  "iva": 0.00,
+  "fecha_emision": "YYYY-MM-DD",
+  "fecha_timbrado": "YYYY-MM-DDTHH:mm:ss",
+  "no_certificado_sat": "Número de 20 dígitos si existe",
+  "sello_cfdi": "Cadena del Sello Digital CFDI",
+  "sello_sat": "Cadena del Sello del SAT",
+  "cadena_original": "Cadena original si está visible"
 }`;
 
       await executeGeminiRequest(apiKey, statusEl, (modelId) => ({
@@ -855,6 +922,25 @@ Extrae estrictamente en formato JSON plano:
           if (p.monto_total) document.getElementById('invoice-total').value = parseFloat(p.monto_total).toFixed(2);
           if (p.fecha_emision) document.getElementById('invoice-date').value = p.fecha_emision;
 
+          currentExtractedFiscal = {
+            uuid: p.folio || "",
+            folio: p.folio || "",
+            fecha_emision: p.fecha_emision || new Date().toISOString().split('T')[0],
+            fecha_timbrado: p.fecha_timbrado || (p.fecha_emision ? `${p.fecha_emision}T12:00:00` : ""),
+            rfc_emisor: p.rfc_emisor || "",
+            nombre_emisor: COMPANY_NAME,
+            rfc_receptor: p.rfc_receptor || "",
+            nombre_receptor: p.razon_social || "",
+            subtotal: parseFloat(p.subtotal || p.monto_total || 0),
+            iva: parseFloat(p.iva || 0),
+            total: parseFloat(p.monto_total || 0),
+            no_certificado_sat: p.no_certificado_sat || "",
+            sello_cfdi: p.sello_cfdi || "",
+            sello_sat: p.sello_sat || "",
+            cadena_original: p.cadena_original || (p.folio ? `||1.1|${p.folio}|${p.fecha_emision}||` : "")
+          };
+
+          document.getElementById('raw-fiscal-data').value = JSON.stringify(currentExtractedFiscal);
           success = true;
           break;
         } catch (err) {
@@ -868,7 +954,7 @@ Extrae estrictamente en formato JSON plano:
       }
     }
 
-    // REGISTRO DE CUENTA POR COBRAR (CxC)
+    // REGISTRO DE CUENTA POR COBRAR CON METADATOS FISCALES HEREDADOS
     document.getElementById('form-invoice').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-invoice');
@@ -879,6 +965,22 @@ Extrae estrictamente en formato JSON plano:
       const folio = document.getElementById('invoice-folio').value.trim();
       const entity = document.getElementById('invoice-entity').value.trim();
       const rawDate = document.getElementById('invoice-date').value;
+
+      let fiscalObj = currentExtractedFiscal;
+      if (!fiscalObj && document.getElementById('raw-fiscal-data').value) {
+        try { fiscalObj = JSON.parse(document.getElementById('raw-fiscal-data').value); } catch(e){}
+      }
+
+      if (!fiscalObj) {
+        fiscalObj = {
+          uuid: folio,
+          folio: folio,
+          fecha_emision: rawDate,
+          nombre_emisor: COMPANY_NAME,
+          nombre_receptor: entity,
+          total: total
+        };
+      }
 
       try {
         const docRef = await addDoc(collection(db, "accounts_receivable"), {
@@ -893,8 +995,9 @@ Extrae estrictamente en formato JSON plano:
           due_date: rawDate,
           collected_date: null,
           status: "PENDING",
-          document_url: document.getElementById('uploaded-doc-url').value,
-          document_filename: document.getElementById('uploaded-doc-name').value,
+          document_url: document.getElementById('uploaded-doc-url').value || "",
+          document_filename: document.getElementById('uploaded-doc-name').value || "",
+          fiscal_metadata: fiscalObj,
           registered_by: currentUser?.email || auth.currentUser?.email || 'admin',
           registered_by_name: currentUser?.name || currentUser?.full_name || 'Operador',
           created_at: serverTimestamp()
@@ -924,7 +1027,6 @@ Extrae estrictamente en formato JSON plano:
       toggleModalCollectDate(true);
     };
 
-    // CONFIRMAR COBRO
     window.confirmarCobroConFecha = async () => {
       const id = document.getElementById('collect-record-id').value;
       const collectDate = document.getElementById('collect-record-date').value;
@@ -976,7 +1078,7 @@ Extrae estrictamente en formato JSON plano:
         "Monto Total MXN": Number(i.total_amount || 0),
         "Saldo Pendiente": Number(i.balance !== undefined ? i.balance : 0),
         "Estado": i.status === 'COLLECTED' ? 'COBRADA' : 'POR COBRAR',
-        "Comprobante": i.document_url ? 'SÍ' : 'NO',
+        "Comprobante": i.document_url ? 'ARCHIVO FÍSICO' : 'ACUSE FISCAL DIGITAL',
         "Registrado Por": i.registered_by || ''
       }));
 

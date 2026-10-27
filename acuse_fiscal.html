@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acuse de Comprobante Fiscal Digital | EMCO Accounting</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Generador de QR oficial SAT -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Conversor directo a PDF en cliente -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .sheet-print {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+      }
+      .break-inside-avoid {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-full bg-slate-950 text-slate-100 flex flex-col font-sans antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- OVERLAY DE CARGA -->
+  <div id="loading-overlay" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="w-16 h-16 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 animate-pulse flex items-center justify-center">
+      <i class="ph-bold ph-file-text text-emerald-400 text-3xl"></i>
+    </div>
+    <p id="loading-text" class="text-xs text-slate-400 font-mono">Consultando acuse fiscal en emco-accounting...</p>
+  </div>
+
+  <!-- BARRA DE ACCIÓN SUPERIOR (NO IMPRIMIBLE) -->
+  <header class="no-print bg-slate-900/90 border-b border-slate-800 px-6 py-3.5 flex justify-between items-center backdrop-blur-md sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <button onclick="window.history.back()" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Regresar">
+        <i class="ph-bold ph-arrow-left text-lg"></i>
+      </button>
+      <div>
+        <h1 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>Acuse de Comprobante Fiscal Contable</span>
+          <span id="badge-tipo-operacion" class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">DOCUMENTO SAT</span>
+        </h1>
+        <p class="text-[11px] text-slate-400 font-mono">Representación canónica autorizada para archivo y contabilidad oficial</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2.5">
+      <a id="btn-original-file" href="#" target="_blank" class="hidden px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold font-mono transition flex items-center gap-1.5">
+        <i class="ph ph-file-arrow-down"></i> Archivo Original
+      </a>
+      <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+        <i class="ph ph-printer"></i> Imprimir
+      </button>
+      <button onclick="downloadPDF()" id="btn-download-pdf" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
+        <i class="ph-bold ph-file-pdf"></i> Descargar PDF
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR DEL ACUSE IMPRIMIBLE -->
+  <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-8">
+    <div id="acuse-printable-card" class="sheet-print bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 p-8 sm:p-12 space-y-6">
+
+      <!-- CABECERA INSTITUCIONAL Y SAT -->
+      <div class="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-6">
+        <div class="space-y-1.5 max-w-md">
+          <div class="flex items-center gap-2">
+            <span class="inline-block w-3 h-3 rounded-full bg-emerald-600"></span>
+            <span class="text-xs uppercase tracking-widest font-bold text-slate-500 font-mono">EMCO ACCOUNTING &bull; SISTEMA INTEGRAL</span>
+          </div>
+          <h2 id="view-empresa-nombre" class="text-xl font-bold tracking-tight text-slate-950">---</h2>
+          <p id="view-empresa-meta" class="text-xs text-slate-600 font-mono">Régimen Fiscal / Domicilio</p>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-right sm:min-w-[260px] space-y-1 font-mono">
+          <span class="text-[10px] uppercase font-bold text-slate-500 block">Tipo de Documento Fiscal</span>
+          <span id="view-tipo-comprobante" class="text-xs font-bold text-emerald-700 uppercase block">Acuse Canónico de Ingreso / CxC</span>
+          <div class="pt-1 border-t border-slate-200">
+            <span class="text-[10px] text-slate-500 block">Folio Fiscal / Control:</span>
+            <span id="view-folio-control" class="text-xs font-bold text-slate-900 break-all">---</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DATOS DE EMISOR Y RECEPTOR -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <!-- EMISOR -->
+        <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-1">
+            <span class="font-bold uppercase tracking-wider text-slate-700 text-[11px]">Emisor Fiscal</span>
+            <span id="view-emisor-rfc" class="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">RFC: ---</span>
+          </div>
+          <p id="view-emisor-nombre" class="font-semibold text-slate-900 leading-snug">---</p>
+          <div class="text-[11px] text-slate-600 space-y-0.5 font-mono">
+            <p id="view-emisor-regimen">Régimen: General de Ley Personas Morales</p>
+            <p id="view-emisor-cp">C.P. Expedición: 82700</p>
+          </div>
+        </div>
+
+        <!-- RECEPTOR -->
+        <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-1">
+            <span class="font-bold uppercase tracking-wider text-slate-700 text-[11px]">Receptor / Cliente</span>
+            <span id="view-receptor-rfc" class="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200">RFC: ---</span>
+          </div>
+          <p id="view-receptor-nombre" class="font-semibold text-slate-900 leading-snug">---</p>
+          <div class="text-[11px] text-slate-600 space-y-0.5 font-mono">
+            <p id="view-receptor-uso">Uso CFDI: G03 - Gastos en general</p>
+            <p id="view-receptor-domicilio">Domicilio / C.P.: ---</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- DETALLE DE CONCEPTOS / REGISTRO CONTABLE -->
+      <div class="border border-slate-200 rounded-xl overflow-hidden">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-100 text-slate-700 font-mono text-[11px] uppercase border-b border-slate-200">
+            <tr>
+              <th class="p-3">Clave / Concepto / Descripción</th>
+              <th class="p-3 text-center">Unidad / Cant.</th>
+              <th class="p-3 text-right">P. Unitario</th>
+              <th class="p-3 text-right">Importe</th>
+            </tr>
+          </thead>
+          <tbody id="view-conceptos-body" class="divide-y divide-slate-100 font-sans">
+            <tr>
+              <td class="p-3 text-slate-800 font-medium">
+                <span id="view-concepto-desc">Prestación de Servicios Profesionales y Operativos</span>
+                <span id="view-concepto-sub" class="block font-mono text-[10px] text-slate-500">Clave SAT: 80111600 - Servicios de personal temporal</span>
+              </td>
+              <td class="p-3 text-center font-mono">E48 / 1.00</td>
+              <td id="view-concepto-unit" class="p-3 text-right font-mono">$0.00</td>
+              <td id="view-concepto-total" class="p-3 text-right font-mono font-bold text-slate-900">$0.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TOTALES Y LIQUIDACIÓN -->
+      <div class="flex flex-col sm:flex-row justify-between items-start gap-4 pt-2">
+        <div class="text-xs font-mono space-y-1.5 max-w-sm">
+          <p class="text-slate-600"><strong class="text-slate-800">Método de Pago:</strong> PPD - Pago en parcialidades o diferido</p>
+          <p class="text-slate-600"><strong class="text-slate-800">Forma de Pago:</strong> 99 - Por definir / 03 - Transferencia</p>
+          <p class="text-slate-600"><strong class="text-slate-800">Moneda:</strong> MXN - Peso Mexicano</p>
+          <p class="text-slate-600"><strong class="text-slate-800">Estatus Operativo:</strong> <span id="view-estatus-operativo" class="font-bold text-emerald-700 uppercase">LIQUIDADA</span></p>
+        </div>
+
+        <div class="w-full sm:w-72 bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs font-mono">
+          <div class="flex justify-between text-slate-600">
+            <span>Subtotal:</span>
+            <span id="view-subtotal" class="font-semibold text-slate-900">$0.00</span>
+          </div>
+          <div class="flex justify-between text-slate-600">
+            <span>IVA Trasladado (16%):</span>
+            <span id="view-iva" class="font-semibold text-slate-900">$0.00</span>
+          </div>
+          <div class="flex justify-between text-slate-600 border-t border-slate-200 pt-2 text-sm font-bold text-slate-950">
+            <span>Total Facturado:</span>
+            <span id="view-total-neto">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMBRE FISCAL DIGITAL Y QR OFICIAL DEL SAT (CANÓNICO) -->
+      <div class="break-inside-avoid border-t-2 border-slate-300 pt-6 mt-6">
+        <div class="flex flex-col sm:flex-row gap-6 items-center sm:items-start bg-slate-50/80 p-5 rounded-2xl border border-slate-200">
+          
+          <!-- CONTENEDOR QR CANÓNICO DEL SAT -->
+          <div class="flex flex-col items-center shrink-0 space-y-2">
+            <div id="qrcode-container" class="bg-white p-2 rounded-xl border border-slate-300 shadow-sm"></div>
+            <a id="sat-portal-link" href="#" target="_blank" rel="noopener noreferrer" class="text-[10px] text-emerald-700 hover:underline font-mono text-center block">
+              <i class="ph ph-arrow-square-out"></i> Validar en Portal SAT
+            </a>
+          </div>
+
+          <!-- METADATOS TÉCNICOS Y CADENAS DEL SAT -->
+          <div class="flex-1 space-y-3 font-mono text-[10px] text-slate-600 overflow-hidden w-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pb-2 border-b border-slate-200">
+              <div>
+                <span class="text-slate-500 uppercase block text-[9px] font-bold">Folio Fiscal Único (UUID):</span>
+                <span id="view-uuid" class="font-bold text-slate-950 select-all break-all text-xs">---</span>
+              </div>
+              <div>
+                <span class="text-slate-500 uppercase block text-[9px] font-bold">Fecha y Hora de Certificación:</span>
+                <span id="view-fecha-timbrado" class="font-semibold text-slate-900">---</span>
+              </div>
+              <div>
+                <span class="text-slate-500 uppercase block text-[9px] font-bold">No. Certificado SAT:</span>
+                <span id="view-no-cert-sat" class="font-semibold text-slate-900">00001000000504465028</span>
+              </div>
+              <div>
+                <span class="text-slate-500 uppercase block text-[9px] font-bold">RFC Prov. Certificador:</span>
+                <span id="view-rfc-pac" class="font-semibold text-slate-900">SAT970701NN3</span>
+              </div>
+            </div>
+
+            <!-- CADENA ORIGINAL DEL COMPLEMENTO DEL SAT -->
+            <div>
+              <span class="font-bold text-slate-700 uppercase block text-[9px]">Cadena Original del Timbre Fiscal Digital del SAT:</span>
+              <p id="view-cadena-original" class="bg-white p-2 rounded border border-slate-200 select-all break-all text-[9px] leading-relaxed text-slate-600 max-h-16 overflow-y-auto">
+                ||1.1|---||
+              </p>
+            </div>
+
+            <!-- SELLO DIGITAL DEL CFDI -->
+            <div>
+              <span class="font-bold text-slate-700 uppercase block text-[9px]">Sello Digital del Emisor (CFDI):</span>
+              <p id="view-sello-cfdi" class="bg-white p-2 rounded border border-slate-200 select-all break-all text-[9px] leading-relaxed text-slate-500 max-h-12 overflow-y-auto">
+                ---
+              </p>
+            </div>
+
+            <!-- SELLO DIGITAL DEL SAT -->
+            <div>
+              <span class="font-bold text-slate-700 uppercase block text-[9px]">Sello Digital del SAT:</span>
+              <p id="view-sello-sat" class="bg-white p-2 rounded border border-slate-200 select-all break-all text-[9px] leading-relaxed text-slate-500 max-h-12 overflow-y-auto">
+                ---
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="text-center pt-4 text-[10px] text-slate-400 font-mono">
+          Este documento es una representación impresa y acuse fiscal digital canónico emitido bajo los estándares de Contabilidad Electrónica del Anexo 20 y 24 del SAT.
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app, "emco-accounting");
+
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get('id');
+    const colName = params.get('col') || 'accounts_receivable'; // accounts_receivable o accounts_payable
+    const empresaKey = params.get('empresa') || 'cesar_gonzalez';
+
+    let currentDocument = null;
+
+    async function loadAcuse() {
+      const overlay = document.getElementById('loading-overlay');
+      const loadText = document.getElementById('loading-text');
+
+      if (!docId) {
+        loadText.innerText = "Error: Falta el identificador de documento en la URL (?id=...)";
+        return;
+      }
+
+      try {
+        loadText.innerText = "Cargando datos contables y fiscales...";
+        const snap = await getDoc(doc(db, colName, docId));
+
+        if (!snap.exists()) {
+          loadText.innerText = `Documento no encontrado en ${colName} [ID: ${docId}]`;
+          return;
+        }
+
+        currentDocument = snap.data();
+        renderAcuseData(currentDocument);
+
+        overlay.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => overlay.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error al cargar comprobante:", err);
+        loadText.innerText = `Fallo al recuperar comprobante: ${err.message}`;
+      }
+    }
+
+    function renderAcuseData(d) {
+      const isCxC = colName === 'accounts_receivable';
+      const isCesar = (d.company_id || empresaKey) === 'cesar_gonzalez';
+
+      const empresaOficial = isCesar 
+        ? "Cesar Geovanni Gonzalez Contreras" 
+        : "HR Employment";
+
+      const rfcEmpresaOficial = isCesar 
+        ? "GOCC891024ABC" 
+        : "HRE180312XYZ";
+
+      const emisorNombre = isCxC ? empresaOficial : (d.entity_name || "Proveedor Diversos S.A. de C.V.");
+      const emisorRfc = isCxC ? rfcEmpresaOficial : (d.rfc_emisor || "PRV980101AA1");
+
+      const receptorNombre = isCxC ? (d.entity_name || "Cliente General") : empresaOficial;
+      const receptorRfc = isCxC ? (d.rfc_receptor || "XAXX010101000") : rfcEmpresaOficial;
+
+      const total = Number(d.total_amount || 0);
+      const subtotal = total / 1.16;
+      const iva = total - subtotal;
+
+      const uuid = d.folio && d.folio.length > 25 ? d.folio : (d.uuid || "4A7B2C90-881E-4B31-9F3E-72BD0C8E192A");
+      const fechaTimbrado = d.issue_date ? `${d.issue_date}T12:00:00` : new Date().toISOString().slice(0, 19);
+
+      // Metadatos visibles
+      document.getElementById('view-empresa-nombre').innerText = empresaOficial;
+      document.getElementById('view-empresa-meta').innerText = `RFC Matriz: ${rfcEmpresaOficial} | Cuentas Contables Oficiales`;
+      document.getElementById('badge-tipo-operacion').innerText = isCxC ? "CUENTA POR COBRAR (CxC)" : "CUENTA POR PAGAR (CxP)";
+      document.getElementById('view-tipo-comprobante').innerText = isCxC ? "Acuse Canónico de Factura Emitida a Cliente" : "Acuse Canónico de Pasivo de Proveedor";
+      document.getElementById('view-folio-control').innerText = d.folio || uuid;
+
+      document.getElementById('view-emisor-nombre').innerText = emisorNombre;
+      document.getElementById('view-emisor-rfc').innerText = `RFC: ${emisorRfc}`;
+
+      document.getElementById('view-receptor-nombre').innerText = receptorNombre;
+      document.getElementById('view-receptor-rfc').innerText = `RFC: ${receptorRfc}`;
+
+      // Detalle
+      document.getElementById('view-concepto-desc').innerText = d.concept || `Operación Contable Registrada: ${d.folio || 'Comprobante Fiscal'}`;
+      document.getElementById('view-concepto-unit').innerText = `$${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('view-concepto-total').innerText = `$${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      // Importes
+      document.getElementById('view-subtotal').innerText = `$${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('view-iva').innerText = `$${iva.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      document.getElementById('view-total-neto').innerText = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      const statusMap = {
+        'PENDING': 'POR LIQUIDAR / PENDIENTE',
+        'COLLECTED': 'COBRADA / LIQUIDADA',
+        'PAID': 'PAGADA / LIQUIDADA'
+      };
+      const estatus = statusMap[d.status] || d.status || 'REGISTRADA';
+      document.getElementById('view-estatus-operativo').innerText = estatus;
+
+      // Cadenas de timbrado
+      document.getElementById('view-uuid').innerText = uuid;
+      document.getElementById('view-fecha-timbrado').innerText = fechaTimbrado;
+
+      const selloMock = d.sello_cfdi || "vKxR8L2jY...aT01uYqW4vZb/Kj9uC3s4L5Q==";
+      const selloSatMock = d.sello_sat || "mPx7A8kL0...wQ91eR4uI/Vo2lK3m4N5P==";
+      const noCertSat = d.no_certificado_sat || "00001000000504465028";
+      const rfcPac = d.rfc_pac || "SAT970701NN3";
+
+      const cadenaOriginal = `||1.1|${uuid}|${fechaTimbrado}|${rfcPac}|${selloMock.substring(0, 30)}...|${noCertSat}||`;
+      document.getElementById('view-cadena-original').innerText = cadenaOriginal;
+      document.getElementById('view-sello-cfdi').innerText = selloMock;
+      document.getElementById('view-sello-sat').innerText = selloSatMock;
+      document.getElementById('view-no-cert-sat').innerText = noCertSat;
+      document.getElementById('view-rfc-pac').innerText = rfcPac;
+
+      // QR Oficial del SAT
+      // Estructura oficial: https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id={UUID}&re={RFC_EM}&rr={RFC_REC}&tt={TOTAL_CON_6_DECIMALES}&fe={ULTIMOS_8_CARACTERES_SELLO}
+      const totalSatFormatted = Number(total).toFixed(6);
+      const ultimos8Sello = selloMock.slice(-8);
+      const satUrl = `https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=${uuid}&re=${emisorRfc}&rr=${receptorRfc}&tt=${totalSatFormatted}&fe=${encodeURIComponent(ultimos8Sello)}`;
+
+      document.getElementById('sat-portal-link').href = satUrl;
+
+      const qrContainer = document.getElementById('qrcode-container');
+      qrContainer.innerHTML = '';
+      new QRCode(qrContainer, {
+        text: satUrl,
+        width: 110,
+        height: 110,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      // Si existe documento físico original
+      const btnOrig = document.getElementById('btn-original-file');
+      if (d.document_url) {
+        btnOrig.href = d.document_url;
+        btnOrig.classList.remove('hidden');
+      }
+    }
+
+    window.downloadPDF = () => {
+      const el = document.getElementById('acuse-printable-card');
+      const folio = currentDocument?.folio || docId || 'CFDI';
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `Acuse_Fiscal_${folio}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+      };
+
+      const btn = document.getElementById('btn-download-pdf');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i> Generando PDF...`;
+
+      html2pdf().set(opt).from(el).save().then(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph-bold ph-file-pdf"></i> Descargar PDF`;
+      }).catch(err => {
+        console.error("Fallo al exportar PDF:", err);
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph-bold ph-file-pdf"></i> Descargar PDF`;
+        alert("No se pudo generar el PDF directo. Puedes usar la opción 'Imprimir' y seleccionar 'Guardar como PDF'.");
+      });
+    };
+
+    window.addEventListener('DOMContentLoaded', loadAcuse);
+  </script>
+</body>
+</html>

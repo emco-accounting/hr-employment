@@ -312,7 +312,6 @@
       getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, 
       query, where, orderBy, onSnapshot, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
@@ -327,7 +326,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app, "emco-accounting");
-    const storage = getStorage(app);
 
     const COMPANY_ID = "hr_employment";
     const COMPANY_NAME = "HR Employment";
@@ -536,8 +534,6 @@
       let html = '';
       filtered.forEach(i => {
         const isCollected = i.status === "COLLECTED";
-        
-        // RESOLUCIÓN DE COMPROBANTE: Si no hay archivo físico, genera el link directo al acuse fiscal oficial
         const acuseUrl = `acuse_fiscal.html?id=${i.id}&col=accounts_receivable&empresa=${COMPANY_ID}`;
         
         const docBtn = i.document_url
@@ -634,7 +630,16 @@
       }
     };
 
-    // PROCESAMIENTO HÍBRIDO BLINDADO CON EXTRACCIÓN FISCAL SAT
+    // ========================================================
+    // MOTOR FISCAL BLINDADO CXC (CLIENTES) - SIN BLOQUEO CORS
+    // ========================================================
+
+    const ACTIVE_GEMINI_MODELS = [
+      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
+      { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+      { id: "gemini-2.0-pro",   label: "Gemini 2.0 Pro" }
+    ];
+
     window.handleFileUpload = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
@@ -646,115 +651,127 @@
       proc.classList.remove('hidden');
 
       try {
-        procTxt.innerText = "Guardando respaldo en Storage...";
-        try {
-          const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const sRef = ref(storage, `comprobantes/${COMPANY_ID}/cxc/${Date.now()}_${cleanName}`);
-          const upRes = await uploadBytes(sRef, file);
-          const downloadUrl = await getDownloadURL(upRes.ref);
-          document.getElementById('uploaded-doc-url').value = downloadUrl;
-          document.getElementById('uploaded-doc-name').value = file.name;
-        } catch (storageErr) {
-          console.warn("Storage no disponible u omitido, se generará acuse digital nativo:", storageErr);
-          document.getElementById('uploaded-doc-url').value = "";
-          document.getElementById('uploaded-doc-name').value = file.name;
-        }
-
+        // Almacenamiento local del nombre para generar acuse digital nativo
+        document.getElementById('uploaded-doc-name').value = file.name;
+        document.getElementById('uploaded-doc-url').value = ""; 
         document.getElementById('doc-status-msg').innerText = `Procesando: ${file.name}`;
 
         const isXml = file.name.toLowerCase().endsWith('.xml');
         const isPdf = file.name.toLowerCase().endsWith('.pdf');
 
         if (isXml) {
-          procTxt.innerText = "Extrayendo CFDI XML (3.3 / 4.0)...";
+          procTxt.innerText = "Extrayendo CFDI XML nativo...";
           const text = await file.text();
-          const parsedOk = parseXMLUniversal(text);
+          const parsedOk = parseXMLUniversalCxC(text);
+
+          // Si el parser local falla o el XML está dañado, Gemini entra en cascada
           if (!parsedOk) {
-            alert("No se pudieron extraer todos los campos del XML. Revisa la integridad del comprobante.");
+            procTxt.innerText = "Estructura no estándar. Analizando con Gemini...";
+            const key = localStorage.getItem('GEMINI_API_KEY');
+            if (key) {
+              await parseWithGeminiTextCascadaCxC(text, key, procTxt);
+            } else {
+              alert("No se pudieron extraer datos completos del XML. Para procesarlo con IA, ingresa tu Gemini API Key.");
+            }
           }
         } else {
+          // PDF o Imagen
           const key = localStorage.getItem('GEMINI_API_KEY');
           if (!key) {
-            alert("Para autocompletar cadenas SAT mediante Gemini, debes configurar tu Gemini API Key.");
+            alert("Para autocompletar comprobantes mediante Gemini, ingresa tu Gemini API Key en el botón superior.");
             toggleApiKeyModal(true);
             return;
           }
 
           let textExtracted = "";
           if (isPdf && window.pdfjsLib) {
-            procTxt.innerText = "Extrayendo texto del PDF...";
+            procTxt.innerText = "Extrayendo capas de texto del PDF...";
             textExtracted = await extractPdfText(file);
           }
 
           if (textExtracted && textExtracted.trim().length > 60) {
-            procTxt.innerText = "Analizando datos fiscales con Gemini...";
-            await parseWithGeminiTextCascada(textExtracted, key, procTxt);
+            procTxt.innerText = "Analizando factura de cliente con Gemini...";
+            await parseWithGeminiTextCascadaCxC(textExtracted, key, procTxt);
           } else {
-            procTxt.innerText = "Procesando imagen con Gemini Visión...";
+            procTxt.innerText = "Documento escaneado. Procesando con Gemini Visión...";
             const b64 = await fileToBase64(file);
-            await parseWithGeminiVisionCascada(b64, file.type || 'application/pdf', key, procTxt);
+            await parseWithGeminiVisionCascadaCxC(b64, file.type || 'application/pdf', key, procTxt);
           }
         }
       } catch (err) {
-        console.error("Error en procesamiento:", err);
+        console.error("Error en procesamiento CxC:", err);
         alert("Aviso: " + err.message);
       } finally {
         setTimeout(() => {
           idle.classList.remove('hidden');
           proc.classList.add('hidden');
-        }, 800);
+        }, 600);
       }
     };
 
-    // PARSER XML UNIVERSAL COMPATIBLE CFDI 3.3 Y 4.0 CON CAPTURA CRIPTOGRÁFICA
-    function parseXMLUniversal(xmlString) {
+    function parseXMLUniversalCxC(xmlString) {
       try {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+        if (xmlDoc.getElementsByTagName("parsererror").length > 0) return false;
 
-        const getFirstNodeByLocal = (tag) => {
+        const findNode = (tag) => {
           const all = xmlDoc.getElementsByTagName("*");
+          const target = tag.toLowerCase();
           for (let i = 0; i < all.length; i++) {
-            if (all[i].localName === tag) return all[i];
+            if (all[i].localName && all[i].localName.toLowerCase() === target) return all[i];
           }
           return null;
         };
 
-        const compNode = getFirstNodeByLocal("Comprobante");
-        const timbreNode = getFirstNodeByLocal("TimbreFiscalDigital");
-        const emisorNode = getFirstNodeByLocal("Emisor");
-        const receptorNode = getFirstNodeByLocal("Receptor");
+        const getAttr = (node, ...names) => {
+          if (!node) return "";
+          for (const n of names) {
+            const v = node.getAttribute(n) || node.getAttribute(n.toLowerCase());
+            if (v) return v;
+          }
+          return "";
+        };
 
-        let total = compNode?.getAttribute("Total") || compNode?.getAttribute("total") || "";
-        let subtotal = compNode?.getAttribute("SubTotal") || compNode?.getAttribute("subTotal") || "";
-        let fecha = compNode?.getAttribute("Fecha") || compNode?.getAttribute("fecha") || "";
-        let serie = compNode?.getAttribute("Serie") || compNode?.getAttribute("serie") || "";
-        let folioComp = compNode?.getAttribute("Folio") || compNode?.getAttribute("folio") || "";
-        let formaPago = compNode?.getAttribute("FormaPago") || compNode?.getAttribute("formaPago") || "99";
-        let metodoPago = compNode?.getAttribute("MetodoPago") || compNode?.getAttribute("metodoPago") || "PPD";
-        let lugarExpedicion = compNode?.getAttribute("LugarExpedicion") || compNode?.getAttribute("lugarExpedicion") || "";
+        const compNode = findNode("Comprobante");
+        const timbreNode = findNode("TimbreFiscalDigital");
+        const emisorNode = findNode("Emisor");
+        const receptorNode = findNode("Receptor");
 
-        let uuid = timbreNode?.getAttribute("UUID") || timbreNode?.getAttribute("uuid") || folioComp;
-        let fechaTimbrado = timbreNode?.getAttribute("FechaTimbrado") || timbreNode?.getAttribute("fechaTimbrado") || fecha;
-        let rfcProvCertif = timbreNode?.getAttribute("RfcProvCertif") || timbreNode?.getAttribute("rfcProvCertif") || "";
-        let noCertificadoSAT = timbreNode?.getAttribute("NoCertificadoSAT") || timbreNode?.getAttribute("noCertificadoSAT") || "";
-        let selloSAT = timbreNode?.getAttribute("SelloSAT") || timbreNode?.getAttribute("selloSAT") || "";
-        let selloCFD = timbreNode?.getAttribute("SelloCFD") || timbreNode?.getAttribute("selloCFD") || compNode?.getAttribute("Sello") || "";
+        let total = getAttr(compNode, "Total", "total");
+        let subtotal = getAttr(compNode, "SubTotal", "subtotal", "subTotal");
+        let fecha = getAttr(compNode, "Fecha", "fecha");
+        let serie = getAttr(compNode, "Serie", "serie");
+        let folioComp = getAttr(compNode, "Folio", "folio");
+        let formaPago = getAttr(compNode, "FormaPago", "formapago") || "99";
+        let metodoPago = getAttr(compNode, "MetodoPago", "metodopago") || "PPD";
+        let lugarExpedicion = getAttr(compNode, "LugarExpedicion", "lugarexpedicion") || "";
 
-        let rfcEmisor = emisorNode?.getAttribute("Rfc") || emisorNode?.getAttribute("rfc") || "";
-        let nombreEmisor = emisorNode?.getAttribute("Nombre") || emisorNode?.getAttribute("nombre") || COMPANY_NAME;
-        let regimenFiscalEmisor = emisorNode?.getAttribute("RegimenFiscal") || emisorNode?.getAttribute("regimenFiscal") || "601";
+        let uuid = getAttr(timbreNode, "UUID", "uuid") || folioComp;
+        let fechaTimbrado = getAttr(timbreNode, "FechaTimbrado", "fechatimbrado") || fecha;
+        let rfcProvCertif = getAttr(timbreNode, "RfcProvCertif", "rfcprovcertif");
+        let noCertificadoSAT = getAttr(timbreNode, "NoCertificadoSAT", "nocertificadosat");
+        let selloSAT = getAttr(timbreNode, "SelloSAT", "sellosat");
+        let selloCFD = getAttr(timbreNode, "SelloCFD", "sellocfd") || getAttr(compNode, "Sello", "sello");
 
-        let rfcReceptor = receptorNode?.getAttribute("Rfc") || receptorNode?.getAttribute("rfc") || "";
-        let nombreReceptor = receptorNode?.getAttribute("Nombre") || receptorNode?.getAttribute("nombre") || rfcReceptor;
-        let usoCFDI = receptorNode?.getAttribute("UsoCFDI") || receptorNode?.getAttribute("usoCFDI") || "G03";
+        // En CxC: El emisor somos nosotros
+        let rfcEmisor = getAttr(emisorNode, "Rfc", "rfc");
+        let nombreEmisor = getAttr(emisorNode, "Nombre", "nombre") || COMPANY_NAME;
+        let regimenFiscalEmisor = getAttr(emisorNode, "RegimenFiscal", "regimenfiscal") || "601";
+
+        // En CxC: El receptor es el Cliente
+        let rfcReceptor = getAttr(receptorNode, "Rfc", "rfc");
+        let nombreReceptor = getAttr(receptorNode, "Nombre", "nombre") || rfcReceptor;
+        let usoCFDI = getAttr(receptorNode, "UsoCFDI", "usocfdi") || "G03";
+
+        if (!total && !uuid && !nombreReceptor) return false;
 
         if (total) document.getElementById('invoice-total').value = parseFloat(total).toFixed(2);
         if (uuid) document.getElementById('invoice-folio').value = uuid;
         if (nombreReceptor) document.getElementById('invoice-entity').value = nombreReceptor;
         if (fecha) document.getElementById('invoice-date').value = fecha.split('T')[0];
 
-        const versionTFD = timbreNode?.getAttribute("Version") || "1.1";
+        const versionTFD = getAttr(timbreNode, "Version", "version") || "1.1";
         const cadenaOriginal = `||${versionTFD}|${uuid}|${fechaTimbrado}|${rfcProvCertif}|${selloCFD}|${noCertificadoSAT}||`;
 
         currentExtractedFiscal = {
@@ -773,9 +790,9 @@
           rfc_receptor: rfcReceptor,
           nombre_receptor: nombreReceptor,
           uso_cfdi: usoCFDI,
-          subtotal: parseFloat(subtotal || total),
-          iva: (parseFloat(total) - parseFloat(subtotal || total)) > 0 ? (parseFloat(total) - parseFloat(subtotal || total)) : 0,
-          total: parseFloat(total),
+          subtotal: parseFloat(subtotal || total || 0),
+          iva: (parseFloat(total || 0) - parseFloat(subtotal || total || 0)) > 0 ? (parseFloat(total) - parseFloat(subtotal)) : 0,
+          total: parseFloat(total || 0),
           no_certificado_sat: noCertificadoSAT,
           rfc_prov_certif: rfcProvCertif,
           sello_cfdi: selloCFD,
@@ -784,9 +801,9 @@
         };
 
         document.getElementById('raw-fiscal-data').value = JSON.stringify(currentExtractedFiscal);
-        return !!(total || uuid || nombreReceptor);
+        return true;
       } catch (e) {
-        console.warn("Fallo parser XML universal:", e);
+        console.warn("Fallo parser XML CxC:", e);
         return false;
       }
     }
@@ -800,12 +817,10 @@
         for (let i = 1; i <= maxPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          const strings = content.items.map(item => item.str);
-          fullText += strings.join(" ") + "\n";
+          fullText += content.items.map(item => item.str).join(" ") + "\n";
         }
         return fullText;
       } catch (e) {
-        console.warn("PDF no contiene texto seleccionable:", e);
         return "";
       }
     }
@@ -819,35 +834,29 @@
       });
     }
 
-    const ACTIVE_GEMINI_MODELS = [
-      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
-      { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-      { id: "gemini-2.0-pro", label: "Gemini 2.0 Pro" }
-    ];
-
-    async function parseWithGeminiTextCascada(extractedText, apiKey, statusEl) {
-      const prompt = `Analiza el texto de esta FACTURA DE CLIENTE / VENTA (CxC) de HR Employment en México.
-Extrae los datos fiscales estrictamente en formato JSON plano:
+    async function parseWithGeminiTextCascadaCxC(extractedText, apiKey, statusEl) {
+      const prompt = `Analiza el contenido de esta FACTURA DE CLIENTE (Cuentas por Cobrar - CxC) emitida en México.
+Extrae los datos fiscales obligatoriamente en JSON plano:
 {
-  "razon_social": "Nombre o Razón Social del CLIENTE / RECEPTOR",
-  "rfc_receptor": "RFC del cliente (12 o 13 caracteres)",
+  "cliente": "Nombre o Razón Social del CLIENTE o Receptor",
+  "rfc_receptor": "RFC del cliente",
   "rfc_emisor": "RFC de la empresa emisora",
-  "folio": "UUID fiscal de 36 caracteres (ej. 602B1C8B-...)",
+  "folio": "UUID fiscal de 36 caracteres",
   "monto_total": 0.00,
   "subtotal": 0.00,
   "iva": 0.00,
   "fecha_emision": "YYYY-MM-DD",
   "fecha_timbrado": "YYYY-MM-DDTHH:mm:ss",
-  "no_certificado_sat": "Número de 20 dígitos del SAT si existe",
-  "sello_cfdi": "Cadena alfanumérica del Sello Digital CFDI",
-  "sello_sat": "Cadena alfanumérica del Sello del SAT",
-  "cadena_original": "Cadena original del timbre si está visible"
+  "no_certificado_sat": "Número de 20 dígitos si existe",
+  "sello_cfdi": "Sello Digital CFDI",
+  "sello_sat": "Sello del SAT",
+  "cadena_original": "Cadena original"
 }
 
 Texto:
-${extractedText.substring(0, 10000)}`;
+${extractedText.substring(0, 12000)}`;
 
-      await executeGeminiRequest(apiKey, statusEl, (modelId) => ({
+      await executeGeminiRequestCxC(apiKey, statusEl, (modelId) => ({
         url: `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
         body: {
           contents: [{ parts: [{ text: prompt }] }],
@@ -856,26 +865,26 @@ ${extractedText.substring(0, 10000)}`;
       }));
     }
 
-    async function parseWithGeminiVisionCascada(base64Data, mimeType, apiKey, statusEl) {
-      const prompt = `Analiza la imagen de la FACTURA DE CLIENTE / VENTA (CxC) de HR Employment.
-Extrae los datos fiscales estrictamente en formato JSON plano:
+    async function parseWithGeminiVisionCascadaCxC(base64Data, mimeType, apiKey, statusEl) {
+      const prompt = `Analiza la imagen de la FACTURA DE CLIENTE (CxC) de México.
+Extrae los datos fiscales en JSON plano:
 {
-  "razon_social": "Nombre o Razón Social del CLIENTE o Receptor",
-  "rfc_receptor": "RFC del cliente (12 o 13 caracteres)",
-  "rfc_emisor": "RFC del emisor",
+  "cliente": "Nombre o Razón Social del Cliente Receptor",
+  "rfc_receptor": "RFC del cliente",
+  "rfc_emisor": "RFC de la empresa",
   "folio": "UUID fiscal de 36 caracteres",
   "monto_total": 0.00,
   "subtotal": 0.00,
   "iva": 0.00,
   "fecha_emision": "YYYY-MM-DD",
   "fecha_timbrado": "YYYY-MM-DDTHH:mm:ss",
-  "no_certificado_sat": "Número de 20 dígitos si existe",
-  "sello_cfdi": "Cadena del Sello Digital CFDI",
-  "sello_sat": "Cadena del Sello del SAT",
-  "cadena_original": "Cadena original si está visible"
+  "no_certificado_sat": "Número de 20 dígitos",
+  "sello_cfdi": "Sello CFDI",
+  "sello_sat": "Sello SAT",
+  "cadena_original": "Cadena original"
 }`;
 
-      await executeGeminiRequest(apiKey, statusEl, (modelId) => ({
+      await executeGeminiRequestCxC(apiKey, statusEl, (modelId) => ({
         url: `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`,
         body: {
           contents: [{
@@ -889,7 +898,7 @@ Extrae los datos fiscales estrictamente en formato JSON plano:
       }));
     }
 
-    async function executeGeminiRequest(apiKey, statusEl, requestFactory) {
+    async function executeGeminiRequestCxC(apiKey, statusEl, requestFactory) {
       let success = false;
       let lastError = null;
 
@@ -906,17 +915,17 @@ Extrae los datos fiscales estrictamente en formato JSON plano:
 
           if (!resp.ok) {
             const errDetail = await resp.json().catch(() => null);
-            throw new Error(errDetail?.error?.message || `HTTP ${resp.status} en ${m.label}`);
+            throw new Error(errDetail?.error?.message || `HTTP ${resp.status}`);
           }
 
           const d = await resp.json();
           const rawText = d.candidates?.[0]?.content?.parts?.[0]?.text;
           if (!rawText) throw new Error("Sin respuesta de texto.");
 
-          const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-          const p = JSON.parse(cleanJson);
+          const p = JSON.parse(rawText.replace(/```json/gi, '').replace(/```/g, '').trim());
 
-          if (p.razon_social) document.getElementById('invoice-entity').value = p.razon_social;
+          const cli = p.cliente || p.rfc_receptor || "";
+          if (cli) document.getElementById('invoice-entity').value = cli;
           if (p.folio) document.getElementById('invoice-folio').value = p.folio;
           if (p.monto_total) document.getElementById('invoice-total').value = parseFloat(p.monto_total).toFixed(2);
           if (p.fecha_emision) document.getElementById('invoice-date').value = p.fecha_emision;
@@ -925,11 +934,11 @@ Extrae los datos fiscales estrictamente en formato JSON plano:
             uuid: p.folio || "",
             folio: p.folio || "",
             fecha_emision: p.fecha_emision || new Date().toISOString().split('T')[0],
-            fecha_timbrado: p.fecha_timbrado || (p.fecha_emision ? `${p.fecha_emision}T12:00:00` : ""),
-            rfc_emisor: p.rfc_emisor || "",
+            fecha_timbrado: p.fecha_timbrado || "",
+            rfc_emisor: p.rfc_emisor || COMPANY_NAME,
             nombre_emisor: COMPANY_NAME,
             rfc_receptor: p.rfc_receptor || "",
-            nombre_receptor: p.razon_social || "",
+            nombre_receptor: cli,
             subtotal: parseFloat(p.subtotal || p.monto_total || 0),
             iva: parseFloat(p.iva || 0),
             total: parseFloat(p.monto_total || 0),
@@ -943,13 +952,13 @@ Extrae los datos fiscales estrictamente en formato JSON plano:
           success = true;
           break;
         } catch (err) {
-          console.warn(`Fallback: ${m.label} no disponible:`, err.message);
+          console.warn(`${m.label} no disponible:`, err.message);
           lastError = err;
         }
       }
 
       if (!success) {
-        throw new Error(`Los motores Gemini (3.8 / 2.5 / 2.0) no pudieron completar la extracción: ${lastError?.message}`);
+        throw new Error(`Los motores Gemini no pudieron procesar la factura: ${lastError?.message}`);
       }
     }
 

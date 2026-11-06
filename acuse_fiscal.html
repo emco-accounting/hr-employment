@@ -57,7 +57,7 @@
     <div class="w-16 h-16 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 animate-pulse flex items-center justify-center">
       <i class="ph-bold ph-file-text text-emerald-400 text-3xl"></i>
     </div>
-    <p id="loading-text" class="text-xs text-slate-400 font-mono">Consultando acuse fiscal en emco-accounting...</p>
+    <p id="loading-text" class="text-xs text-slate-400 font-mono">Autenticando y consultando acuse fiscal en emco-accounting...</p>
   </div>
 
   <!-- BARRA DE ACCIÓN SUPERIOR (NO IMPRIMIBLE) -->
@@ -262,6 +262,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -275,30 +276,47 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
     const db = getFirestore(app, "emco-accounting");
 
     const params = new URLSearchParams(window.location.search);
     const docId = params.get('id');
-    const colName = params.get('col') || 'accounts_receivable'; // accounts_receivable o accounts_payable
+    const colName = params.get('col') || 'accounts_receivable';
     const empresaKey = params.get('empresa') || 'cesar_gonzalez';
 
     let currentDocument = null;
 
-    async function loadAcuse() {
+    // Sincronizar estado de sesión antes de consultar Firestore
+    onAuthStateChanged(auth, async (user) => {
       const overlay = document.getElementById('loading-overlay');
       const loadText = document.getElementById('loading-text');
 
-      if (!docId) {
+      if (!user) {
+        loadText.innerText = "Sesión no detectada. Redirigiendo a inicio de sesión...";
+        setTimeout(() => {
+          window.location.replace("index.html");
+        }, 1200);
+        return;
+      }
+
+      await loadAcuse(docId, colName);
+    });
+
+    async function loadAcuse(id, collectionPath) {
+      const overlay = document.getElementById('loading-overlay');
+      const loadText = document.getElementById('loading-text');
+
+      if (!id) {
         loadText.innerText = "Error: Falta el identificador de documento en la URL (?id=...)";
         return;
       }
 
       try {
         loadText.innerText = "Cargando datos contables y fiscales...";
-        const snap = await getDoc(doc(db, colName, docId));
+        const snap = await getDoc(doc(db, collectionPath, id));
 
         if (!snap.exists()) {
-          loadText.innerText = `Documento no encontrado en ${colName} [ID: ${docId}]`;
+          loadText.innerText = `Documento no encontrado en ${collectionPath} [ID: ${id}]`;
           return;
         }
 
@@ -314,7 +332,7 @@
     }
 
     function renderAcuseData(d) {
-      const isCxC = colName === 'accounts_receivable';
+      const isCxC = colName.includes('receivable') || colName.includes('cxc');
       const isCesar = (d.company_id || empresaKey) === 'cesar_gonzalez';
 
       const empresaOficial = isCesar 
@@ -386,7 +404,6 @@
       document.getElementById('view-rfc-pac').innerText = rfcPac;
 
       // QR Oficial del SAT
-      // Estructura oficial: https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id={UUID}&re={RFC_EM}&rr={RFC_REC}&tt={TOTAL_CON_6_DECIMALES}&fe={ULTIMOS_8_CARACTERES_SELLO}
       const totalSatFormatted = Number(total).toFixed(6);
       const ultimos8Sello = selloMock.slice(-8);
       const satUrl = `https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id=${uuid}&re=${emisorRfc}&rr=${receptorRfc}&tt=${totalSatFormatted}&fe=${encodeURIComponent(ultimos8Sello)}`;
@@ -437,8 +454,6 @@
         alert("No se pudo generar el PDF directo. Puedes usar la opción 'Imprimir' y seleccionar 'Guardar como PDF'.");
       });
     };
-
-    window.addEventListener('DOMContentLoaded', loadAcuse);
   </script>
 </body>
 </html>

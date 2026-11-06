@@ -95,14 +95,17 @@
   <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950">
     <header class="bg-slate-900/60 border-b border-slate-800/80 px-8 py-4 flex justify-between items-center shrink-0 backdrop-blur-md sticky top-0 z-10">
       <div>
-        <h2 class="text-xl font-bold text-white tracking-tight">Directorio de Staff & Gobernanza</h2>
+        <div class="flex items-center gap-2">
+          <h2 class="text-xl font-bold text-white tracking-tight">Directorio de Staff & Gobernanza</h2>
+          <span id="mode-badge" class="text-[10px] font-mono px-2 py-0.5 rounded border border-indigo-500/30 text-indigo-400 bg-indigo-500/10">Verificando...</span>
+        </div>
         <span class="text-xs text-slate-400 font-mono">Control de acceso bilateral: Cesar Geovanni Gonzalez Contreras & HR Employment</span>
       </div>
       <div class="flex items-center gap-3">
         <button onclick="abrirMatrizPermisos()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
           <i class="ph-bold ph-shield-star text-amber-400 text-sm"></i> Matriz de Permisos RBAC
         </button>
-        <button onclick="toggleModalStaff(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+        <button id="btn-open-create-user" onclick="toggleModalStaff(true)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
           <i class="ph-bold ph-user-plus text-sm"></i> + Inyectar Colaborador
         </button>
       </div>
@@ -184,7 +187,7 @@
     </div>
   </main>
 
-  <!-- MODAL: REGISTRAR COLABORADOR CON VISOR DE CONTRASEÑA -->
+  <!-- MODAL: REGISTRAR COLABORADOR -->
   <div id="modal-staff" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -228,7 +231,7 @@
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Rol RBAC</label>
             <select id="staff-role" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500 font-mono">
-              <!-- Cargado dinámicamente desde system_roles -->
+              <!-- Dinámico -->
             </select>
           </div>
           <div>
@@ -248,7 +251,7 @@
     </div>
   </div>
 
-  <!-- MODAL: MATRIZ DE GOBERNANZA RBAC DINÁMICA (CRUD DE ROLES) -->
+  <!-- MODAL: MATRIZ DE GOBERNANZA RBAC DINÁMICA -->
   <div id="modal-roles" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4 max-h-[92vh] flex flex-col">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
@@ -256,7 +259,7 @@
           <h4 class="text-base font-bold text-white flex items-center gap-2">
             <i class="ph-bold ph-shield-star text-amber-400"></i> Matriz Dinámica de Gobernanza RBAC
           </h4>
-          <span class="text-xs text-slate-400 font-mono">Alta, edición, baja de roles y asignación de permisos sobre módulos</span>
+          <span class="text-xs text-slate-400 font-mono">Consulta y administración de roles y privilegios de lectura/escritura</span>
         </div>
         <button onclick="toggleModalRoles(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
@@ -264,13 +267,13 @@
       <!-- BARRA DE GESTIÓN DE ROLES -->
       <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-3 rounded-xl border border-slate-800 shrink-0 text-xs">
         <div class="flex items-center gap-3">
-          <label class="font-mono uppercase text-slate-400">Rol en Edición:</label>
+          <label class="font-mono uppercase text-slate-400">Rol seleccionado:</label>
           <select id="select-role-edit" onchange="seleccionarRolParaEdicion(this.value)" class="bg-slate-900 text-white font-bold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500 font-mono">
-            <!-- Cargado dinámicamente -->
+            <!-- Dinámico -->
           </select>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div id="admin-role-actions" class="flex items-center gap-2">
           <button onclick="abrirModalCrearRol()" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg font-semibold flex items-center gap-1 transition">
             <i class="ph-bold ph-plus"></i> + Nuevo Rol
           </button>
@@ -288,12 +291,12 @@
 
       <!-- CONTENEDOR DE PERMISOS -->
       <div class="overflow-y-auto flex-1 space-y-4 pr-1" id="permissions-container">
-        <!-- Renderizado dinámico de módulos nativos y creados -->
+        <!-- Render dinámico -->
       </div>
 
       <!-- BOTONES INFERIORES -->
       <div class="flex justify-between items-center pt-3 border-t border-slate-800 shrink-0 text-xs">
-        <div class="flex items-center gap-3 font-mono">
+        <div id="matrix-selection-actions" class="flex items-center gap-3 font-mono">
           <button type="button" onclick="marcarTodosPermisos(true)" class="text-indigo-400 hover:text-indigo-300">Marcar Todos</button>
           <span class="text-slate-600">|</span>
           <button type="button" onclick="marcarTodosPermisos(false)" class="text-slate-400 hover:text-white">Desmarcar Todos</button>
@@ -350,7 +353,7 @@
       </div>
 
       <p class="text-slate-300 leading-relaxed">
-        Se enviará un correo electrónico oficial de recuperación con un enlace seguro para que el colaborador redefina su clave:
+        Se enviará un correo electrónico oficial con el enlace seguro para redefinir la clave:
       </p>
 
       <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center font-mono text-indigo-300 text-xs break-all" id="reset-target-email">
@@ -369,7 +372,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { 
-      getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut 
+      getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut,
+      setPersistence, inMemoryPersistence 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { 
       getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, 
@@ -390,15 +394,19 @@
     const auth = getAuth(mainApp);
     const db = getFirestore(mainApp, "emco-accounting");
 
-    // Instancia secundaria para registrar nuevos colaboradores sin cerrar la sesión del admin
+    // Instancia secundaria aislada en memoria para evitar colisión de tokens
     const secondaryApp = initializeApp(firebaseConfig, "SecondaryStaffAdmin");
     const secondaryAuth = getAuth(secondaryApp);
+    setPersistence(secondaryAuth, inMemoryPersistence).catch(console.warn);
 
     const urlParams = new URLSearchParams(window.location.search);
     let activeCompanyId = urlParams.get('empresa') || localStorage.getItem('active_company_id') || sessionStorage.getItem('active_company_id') || 'cesar_gonzalez';
 
-    let currentAdmin = null;
-    let currentAdminData = null;
+    let currentUser = null;
+    let currentUserData = null;
+    let userPermissions = [];
+    let isSuperAdmin = false;
+
     let rawStaffList = [];
     let rolesCache = {};
     let systemModulesList = [];
@@ -419,7 +427,6 @@
         tenantTag.innerText = activeCompanyId === 'hr_employment' ? 'HR Employment' : 'Cesar Geovanni';
       }
     }
-
     syncNavLinks();
 
     function showToast(title, desc, isError = false) {
@@ -442,9 +449,9 @@
       try {
         await addDoc(collection(db, "audit_logs"), {
           timestamp: serverTimestamp(),
-          user_email: currentAdmin?.email || "admin",
-          user_name: currentAdminData?.full_name || currentAdminData?.name || "Administrador",
-          role_id: currentAdminData?.role_id || "SUPERADMIN",
+          user_email: currentUser?.email || "anon",
+          user_name: currentUserData?.full_name || currentUserData?.name || "Usuario",
+          role_id: currentUserData?.role_id || "OPERATIVO",
           company_id: activeCompanyId,
           company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Geovanni Gonzalez Contreras",
           module_slug: "staff",
@@ -453,17 +460,18 @@
           user_agent: navigator.userAgent
         });
       } catch (e) {
-        console.warn("Fallo log auditoría:", e);
+        console.warn("Auditoría:", e);
       }
     }
 
+    // ARRANQUE Y VALIDACIÓN DE SESIÓN RBAC
     onAuthStateChanged(auth, async (user) => {
       const shield = document.getElementById("auth-shield");
       if (!user) {
         window.location.replace("index.html");
         return;
       }
-      currentAdmin = user;
+      currentUser = user;
 
       try {
         const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
@@ -473,13 +481,27 @@
           return;
         }
 
-        currentAdminData = staffSnap.data();
-        if (currentAdminData.role_id !== "SUPERADMIN") {
-          alert("Acceso denegado: El área de gobernanza y staff es de acceso exclusivo para SUPERADMIN.");
+        currentUserData = staffSnap.data();
+        isSuperAdmin = currentUserData.role_id === "SUPERADMIN";
+
+        // Obtener permisos del rol
+        const roleSnap = await getDoc(doc(db, "system_roles", currentUserData.role_id));
+        if (roleSnap.exists()) {
+          userPermissions = roleSnap.data().permissions || [];
+        }
+
+        const canViewStaff = isSuperAdmin || userPermissions.includes("*") || userPermissions.includes("staff.read");
+
+        if (!canViewStaff) {
+          alert("Acceso denegado: Tu perfil no cuenta con permisos para consultar la gobernanza del personal.");
           window.location.replace(`portal_catalogo.html?empresa=${encodeURIComponent(activeCompanyId)}`);
           return;
         }
 
+        // Adaptar interfaz si no es SUPERADMIN
+        ajustarUIPorPrivilegios();
+
+        // Cargar flujos en tiempo real con manejo de error
         initRolesStream();
         initStaffListener();
         initSystemModulesListener();
@@ -487,11 +509,35 @@
         shield.classList.add("opacity-0", "pointer-events-none");
         setTimeout(() => shield.classList.add("hidden"), 300);
       } catch (err) {
-        console.error("Error validando sesión de staff:", err);
+        console.error("Error al validar sesión RBAC:", err);
+        shield.innerHTML = `<div class="p-6 bg-rose-950/80 border border-rose-800 rounded-2xl text-center text-xs font-mono text-rose-300">Error al consultar perfil de permisos: ${err.message}</div>`;
       }
     });
 
-    // VISOR INTERACTIVO DE CONTRASEÑA
+    function ajustarUIPorPrivilegios() {
+      const modeBadge = document.getElementById("mode-badge");
+      const btnInject = document.getElementById("btn-open-create-user");
+      const adminRoleActions = document.getElementById("admin-role-actions");
+      const matrixSelectionActions = document.getElementById("matrix-selection-actions");
+      const btnSaveRolePerms = document.getElementById("btn-save-role-perms");
+      const roleDescInput = document.getElementById("role-description-input");
+
+      if (isSuperAdmin) {
+        modeBadge.innerText = "SUPERADMIN (Control Total)";
+        modeBadge.className = "text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/30 text-emerald-400 bg-emerald-500/10";
+      } else {
+        modeBadge.innerText = `MODO CONSULTA (${currentUserData.role_id})`;
+        modeBadge.className = "text-[10px] font-mono px-2 py-0.5 rounded border border-amber-500/30 text-amber-400 bg-amber-500/10";
+
+        // Ocultar acciones de escritura/mutación de gobernanza
+        if (btnInject) btnInject.classList.add("hidden");
+        if (adminRoleActions) adminRoleActions.classList.add("hidden");
+        if (matrixSelectionActions) matrixSelectionActions.classList.add("hidden");
+        if (btnSaveRolePerms) btnSaveRolePerms.classList.add("hidden");
+        if (roleDescInput) roleDescInput.disabled = true;
+      }
+    }
+
     window.togglePasswordVisibility = (inputId, iconId) => {
       const input = document.getElementById(inputId);
       const icon = document.getElementById(iconId);
@@ -505,6 +551,7 @@
     };
 
     window.toggleModalStaff = (show) => {
+      if (!isSuperAdmin && show) return;
       document.getElementById('modal-staff').classList.toggle('hidden', !show);
       if (!show) document.getElementById('form-staff').reset();
     };
@@ -514,6 +561,7 @@
     };
 
     window.toggleModalCreateRole = (show) => {
+      if (!isSuperAdmin && show) return;
       document.getElementById('modal-create-role').classList.toggle('hidden', !show);
       if (show) {
         document.getElementById('new-role-id').value = "";
@@ -522,57 +570,64 @@
     };
 
     window.toggleModalResetPass = (show) => {
+      if (!isSuperAdmin && show) return;
       document.getElementById('modal-reset-pass').classList.toggle('hidden', !show);
     };
 
-    // ESCUCHA REACTIVA DE ROLES EN FIRESTORE
+    // ESCUCHA REACTIVA DE ROLES CON RETORNO SEGURO
     function initRolesStream() {
       onSnapshot(collection(db, "system_roles"), (snap) => {
         rolesCache = {};
         const selectModal = document.getElementById('staff-role');
         const selectMatrix = document.getElementById('select-role-edit');
 
-        selectModal.innerHTML = '';
-        selectMatrix.innerHTML = '';
+        if (selectModal) selectModal.innerHTML = '';
+        if (selectMatrix) selectMatrix.innerHTML = '';
 
         snap.forEach(d => {
           rolesCache[d.id] = { id: d.id, ...d.data() };
 
-          const opt = document.createElement('option');
-          opt.value = d.id;
-          opt.innerText = d.id;
-          selectModal.appendChild(opt);
+          if (selectModal) {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.innerText = d.id;
+            selectModal.appendChild(opt);
+          }
 
-          const optM = document.createElement('option');
-          optM.value = d.id;
-          optM.innerText = d.id;
-          selectMatrix.appendChild(optM);
+          if (selectMatrix) {
+            const optM = document.createElement('option');
+            optM.value = d.id;
+            optM.innerText = d.id;
+            selectMatrix.appendChild(optM);
+          }
         });
 
-        // Asegurar SUPERADMIN en caso de base de datos vacía
-        if (!rolesCache["SUPERADMIN"]) {
-          setDoc(doc(db, "system_roles", "SUPERADMIN"), {
-            permissions: ["*"],
-            description: "Control absoluto multitenant y gobernanza del sistema"
-          });
-        }
+        const kpiRoles = document.getElementById('kpi-total-roles');
+        if (kpiRoles) kpiRoles.innerText = Object.keys(rolesCache).length;
 
-        document.getElementById('kpi-total-roles').innerText = Object.keys(rolesCache).length;
-        seleccionarRolParaEdicion(selectMatrix.value || "SUPERADMIN");
+        if (selectMatrix && selectMatrix.value) {
+          seleccionarRolParaEdicion(selectMatrix.value);
+        } else if (selectMatrix && Object.keys(rolesCache).length > 0) {
+          seleccionarRolParaEdicion(Object.keys(rolesCache)[0]);
+        }
+      }, (err) => {
+        console.warn("Fallo lectura de roles:", err.message);
       });
     }
 
-    // ESCUCHA REACTIVA DE MÓDULOS CREADOS E IMPORTADOS
+    // ESCUCHA REACTIVA DE MÓDULOS DEL SISTEMA
     function initSystemModulesListener() {
       onSnapshot(collection(db, "system_modules"), (snap) => {
         systemModulesList = [];
         snap.forEach(d => systemModulesList.push({ id: d.id, ...d.data() }));
         const currentRole = document.getElementById('select-role-edit')?.value;
         if (currentRole) renderMatrizPermisos(currentRole);
+      }, (err) => {
+        console.warn("Fallo lectura de módulos dinámicos:", err.message);
       });
     }
 
-    // DIRECTORIO DE PERSONAL EN TIEMPO REAL
+    // ESCUCHA DEL DIRECTORIO DE STAFF
     function initStaffListener() {
       onSnapshot(collection(db, "staff_users"), (snap) => {
         rawStaffList = [];
@@ -597,6 +652,9 @@
         document.getElementById('staff-count-badge').innerText = `${total} colaboradores`;
 
         renderStaffTable();
+      }, (err) => {
+        console.warn("Fallo lectura del directorio staff:", err.message);
+        document.getElementById('table-staff').innerHTML = `<tr><td colspan="6" class="p-6 text-center text-amber-400 font-mono text-xs">Acceso restringido al directorio completo por directriz de seguridad.</td></tr>`;
       });
     }
 
@@ -615,7 +673,7 @@
       });
 
       if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono text-xs">Sin colaboradores coincidentes con el criterio de búsqueda.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-500 font-mono text-xs">Sin colaboradores coincidentes.</td></tr>';
         return;
       }
 
@@ -633,6 +691,25 @@
             if (c === "hr_employment") return `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mr-1 font-bold">HR EMPL.</span>`;
             return '';
           }).join('');
+        }
+
+        // Acciones disponibles únicamente para SUPERADMIN
+        let acciones = `<span class="text-[11px] font-mono text-slate-500 italic">Solo Lectura</span>`;
+        if (isSuperAdmin) {
+          acciones = `
+            <button onclick="solicitarResetPassword('${u.email}')" class="text-xs px-2.5 py-1 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition" title="Restablecer Contraseña">
+              <i class="ph-bold ph-key"></i> Clave
+            </button>
+            <button onclick="cambiarEmpresas('${u.id}', '${u.full_name}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">
+              Empresas
+            </button>
+            <button onclick="cambiarRol('${u.id}', '${u.role_id}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">
+              Rol
+            </button>
+            <button onclick="cambiarEstado('${u.id}', '${isActive ? 'SUSPENDED' : 'ACTIVE'}', '${u.full_name}')" class="text-xs px-2.5 py-1 rounded-lg border ${isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/20' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'} transition">
+              ${isActive ? 'Suspender' : 'Activar'}
+            </button>
+          `;
         }
 
         html += `
@@ -654,18 +731,7 @@
               </span>
             </td>
             <td class="p-4 text-right space-x-1.5 whitespace-nowrap">
-              <button onclick="solicitarResetPassword('${u.email}')" class="text-xs px-2.5 py-1 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition" title="Enviar enlace de restablecimiento de contraseña">
-                <i class="ph-bold ph-key"></i> Clave
-              </button>
-              <button onclick="cambiarEmpresas('${u.id}', '${u.full_name}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">
-                Empresas
-              </button>
-              <button onclick="cambiarRol('${u.id}', '${u.role_id}')" class="text-xs px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition">
-                Rol
-              </button>
-              <button onclick="cambiarEstado('${u.id}', '${isActive ? 'SUSPENDED' : 'ACTIVE'}', '${u.full_name}')" class="text-xs px-2.5 py-1 rounded-lg border ${isActive ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/20' : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20'} transition">
-                ${isActive ? 'Suspender' : 'Activar'}
-              </button>
+              ${acciones}
             </td>
           </tr>
         `;
@@ -673,9 +739,11 @@
       tbody.innerHTML = html;
     };
 
-    // INYECCIÓN DE NUEVO COLABORADOR CON FIREBASE AUTH & FIRESTORE
+    // ALTA DE COLABORADOR (SOLO SUPERADMIN)
     document.getElementById('form-staff').addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (!isSuperAdmin) return alert("Función exclusiva para administradores.");
+
       const btn = document.getElementById('btn-submit-staff');
       btn.disabled = true;
       btn.innerText = "Inyectando...";
@@ -710,8 +778,8 @@
       }
     });
 
-    // GESTIÓN DE CONTRASEÑAS CON FIREBASE AUTH
     window.solicitarResetPassword = (email) => {
+      if (!isSuperAdmin) return;
       targetEmailForReset = email;
       document.getElementById('reset-target-email').innerText = email;
       toggleModalResetPass(true);
@@ -726,7 +794,7 @@
         await sendPasswordResetEmail(auth, targetEmailForReset);
         await logAudit("STAFF_PASSWORD_RESET_SENT", { email: targetEmailForReset });
         toggleModalResetPass(false);
-        showToast("Correo Enviado", `Enlace de recuperación enviado a ${targetEmailForReset}.`);
+        showToast("Correo Enviado", `Enlace enviado a ${targetEmailForReset}.`);
       } catch (err) {
         showToast("Fallo al Enviar", err.message, true);
       } finally {
@@ -736,6 +804,7 @@
     };
 
     window.cambiarEstado = async (uid, newStatus, userName) => {
+      if (!isSuperAdmin) return;
       try {
         await updateDoc(doc(db, "staff_users", uid), { status: newStatus });
         await logAudit("STAFF_STATUS_MUTATED", { uid, userName, newStatus });
@@ -746,6 +815,7 @@
     };
 
     window.cambiarRol = async (uid, currentRole) => {
+      if (!isSuperAdmin) return;
       const rolesDisponibles = Object.keys(rolesCache);
       const msg = `Selecciona nuevo Rol RBAC:\n` + rolesDisponibles.map((r, i) => `${i + 1} = ${r}`).join('\n');
       const opt = prompt(msg, "1");
@@ -758,13 +828,14 @@
       try {
         await updateDoc(doc(db, "staff_users", uid), { role_id: nuevoRol });
         await logAudit("STAFF_ROLE_MUTATED", { uid, old_role: currentRole, new_role: nuevoRol });
-        showToast("Rol Modificado", `El usuario ahora tiene asignado el rol ${nuevoRol}.`);
+        showToast("Rol Modificado", `Usuario asignado al rol ${nuevoRol}.`);
       } catch (err) {
         showToast("Error al Cambiar Rol", err.message, true);
       }
     };
 
     window.cambiarEmpresas = async (uid, userName) => {
+      if (!isSuperAdmin) return;
       const opt = prompt(
         `Asignar Razones Sociales autorizadas para ${userName}:\n1 = Ambas (Acceso Global)\n2 = Solo Cesar Geovanni Gonzalez Contreras\n3 = Solo HR Employment`, 
         "1"
@@ -778,15 +849,13 @@
       try {
         await updateDoc(doc(db, "staff_users", uid), { allowed_companies: allowed });
         await logAudit("STAFF_COMPANIES_UPDATED", { uid, userName, allowed });
-        showToast("Empresas Asignadas", `Acceso actualizado correctamente para ${userName}.`);
+        showToast("Empresas Asignadas", `Acceso actualizado para ${userName}.`);
       } catch (err) {
         showToast("Error al Asignar Empresa", err.message, true);
       }
     };
 
-    // =========================================================================
-    // MATRIZ DE GOBERNANZA RBAC DINÁMICA (CRUD COMPLETO DE ROLES)
-    // =========================================================================
+    // MATRIZ RBAC
     window.abrirMatrizPermisos = () => {
       toggleModalRoles(true);
       const selectMatrix = document.getElementById('select-role-edit');
@@ -797,12 +866,13 @@
       const role = rolesCache[roleId] || { permissions: [], description: "" };
       document.getElementById('role-description-input').value = role.description || "";
 
-      // Protección de eliminación de SUPERADMIN
       const btnDelete = document.getElementById('btn-delete-role');
-      if (roleId === "SUPERADMIN") {
-        btnDelete.classList.add("hidden");
-      } else {
-        btnDelete.classList.remove("hidden");
+      if (btnDelete) {
+        if (!isSuperAdmin || roleId === "SUPERADMIN") {
+          btnDelete.classList.add("hidden");
+        } else {
+          btnDelete.classList.remove("hidden");
+        }
       }
 
       renderMatrizPermisos(roleId);
@@ -813,24 +883,25 @@
       const role = rolesCache[roleId] || { permissions: [] };
       const perms = role.permissions || [];
       const isSuper = roleId === "SUPERADMIN";
+      const disableInputs = !isSuperAdmin || isSuper;
 
       let html = '';
 
-      // 1. Módulos Nativos del Núcleo Contable
       const modulosNativos = [
         { label: "Cuentas por Cobrar (CxC)", slug: "cxc" },
         { label: "Cuentas por Pagar (CxP)", slug: "cxp" },
         { label: "Activos & Hardware LISR", slug: "assets" },
         { label: "Tablero Gerencial", slug: "gerencial" },
         { label: "Consola de Auditoría (Logs)", slug: "audit" },
-        { label: "Creador Studio & IDE", slug: "creator" }
+        { label: "Creador Studio & IDE", slug: "creator" },
+        { label: "Gobernanza & Directorio Staff", slug: "staff" }
       ];
 
       html += `
         <div class="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
           <div class="flex justify-between items-center">
             <span class="text-xs font-mono font-bold uppercase text-indigo-400 flex items-center gap-2">
-              <i class="ph-bold ph-shield-check"></i> Módulos Nativos del Núcleo
+              <i class="ph-bold ph-shield-check"></i> Módulos Nativos del Núcleo Contable
             </span>
             ${isSuper ? '<span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Acceso Universal (*)</span>' : ''}
           </div>
@@ -851,13 +922,13 @@
             <span class="font-bold text-white">${m.label}</span>
             <div class="flex items-center gap-3 font-mono text-[11px] text-slate-300">
               <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" value="${rKey}" ${checkR ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-indigo-600 focus:ring-0"> Ver
+                <input type="checkbox" value="${rKey}" ${checkR ? 'checked' : ''} ${disableInputs ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-indigo-600 focus:ring-0"> Ver
               </label>
               <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" value="${wKey}" ${checkW ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-emerald-600 focus:ring-0"> Captura
+                <input type="checkbox" value="${wKey}" ${checkW ? 'checked' : ''} ${disableInputs ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-emerald-600 focus:ring-0"> Captura
               </label>
               <label class="flex items-center gap-1 cursor-pointer">
-                <input type="checkbox" value="${dKey}" ${checkD ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-rose-600 focus:ring-0"> Baja
+                <input type="checkbox" value="${dKey}" ${checkD ? 'checked' : ''} ${disableInputs ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-rose-600 focus:ring-0"> Baja
               </label>
             </div>
           </div>
@@ -866,13 +937,13 @@
 
       html += `</div></div>`;
 
-      // 2. Módulos Dinámicos Creados e Importados
+      // Módulos dinámicos
       if (systemModulesList.length > 0) {
         html += `
           <div class="border border-slate-800 rounded-xl p-4 bg-slate-950/60 space-y-3">
             <div class="flex justify-between items-center">
               <span class="text-xs font-mono font-bold uppercase text-emerald-400 flex items-center gap-2">
-                <i class="ph-bold ph-cube"></i> Módulos Dinámicos & Creados en Caliente
+                <i class="ph-bold ph-cube"></i> Módulos Dinámicos & Extensiones
               </span>
               <span class="text-[10px] font-mono text-slate-500">${systemModulesList.length} Extensiones</span>
             </div>
@@ -896,13 +967,13 @@
               </div>
               <div class="flex items-center gap-3 font-mono text-[11px] text-slate-300">
                 <label class="flex items-center gap-1 cursor-pointer">
-                  <input type="checkbox" value="${rKey}" ${checkR ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-indigo-600 focus:ring-0"> Ver
+                  <input type="checkbox" value="${rKey}" ${checkR ? 'checked' : ''} ${disableInputs ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-indigo-600 focus:ring-0"> Ver
                 </label>
                 <label class="flex items-center gap-1 cursor-pointer">
-                  <input type="checkbox" value="${wKey}" ${checkW ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-emerald-600 focus:ring-0"> Captura
+                  <input type="checkbox" value="${wKey}" ${checkW ? 'checked' : ''} ${disableInputs ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-emerald-600 focus:ring-0"> Captura
                 </label>
                 <label class="flex items-center gap-1 cursor-pointer">
-                  <input type="checkbox" value="${dKey}" ${checkD ? 'checked' : ''} ${isSuper ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-rose-600 focus:ring-0"> Baja
+                  <input type="checkbox" value="${dKey}" ${checkD ? 'checked' : ''} ${disableInputs ? 'disabled' : ''} class="perm-check rounded border-slate-700 text-rose-600 focus:ring-0"> Baja
                 </label>
               </div>
             </div>
@@ -916,22 +987,24 @@
     }
 
     window.marcarTodosPermisos = (estado) => {
+      if (!isSuperAdmin) return;
       const currentRole = document.getElementById('select-role-edit').value;
       if (currentRole === "SUPERADMIN") return;
       document.querySelectorAll('.perm-check').forEach(chk => chk.checked = estado);
     };
 
-    // ALTA DE NUEVO ROL
     window.abrirModalCrearRol = () => {
+      if (!isSuperAdmin) return;
       toggleModalCreateRole(true);
     };
 
     window.ejecutarCreacionRol = async () => {
+      if (!isSuperAdmin) return;
       const roleId = document.getElementById('new-role-id').value.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '_');
       const desc = document.getElementById('new-role-desc').value.trim();
 
-      if (!roleId) return alert("Por favor ingresa una clave de rol válida.");
-      if (rolesCache[roleId]) return alert(`El rol "${roleId}" ya existe en el sistema.`);
+      if (!roleId) return alert("Ingresa una clave de rol válida.");
+      if (rolesCache[roleId]) return alert(`El rol "${roleId}" ya existe.`);
 
       try {
         await setDoc(doc(db, "system_roles", roleId), {
@@ -940,39 +1013,38 @@
         });
 
         await logAudit("RBAC_ROLE_CREATED", { roleId, description: desc });
-        showToast("Rol Creado", `El rol ${roleId} ha sido registrado en Firestore.`);
+        showToast("Rol Creado", `El rol ${roleId} ha sido registrado.`);
         toggleModalCreateRole(false);
       } catch (err) {
         showToast("Error al Crear Rol", err.message, true);
       }
     };
 
-    // BAJA DE ROL
     window.eliminarRolActual = async () => {
+      if (!isSuperAdmin) return;
       const roleId = document.getElementById('select-role-edit').value;
       if (roleId === "SUPERADMIN") {
-        return alert("El rol SUPERADMIN es el pilar de seguridad y no puede ser eliminado.");
+        return alert("El rol SUPERADMIN no puede ser eliminado.");
       }
 
-      // Validar si existen colaboradores asignados a este rol
       const usuariosAsignados = rawStaffList.filter(u => u.role_id === roleId);
       if (usuariosAsignados.length > 0) {
-        return alert(`No se puede eliminar el rol "${roleId}" porque tiene ${usuariosAsignados.length} colaborador(es) asignado(s). Reasigna sus roles primero.`);
+        return alert(`No se puede eliminar el rol "${roleId}" porque tiene ${usuariosAsignados.length} colaborador(es) asignado(s).`);
       }
 
-      if (confirm(`¿Confirmas la eliminación permanente del rol "${roleId}" del sistema?`)) {
+      if (confirm(`¿Confirmas la eliminación permanente del rol "${roleId}"?`)) {
         try {
           await deleteDoc(doc(db, "system_roles", roleId));
           await logAudit("RBAC_ROLE_DELETED", { roleId });
-          showToast("Rol Eliminado", `El rol ${roleId} fue dado de baja exitosamente.`);
+          showToast("Rol Eliminado", `El rol ${roleId} fue dado de baja.`);
         } catch (err) {
           showToast("Error al Eliminar Rol", err.message, true);
         }
       }
     };
 
-    // GUARDAR PERMISOS Y DESCRIPCIÓN DEL ROL
     window.guardarPermisosRol = async () => {
+      if (!isSuperAdmin) return;
       const roleId = document.getElementById('select-role-edit').value;
       const desc = document.getElementById('role-description-input').value.trim();
       const btn = document.getElementById('btn-save-role-perms');

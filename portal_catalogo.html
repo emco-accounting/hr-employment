@@ -61,8 +61,7 @@
       <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
         <label class="text-[11px] font-mono uppercase text-slate-400 px-2">Empresa:</label>
         <select id="select-company" onchange="cambiarEmpresaActiva(this.value)" class="bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500 font-sans">
-          <option value="cesar_gonzalez">Cesar Geovanni Gonzalez Contreras</option>
-          <option value="hr_employment">HR Employment</option>
+          <!-- Opciones dinámicas según allowed_companies -->
         </select>
       </div>
 
@@ -137,7 +136,7 @@
           </div>
         </div>
 
-        <!-- CARD 3: ACTIVOS & HARDWARE (CON DEPRECIACIÓN) -->
+        <!-- CARD 3: ACTIVOS & HARDWARE -->
         <div id="card-core-assets" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-indigo-500/40 transition">
           <div class="space-y-3">
             <div class="flex justify-between items-start">
@@ -228,7 +227,7 @@
       </div>
     </section>
 
-    <!-- SECCIÓN 2: MÓDULOS DINÁMICOS & EXTERNOS (EN VIVO DESDE FIRESTORE) -->
+    <!-- SECCIÓN 2: MÓDULOS DINÁMICOS & EXTERNOS -->
     <section class="space-y-4">
       <div class="flex justify-between items-center border-b border-slate-800 pb-2">
         <div>
@@ -295,6 +294,8 @@
     let currentUser = null;
     let currentUserStaff = null;
     let userPermissions = [];
+    let unsubscribeDynamicModules = null;
+    let cachedModules = [];
 
     onAuthStateChanged(auth, async (user) => {
       const shield = document.getElementById("auth-shield");
@@ -316,7 +317,10 @@
         const allowed = currentUserStaff.allowed_companies || ["*"];
         const isSuper = currentUserStaff.role_id === "SUPERADMIN";
 
-        // Si el usuario no tiene acceso a la empresa solicitada, redirigir a la primera autorizada
+        // Ajustar selector de empresas según permisos
+        construirSelectorEmpresas(allowed, isSuper);
+
+        // Validar si la empresa activa solicitada es permitida
         if (!isSuper && !allowed.includes("*") && !allowed.includes(activeCompanyId)) {
           activeCompanyId = allowed[0] || "cesar_gonzalez";
         }
@@ -337,10 +341,41 @@
       }
     });
 
+    function construirSelectorEmpresas(allowed, isSuper) {
+      const select = document.getElementById("select-company");
+      select.innerHTML = "";
+
+      const options = [];
+      if (isSuper || allowed.includes("*")) {
+        options.push({ val: "cesar_gonzalez", label: "Cesar Geovanni Gonzalez Contreras" });
+        options.push({ val: "hr_employment", label: "HR Employment" });
+      } else {
+        if (allowed.includes("cesar_gonzalez")) {
+          options.push({ val: "cesar_gonzalez", label: "Cesar Geovanni Gonzalez Contreras" });
+        }
+        if (allowed.includes("hr_employment")) {
+          options.push({ val: "hr_employment", label: "HR Employment" });
+        }
+      }
+
+      options.forEach(opt => {
+        const el = document.createElement("option");
+        el.value = opt.val;
+        el.innerText = opt.label;
+        select.appendChild(el);
+      });
+
+      // Si solo tiene una empresa permitida, deshabilitar selector
+      if (options.length <= 1) {
+        select.disabled = true;
+        select.classList.add("opacity-60", "cursor-not-allowed");
+      }
+    }
+
     window.cambiarEmpresaActiva = (empId) => {
       activeCompanyId = empId;
       actualizarContextoEmpresa();
-      initDynamicModulesStream();
+      renderDynamicModules();
     };
 
     function actualizarContextoEmpresa() {
@@ -355,7 +390,7 @@
       badge.innerText = emp.short;
       badge.className = `px-2 py-0.5 rounded text-[10px] font-mono border ${emp.badgeColor}`;
 
-      // Configurar enlaces directos a los módulos centrales con el parámetro de tenant
+      // Configurar enlaces directos
       document.getElementById("btn-nav-cxc").href = `${emp.cxc_file}?empresa=${encodeURIComponent(activeCompanyId)}`;
       document.getElementById("btn-nav-cxp").href = `${emp.cxp_file}?empresa=${encodeURIComponent(activeCompanyId)}`;
       document.getElementById("btn-nav-assets").href = `${emp.assets_file}?empresa=${encodeURIComponent(activeCompanyId)}`;
@@ -364,11 +399,25 @@
       document.getElementById("btn-nav-logs").href = `modulo_logs.html?empresa=${encodeURIComponent(activeCompanyId)}`;
       document.getElementById("link-studio-creator").href = `modulo_creador.html?empresa=${encodeURIComponent(activeCompanyId)}`;
 
-      // Verificar permisos RBAC sobre módulos centrales
+      // Evaluación completa de permisos sobre todos los módulos del núcleo
       aplicarRestriccionVisual("card-core-cxc", "cxc.read");
       aplicarRestriccionVisual("card-core-cxp", "cxp.read");
       aplicarRestriccionVisual("card-core-assets", "assets.read");
+      aplicarRestriccionVisual("card-core-gerencial", "gerencial.read");
+      aplicarRestriccionVisual("card-core-staff", "staff.read");
       aplicarRestriccionVisual("card-core-logs", "audit.read");
+
+      // Botón del Creador Studio
+      const isSuper = currentUserStaff?.role_id === "SUPERADMIN";
+      const hasCreator = isSuper || userPermissions.includes("*") || userPermissions.includes("creator.read");
+      const linkCreator = document.getElementById("link-studio-creator");
+      if (linkCreator) {
+        if (!hasCreator) {
+          linkCreator.classList.add("hidden");
+        } else {
+          linkCreator.classList.remove("hidden");
+        }
+      }
     }
 
     function aplicarRestriccionVisual(cardId, requiredPermission) {
@@ -377,94 +426,119 @@
       const card = document.getElementById(cardId);
       if (!card) return;
 
+      const btn = card.querySelector("a");
+
       if (!hasPerm) {
         card.classList.add("opacity-40", "grayscale");
-        const btn = card.querySelector("a");
         if (btn) {
           btn.classList.add("pointer-events-none", "bg-slate-800", "text-slate-500");
           btn.innerText = "Acceso Restringido (RBAC)";
         }
       } else {
         card.classList.remove("opacity-40", "grayscale");
+        if (btn) {
+          btn.classList.remove("pointer-events-none", "bg-slate-800", "text-slate-500");
+          // Restaurar etiquetas originales
+          if (cardId === "card-core-cxc") btn.innerText = "Abrir Cuentas por Cobrar";
+          if (cardId === "card-core-cxp") btn.innerText = "Abrir Cuentas por Pagar";
+          if (cardId === "card-core-assets") btn.innerText = "Abrir Activos Fijos";
+          if (cardId === "card-core-gerencial") btn.innerText = "Abrir Tablero Gerencial";
+          if (cardId === "card-core-staff") btn.innerText = "Gestionar Staff";
+          if (cardId === "card-core-logs") btn.innerText = "Abrir Logs Forenses";
+        }
       }
     }
 
     // SINCRONIZACIÓN REACTIVA DE MÓDULOS CREADOS E IMPORTADOS
     function initDynamicModulesStream() {
-      onSnapshot(collection(db, "system_modules"), (snap) => {
-        const container = document.getElementById("dynamic-modules-container");
-        const counter = document.getElementById("counter-dynamic-modules");
-        container.innerHTML = "";
+      if (unsubscribeDynamicModules) unsubscribeDynamicModules();
 
-        const modules = [];
+      unsubscribeDynamicModules = onSnapshot(collection(db, "system_modules"), (snap) => {
+        cachedModules = [];
         snap.forEach(d => {
-          const mod = d.data();
-          // Validar que esté habilitado para la empresa activa
-          const tenants = mod.tenants_enabled || ["cesar_gonzalez", "hr_employment"];
-          if (tenants.includes(activeCompanyId) || tenants.includes("*")) {
-            modules.push({ id: d.id, ...mod });
-          }
+          cachedModules.push({ id: d.id, ...d.data() });
         });
+        renderDynamicModules();
+      }, (err) => {
+        console.warn("Fallo lectura de módulos dinámicos:", err.message);
+        const container = document.getElementById("dynamic-modules-container");
+        container.innerHTML = `
+          <div class="p-8 text-center text-amber-400 font-mono text-xs col-span-full border border-slate-800/80 rounded-2xl bg-slate-900/30">
+            Módulos dinámicos no disponibles para este perfil de usuario.
+          </div>
+        `;
+      });
+    }
 
-        counter.innerText = `${modules.length} Módulo(s) Activo(s)`;
+    function renderDynamicModules() {
+      const container = document.getElementById("dynamic-modules-container");
+      const counter = document.getElementById("counter-dynamic-modules");
+      container.innerHTML = "";
 
-        if (modules.length === 0) {
-          container.innerHTML = `
-            <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full border border-slate-800/80 rounded-2xl bg-slate-900/30">
-              No hay módulos dinámicos adicionales registrados para esta razón social. Diseña uno en ContaCore Studio.
-            </div>
-          `;
-          return;
-        }
+      const modules = cachedModules.filter(mod => {
+        const tenants = mod.tenants_enabled || ["cesar_gonzalez", "hr_employment"];
+        return tenants.includes(activeCompanyId) || tenants.includes("*");
+      });
 
-        const isSuper = currentUserStaff?.role_id === "SUPERADMIN";
+      counter.innerText = `${modules.length} Módulo(s) Activo(s)`;
 
-        modules.forEach(mod => {
-          const readPerm = `${mod.slug}.read`;
-          const hasAccess = isSuper || userPermissions.includes("*") || userPermissions.includes(readPerm);
-          const urlVisor = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
+      if (modules.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full border border-slate-800/80 rounded-2xl bg-slate-900/30">
+            No hay módulos dinámicos adicionales registrados para esta razón social.
+          </div>
+        `;
+        return;
+      }
 
-          const card = document.createElement("div");
-          card.className = `bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-indigo-500/40 transition ${!hasAccess ? 'opacity-40 grayscale' : ''}`;
+      const isSuper = currentUserStaff?.role_id === "SUPERADMIN";
 
-          const badgeTipo = mod.is_standalone
-            ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">AUTÓNOMO</span>`
-            : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ESQUEMA</span>`;
+      modules.forEach(mod => {
+        const readPerm = `${mod.slug}.read`;
+        const hasAccess = isSuper || userPermissions.includes("*") || userPermissions.includes(readPerm);
+        const urlVisor = `modulo_dinamico.html?slug=${encodeURIComponent(mod.slug)}&empresa=${encodeURIComponent(activeCompanyId)}`;
 
-          const actionBtn = hasAccess
-            ? `<a href="${urlVisor}" class="w-full text-center py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
-                 <span>Ingresar al Módulo</span>
-                 <i class="ph ph-arrow-right"></i>
-               </a>`
-            : `<button disabled class="w-full text-center py-2 px-3 rounded-xl bg-slate-800 text-slate-500 text-xs font-semibold cursor-not-allowed">
-                 Acceso Restringido (RBAC)
-               </button>`;
+        const card = document.createElement("div");
+        card.className = `bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-indigo-500/40 transition ${!hasAccess ? 'opacity-40 grayscale' : ''}`;
 
-          card.innerHTML = `
-            <div class="space-y-3">
-              <div class="flex justify-between items-start">
-                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl">
-                  <i class="ph-bold ${mod.icon || 'ph-cube'}"></i>
-                </div>
-                ${badgeTipo}
+        const badgeTipo = mod.is_standalone
+          ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">AUTÓNOMO</span>`
+          : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ESQUEMA</span>`;
+
+        const actionBtn = hasAccess
+          ? `<a href="${urlVisor}" class="w-full text-center py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20">
+               <span>Ingresar al Módulo</span>
+               <i class="ph ph-arrow-right"></i>
+             </a>`
+          : `<button disabled class="w-full text-center py-2 px-3 rounded-xl bg-slate-800 text-slate-500 text-xs font-semibold cursor-not-allowed">
+               Acceso Restringido (RBAC)
+             </button>`;
+
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl">
+                <i class="ph-bold ${mod.icon || 'ph-cube'}"></i>
               </div>
-              <div>
-                <h4 class="text-base font-bold text-white leading-tight">${mod.title}</h4>
-                <span class="text-[10px] font-mono text-indigo-400 block mt-0.5">${mod.slug}</span>
-                <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${mod.description || 'Sin descripción disponible'}</p>
-              </div>
+              ${badgeTipo}
             </div>
-            <div class="mt-5 pt-4 border-t border-slate-800">
-              ${actionBtn}
+            <div>
+              <h4 class="text-base font-bold text-white leading-tight">${mod.title}</h4>
+              <span class="text-[10px] font-mono text-indigo-400 block mt-0.5">${mod.slug}</span>
+              <p class="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">${mod.description || 'Sin descripción disponible'}</p>
             </div>
-          `;
-          container.appendChild(card);
-        });
+          </div>
+          <div class="mt-5 pt-4 border-t border-slate-800">
+            ${actionBtn}
+          </div>
+        `;
+        container.appendChild(card);
       });
     }
 
     window.logoutSession = async () => {
       if (confirm("¿Cerrar sesión de forma segura en ContaCore?")) {
+        if (unsubscribeDynamicModules) unsubscribeDynamicModules();
         await signOut(auth);
         localStorage.clear();
         sessionStorage.clear();

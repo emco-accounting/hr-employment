@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caja Chica & Saldos Iniciales | ContaCore EMCO</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-amber-500 selection:text-white">
+
+  <!-- OVERLAY AUTORIZACIÓN -->
+  <div id="auth-shield" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center gap-4 transition-opacity duration-300">
+    <div class="w-16 h-16 rounded-2xl bg-amber-600/20 border border-amber-500/30 animate-pulse flex items-center justify-center">
+      <i class="ph-bold ph-vault text-amber-400 text-3xl"></i>
+    </div>
+    <p class="text-xs text-slate-400 font-mono">Sincronizando Caja Chica y Libro Diario...</p>
+  </div>
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex flex-wrap justify-between items-center gap-4 backdrop-blur-md sticky top-0 z-20">
+    <div class="flex items-center gap-3">
+      <a id="btn-back-portal" href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
+        <i class="ph-bold ph-arrow-left text-lg"></i>
+      </a>
+      <div>
+        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+          <span>Caja Chica, Arqueo & Saldos Iniciales</span>
+          <span id="header-tenant-badge" class="px-2 py-0.5 rounded text-[10px] font-mono border">--</span>
+        </h2>
+        <span class="text-xs text-slate-400 font-mono">Razón Social: <strong id="header-company-name" class="text-slate-200">--</strong> | BD: emco-accounting</span>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5">
+      <select id="select-company" onchange="cambiarEmpresa(this.value)" class="bg-slate-950 text-white text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700 outline-none focus:border-amber-500">
+        <!-- Opciones dinámicas -->
+      </select>
+
+      <button onclick="openModalApertura()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+        <i class="ph-bold ph-bank"></i> Saldos Iniciales
+      </button>
+
+      <button onclick="openModalFondeo()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+        <i class="ph-bold ph-arrow-down-left"></i> + Fondear / Reponer
+      </button>
+
+      <button onclick="openModalGastoCaja()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-amber-600/20">
+        <i class="ph-bold ph-receipt"></i> - Comprobar Gasto
+      </button>
+    </div>
+  </header>
+
+  <!-- CUERPO PRINCIPAL -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
+
+    <!-- KPI ROW + ARQUEO RÁPIDO -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+      <div class="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-5 shadow-lg shadow-amber-500/5">
+        <span class="text-xs font-mono text-amber-400 uppercase font-semibold flex items-center justify-between">
+          <span>Saldo Disponible Caja</span>
+          <i class="ph-bold ph-vault text-base"></i>
+        </span>
+        <p id="kpi-saldo-caja" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-400 mt-1 block">Cuenta Contable 101.01 (Activo)</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total Fondeado / Ingresado</span>
+        <p id="kpi-total-fondeos" class="text-2xl font-bold font-mono text-emerald-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-fondeos-sub">0 fondeos realizados</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Gastos Comprobados</span>
+        <p id="kpi-total-gastos" class="text-2xl font-bold font-mono text-rose-400 mt-2">$0.00</p>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-gastos-sub">0 tickets comprobados</span>
+      </div>
+
+      <!-- TARJETA DE ARQUEO FÍSICO EN VIVO -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-mono text-indigo-300 uppercase font-bold">Arqueo Físico (Efectivo)</span>
+          <span id="arqueo-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400">SIN CONTAR</span>
+        </div>
+        <div class="flex items-center gap-2 mt-2">
+          <input type="number" step="0.01" id="input-arqueo-fisico" oninput="calcularArqueo()" placeholder="Efectivo contado $" class="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-white font-mono text-xs outline-none focus:border-indigo-500">
+        </div>
+        <div class="flex justify-between items-center mt-2 text-[11px] font-mono">
+          <span class="text-slate-400">Diferencia:</span>
+          <span id="arqueo-diferencia" class="font-bold text-slate-300">$0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARRA DE FILTROS -->
+    <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+          <i class="ph ph-magnifying-glass text-slate-400"></i>
+          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar concepto, proveedor, folio..." class="bg-transparent text-white focus:outline-none text-xs w-56">
+        </div>
+
+        <select id="filter-tipo" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
+          <option value="ALL">Todos los Movimientos</option>
+          <option value="FONDEO">Entradas (Fondeos / Apertura)</option>
+          <option value="GASTO">Salidas (Comprobación Gastos)</option>
+        </select>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span id="counter-records" class="font-mono text-slate-500 text-xs">0 movimientos</span>
+        <button onclick="exportarExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+          <i class="ph-bold ph-microsoft-excel-logo"></i> Exportar Auxiliar
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLA AUXILIAR DE CAJA CHICA -->
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+      <table class="w-full text-left text-sm text-slate-300">
+        <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
+          <tr>
+            <th class="p-4">Fecha</th>
+            <th class="p-4">Tipo</th>
+            <th class="p-4">Concepto / Proveedor</th>
+            <th class="p-4">Cuenta Contable</th>
+            <th class="p-4 text-right">Entrada (+)</th>
+            <th class="p-4 text-right">Salida (-)</th>
+            <th class="p-4 text-right">Saldo Acumulado</th>
+          </tr>
+        </thead>
+        <tbody id="table-caja" class="divide-y divide-slate-800/60 font-sans text-xs">
+          <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Cargando auxiliar de caja chica...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- MODAL 1: SALDOS INICIALES DE APERTURA (PARA CUADRAR BALANCE DESDE DÍA 1) -->
+  <div id="modal-apertura" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-indigo-500/30 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="ph-bold ph-bank text-indigo-400"></i> Póliza de Saldos Iniciales (Apertura)
+          </h4>
+          <span class="text-[11px] font-mono text-indigo-300">Asienta efectivo inicial contra Capital Social (301.01)</span>
+        </div>
+        <button onclick="toggleModal('modal-apertura', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-apertura" class="space-y-4 text-xs text-slate-300">
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Corte / Apertura</label>
+          <input type="date" id="apertura-fecha" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Saldo Inicial Bancos (102.01)</label>
+            <input type="number" step="0.01" min="0" id="apertura-bancos" oninput="actualizarTotalApertura()" placeholder="0.00" value="0.00" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-amber-400 mb-1">Saldo Inicial Caja Chica (101.01)</label>
+            <input type="number" step="0.01" min="0" id="apertura-caja" oninput="actualizarTotalApertura()" placeholder="0.00" value="0.00" class="w-full px-3 py-2 bg-slate-950 border border-amber-500/30 rounded-xl text-amber-300 font-mono outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800 flex justify-between items-center font-mono">
+          <span class="text-slate-400">Contrapartida Capital Social (301.01):</span>
+          <span id="apertura-total-capital" class="text-sm font-bold text-indigo-400">$0.00</span>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="toggleModal('modal-apertura', false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-submit-apertura" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition">Emitir Póliza de Apertura</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: FONDEO / REPOSICIÓN DE CAJA CHICA DESDE BANCOS -->
+  <div id="modal-fondeo" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-emerald-500/30 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white">Fondeo / Reposición de Caja Chica</h4>
+          <span class="text-[11px] font-mono text-emerald-400">Cargo 101.01 Caja Chica | Abono 102.01 Bancos</span>
+        </div>
+        <button onclick="toggleModal('modal-fondeo', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-fondeo" class="space-y-4 text-xs text-slate-300">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Traspaso</label>
+            <input type="date" id="fondeo-fecha" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-emerald-400 mb-1 font-bold">Monto a Fondear ($ MXN)</label>
+            <input type="number" step="0.01" min="0.01" id="fondeo-monto" placeholder="5000.00" required class="w-full px-3 py-2 bg-slate-950 border border-emerald-500/40 rounded-xl text-emerald-300 font-bold font-mono outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Concepto / Referencia Bancaria</label>
+          <input type="text" id="fondeo-concepto" placeholder="Ej: Reposición semanal fondo fijo / Retiro efectivo" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="toggleModal('modal-fondeo', false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-submit-fondeo" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition">Registrar Fondeo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: COMPROBACIÓN RÁPIDA DE GASTO CON CAJA CHICA -->
+  <div id="modal-gasto" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-amber-500/30 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white">Comprobar Gasto Menor / DiDi con Caja Chica</h4>
+          <span class="text-[11px] font-mono text-amber-400">Impacta Estado de Resultados y descuenta 101.01 Caja Chica</span>
+        </div>
+        <button onclick="toggleModal('modal-gasto', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-gasto" class="space-y-4 text-xs text-slate-300">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Proveedor / Establecimiento</label>
+            <input type="text" id="gasto-proveedor" placeholder="Ej: DiDi, Papelería, Oxxo..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Rubro Contable</label>
+            <select id="gasto-cuenta" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-amber-500">
+              <option value="601.03">601.03 - Movilidad (DiDi / Transporte / Viáticos)</option>
+              <option value="601.04">601.04 - Papelería, Insumos y Caja Chica</option>
+              <option value="501.01">501.01 - Costo Directo de Operación</option>
+              <option value="601.02">601.02 - Publicidad / Marketing</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+          <div>
+            <label class="block text-[10px] uppercase text-slate-400 mb-1">Subtotal ($)</label>
+            <input type="number" step="0.01" id="gasto-subtotal" oninput="recalcGastoTotal()" placeholder="0.00" required class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase text-slate-400 mb-1">IVA ($ MXN)</label>
+            <input type="number" step="0.01" id="gasto-iva" oninput="recalcGastoTotal()" value="0.00" placeholder="0.00" required class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase text-amber-400 font-bold mb-1">Total Ticket ($)</label>
+            <input type="number" step="0.01" id="gasto-total" oninput="recalcGastoSub()" placeholder="0.00" required class="w-full px-2.5 py-1.5 bg-slate-900 border border-amber-500/40 rounded-lg text-amber-300 font-bold font-mono outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha del Ticket</label>
+            <input type="date" id="gasto-fecha" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Concepto / Folio Ticket</label>
+            <input type="text" id="gasto-concepto" placeholder="Ej: Traslado reclutamiento / Ticket #45" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-amber-500">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="toggleModal('modal-gasto', false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-submit-gasto" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-semibold transition">Comprobar y Contabilizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { 
+      getFirestore, collection, addDoc, doc, getDoc, 
+      query, where, orderBy, onSnapshot, serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      emitirPolizaContable,
+      polizaFondeoCajaChica,
+      polizaGastoOperativo,
+      CATALOGO_CUENTAS
+    } from "./contabilidad_core.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const EMPRESAS = {
+      cesar_gonzalez: {
+        name: "Cesar Geovanni Gonzalez Contreras",
+        short: "CESAR GEOVANNI",
+        badge: "bg-blue-500/10 text-blue-400 border-blue-500/20"
+      },
+      hr_employment: {
+        name: "HR Employment",
+        short: "HR EMPLOYMENT",
+        badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+      }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeCompanyId = urlParams.get("empresa") || localStorage.getItem("active_company_id") || "cesar_gonzalez";
+    let currentUser = null;
+    let movimientosCaja = [];
+    let saldoActualCaja = 0;
+    let unsubscribeStream = null;
+
+    const r2 = (n) => Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100;
+
+    onAuthStateChanged(auth, async (user) => {
+      const shield = document.getElementById("auth-shield");
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+
+      try {
+        const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+        if (!staffSnap.exists() || staffSnap.data().status !== "ACTIVE") {
+          await signOut(auth);
+          window.location.replace("index.html");
+          return;
+        }
+
+        currentUser = staffSnap.data();
+        const allowed = currentUser.allowed_companies || ["*"];
+        const isSuper = currentUser.role_id === "SUPERADMIN";
+
+        construirSelectorEmpresas(allowed, isSuper);
+        if (!isSuper && !allowed.includes("*") && !allowed.includes(activeCompanyId)) {
+          activeCompanyId = allowed[0] || "cesar_gonzalez";
+        }
+
+        actualizarHeaderEmpresa();
+        initStreamCajaChica();
+
+        shield.classList.add("opacity-0", "pointer-events-none");
+        setTimeout(() => shield.classList.add("hidden"), 300);
+      } catch (err) {
+        console.error("Error autenticación Caja Chica:", err);
+      }
+    });
+
+    function construirSelectorEmpresas(allowed, isSuper) {
+      const sel = document.getElementById("select-company");
+      sel.innerHTML = "";
+      Object.entries(EMPRESAS).forEach(([key, info]) => {
+        if (isSuper || allowed.includes("*") || allowed.includes(key)) {
+          const opt = document.createElement("option");
+          opt.value = key;
+          opt.innerText = info.name;
+          sel.appendChild(opt);
+        }
+      });
+      sel.value = activeCompanyId;
+    }
+
+    window.cambiarEmpresa = (empId) => {
+      activeCompanyId = empId;
+      localStorage.setItem("active_company_id", empId);
+      actualizarHeaderEmpresa();
+      initStreamCajaChica();
+    };
+
+    function actualizarHeaderEmpresa() {
+      const emp = EMPRESAS[activeCompanyId] || EMPRESAS.cesar_gonzalez;
+      document.getElementById("header-company-name").innerText = emp.name;
+      const badge = document.getElementById("header-tenant-badge");
+      badge.innerText = emp.short;
+      badge.className = `px-2 py-0.5 rounded text-[10px] font-mono border ${emp.badge}`;
+      document.getElementById("btn-back-portal").href = `portal_catalogo.html?empresa=${encodeURIComponent(activeCompanyId)}`;
+    }
+
+    function initStreamCajaChica() {
+      if (unsubscribeStream) unsubscribeStream();
+      const q = query(
+        collection(db, "petty_cash_ledger"),
+        where("company_id", "==", activeCompanyId),
+        orderBy("fecha", "asc")
+      );
+
+      unsubscribeStream = onSnapshot(q, (snap) => {
+        movimientosCaja = [];
+        snap.forEach((d) => movimientosCaja.push({ id: d.id, ...d.data() }));
+        renderTable();
+      });
+    }
+
+    window.renderTable = () => {
+      const search = (document.getElementById("filter-search").value || "").toLowerCase().trim();
+      const tipoFilter = document.getElementById("filter-tipo").value;
+
+      let totalFondeos = 0, countFondeos = 0;
+      let totalGastos = 0, countGastos = 0;
+      let runningBalance = 0;
+
+      // Calcular saldo acumulado cronológicamente
+      const conSaldo = movimientosCaja.map((m) => {
+        const monto = Number(m.total || 0);
+        if (m.tipo === "FONDEO") {
+          runningBalance = r2(runningBalance + monto);
+          totalFondeos = r2(totalFondeos + monto);
+          countFondeos++;
+        } else {
+          runningBalance = r2(runningBalance - monto);
+          totalGastos = r2(totalGastos + monto);
+          countGastos++;
+        }
+        return { ...m, saldo_resultante: runningBalance };
+      });
+
+      saldoActualCaja = runningBalance;
+
+      document.getElementById("kpi-saldo-caja").innerText = `$${saldoActualCaja.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-total-fondeos").innerText = `$${totalFondeos.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-fondeos-sub").innerText = `${countFondeos} fondeos / aperturas`;
+      document.getElementById("kpi-total-gastos").innerText = `$${totalGastos.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-gastos-sub").innerText = `${countGastos} tickets comprobados`;
+      calcularArqueo();
+
+      const filtrados = conSaldo.filter((m) => {
+        if (tipoFilter !== "ALL" && m.tipo !== tipoFilter) return false;
+        if (search) {
+          const c = (m.concepto || "").toLowerCase().includes(search);
+          const p = (m.proveedor || "").toLowerCase().includes(search);
+          if (!c && !p) return false;
+        }
+        return true;
+      }).reverse(); // Mostrar más recientes arriba
+
+      document.getElementById("counter-records").innerText = `${filtrados.length} movimientos`;
+      const tbody = document.getElementById("table-caja");
+
+      if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin movimientos registrados en Caja Chica para esta empresa.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtrados.map((m) => {
+        const esFondeo = m.tipo === "FONDEO";
+        const badge = esFondeo
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ENTRADA</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20">COMPROBACIÓN</span>`;
+
+        const ctaNombre = CATALOGO_CUENTAS[m.cuenta_contable]?.nombre || m.cuenta_contable || "101.01";
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-4 font-mono text-xs text-slate-400">${m.fecha}</td>
+            <td class="p-4">${badge}</td>
+            <td class="p-4">
+              <div class="text-slate-200 font-medium">${m.concepto}</div>
+              ${m.proveedor ? `<span class="text-[11px] text-slate-400">${m.proveedor}</span>` : ""}
+            </td>
+            <td class="p-4 font-mono text-[11px] text-indigo-300">${m.cuenta_contable || "101.01"} &bull; ${ctaNombre}</td>
+            <td class="p-4 text-right font-mono text-emerald-400 font-semibold">${esFondeo ? "+$" + Number(m.total).toLocaleString("es-MX", { minimumFractionDigits: 2 }) : "—"}</td>
+            <td class="p-4 text-right font-mono text-rose-400 font-semibold">${!esFondeo ? "-$" + Number(m.total).toLocaleString("es-MX", { minimumFractionDigits: 2 }) : "—"}</td>
+            <td class="p-4 text-right font-mono text-white font-bold">$${Number(m.saldo_resultante).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+          </tr>
+        `;
+      }).join("");
+    };
+
+    window.calcularArqueo = () => {
+      const val = document.getElementById("input-arqueo-fisico").value;
+      const badge = document.getElementById("arqueo-badge");
+      const diffEl = document.getElementById("arqueo-diferencia");
+
+      if (val === "") {
+        badge.innerText = "SIN CONTAR";
+        badge.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400";
+        diffEl.innerText = "$0.00";
+        diffEl.className = "font-bold text-slate-300";
+        return;
+      }
+
+      const contado = parseFloat(val) || 0;
+      const diff = r2(contado - saldoActualCaja);
+      diffEl.innerText = `${diff >= 0 ? "+" : ""}$${diff.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+
+      if (diff === 0) {
+        badge.innerText = "CUADRADA 100%";
+        badge.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+        diffEl.className = "font-bold text-emerald-400";
+      } else if (diff < 0) {
+        badge.innerText = "FALTANTE";
+        badge.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20";
+        diffEl.className = "font-bold text-rose-400";
+      } else {
+        badge.innerText = "SOBRANTE";
+        badge.className = "px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20";
+        diffEl.className = "font-bold text-amber-400";
+      }
+    };
+
+    window.toggleModal = (id, show) => {
+      document.getElementById(id).classList.toggle("hidden", !show);
+    };
+
+    window.openModalApertura = () => {
+      document.getElementById("form-apertura").reset();
+      document.getElementById("apertura-fecha").value = new Date().toISOString().split("T")[0];
+      actualizarTotalApertura();
+      toggleModal("modal-apertura", true);
+    };
+
+    window.actualizarTotalApertura = () => {
+      const b = parseFloat(document.getElementById("apertura-bancos").value) || 0;
+      const c = parseFloat(document.getElementById("apertura-caja").value) || 0;
+      document.getElementById("apertura-total-capital").innerText = `$${r2(b + c).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+    };
+
+    window.openModalFondeo = () => {
+      document.getElementById("form-fondeo").reset();
+      document.getElementById("fondeo-fecha").value = new Date().toISOString().split("T")[0];
+      toggleModal("modal-fondeo", true);
+    };
+
+    window.openModalGastoCaja = () => {
+      document.getElementById("form-gasto").reset();
+      document.getElementById("gasto-fecha").value = new Date().toISOString().split("T")[0];
+      toggleModal("modal-gasto", true);
+    };
+
+    window.recalcGastoTotal = () => {
+      const sub = parseFloat(document.getElementById("gasto-subtotal").value) || 0;
+      const iva = parseFloat(document.getElementById("gasto-iva").value) || 0;
+      document.getElementById("gasto-total").value = r2(sub + iva).toFixed(2);
+    };
+
+    window.recalcGastoSub = () => {
+      const tot = parseFloat(document.getElementById("gasto-total").value) || 0;
+      const iva = parseFloat(document.getElementById("gasto-iva").value) || 0;
+      document.getElementById("gasto-subtotal").value = r2(tot - iva).toFixed(2);
+    };
+
+    // SUBMIT 1: SALDOS INICIALES DE APERTURA
+    document.getElementById("form-apertura").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-submit-apertura");
+      btn.disabled = true;
+
+      const fecha = document.getElementById("apertura-fecha").value;
+      const bancos = r2(document.getElementById("apertura-bancos").value);
+      const caja = r2(document.getElementById("apertura-caja").value);
+      const totalCapital = r2(bancos + caja);
+
+      if (totalCapital <= 0) {
+        btn.disabled = false;
+        return alert("Ingresa al menos un saldo inicial mayor a $0.00");
+      }
+
+      try {
+        const movs = [];
+        if (bancos > 0) movs.push({ cuenta: "102.01", debe: bancos, haber: 0, referencia: "SALDO_INICIAL" });
+        if (caja > 0) movs.push({ cuenta: "101.01", debe: caja, haber: 0, referencia: "SALDO_INICIAL" });
+        movs.push({ cuenta: "301.01", debe: 0, haber: totalCapital, referencia: "APERTURA_PATRIMONIO" });
+
+        const poliza = await emitirPolizaContable(db, {
+          company_id: activeCompanyId,
+          fecha,
+          origen_modulo: "APERTURA",
+          concepto: `Póliza de Saldos Iniciales (${EMPRESAS[activeCompanyId].name})`,
+          movimientos: movs,
+          user_uid: auth.currentUser?.uid || "SYSTEM"
+        });
+
+        if (caja > 0) {
+          await addDoc(collection(db, "petty_cash_ledger"), {
+            company_id: activeCompanyId,
+            tipo: "FONDEO",
+            fecha,
+            concepto: "Saldo Inicial de Apertura Caja Chica",
+            proveedor: "Capital / Apertura",
+            cuenta_contable: "301.01",
+            subtotal: caja,
+            iva: 0,
+            total: caja,
+            poliza_id: poliza.id,
+            created_by: currentUser?.email || "admin",
+            created_at: serverTimestamp()
+          });
+        }
+
+        toggleModal("modal-apertura", false);
+        alert("Póliza de Saldos Iniciales registrada y cuadrada en el Balance General.");
+      } catch (err) {
+        alert("Error en apertura: " + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // SUBMIT 2: FONDEO / REPOSICIÓN DESDE BANCOS
+    document.getElementById("form-fondeo").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-submit-fondeo");
+      btn.disabled = true;
+
+      const fecha = document.getElementById("fondeo-fecha").value;
+      const monto = r2(document.getElementById("fondeo-monto").value);
+      const concepto = document.getElementById("fondeo-concepto").value.trim();
+
+      try {
+        const docRef = await addDoc(collection(db, "petty_cash_ledger"), {
+          company_id: activeCompanyId,
+          tipo: "FONDEO",
+          fecha,
+          concepto,
+          proveedor: "Traspaso Bancario",
+          cuenta_contable: "102.01",
+          subtotal: monto,
+          iva: 0,
+          total: monto,
+          created_by: currentUser?.email || "admin",
+          created_at: serverTimestamp()
+        });
+
+        await polizaFondeoCajaChica(db, {
+          company_id: activeCompanyId,
+          fecha,
+          movimiento_id: docRef.id,
+          monto,
+          concepto,
+          user_uid: auth.currentUser?.uid || "SYSTEM"
+        });
+
+        toggleModal("modal-fondeo", false);
+      } catch (err) {
+        alert("Error al registrar fondeo: " + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // SUBMIT 3: COMPROBACIÓN DE GASTO CON CAJA CHICA
+    document.getElementById("form-gasto").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-submit-gasto");
+      btn.disabled = true;
+
+      const fecha = document.getElementById("gasto-fecha").value;
+      const proveedor = document.getElementById("gasto-proveedor").value.trim();
+      const cuenta = document.getElementById("gasto-cuenta").value;
+      const subtotal = r2(document.getElementById("gasto-subtotal").value);
+      const iva = r2(document.getElementById("gasto-iva").value);
+      const total = r2(document.getElementById("gasto-total").value);
+      const concepto = document.getElementById("gasto-concepto").value.trim();
+
+      try {
+        const docRef = await addDoc(collection(db, "petty_cash_ledger"), {
+          company_id: activeCompanyId,
+          tipo: "GASTO",
+          fecha,
+          concepto,
+          proveedor,
+          cuenta_contable: cuenta,
+          subtotal,
+          iva,
+          total,
+          created_by: currentUser?.email || "admin",
+          created_at: serverTimestamp()
+        });
+
+        await polizaGastoOperativo(db, {
+          company_id: activeCompanyId,
+          fecha,
+          gasto_id: docRef.id,
+          proveedor,
+          concepto_gasto: concepto,
+          cuenta_gasto: cuenta,
+          subtotal,
+          iva,
+          total,
+          fuente_pago: "CAJA_CHICA",
+          user_uid: auth.currentUser?.uid || "SYSTEM"
+        });
+
+        toggleModal("modal-gasto", false);
+      } catch (err) {
+        alert("Error al comprobar gasto: " + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    window.exportarExcel = () => {
+      if (movimientosCaja.length === 0) return alert("Sin movimientos para exportar.");
+      const rows = movimientosCaja.map((m) => ({
+        Fecha: m.fecha,
+        Tipo: m.tipo,
+        Concepto: m.concepto,
+        Proveedor: m.proveedor || "",
+        "Cuenta Contable": m.cuenta_contable || "101.01",
+        Subtotal: Number(m.subtotal || 0),
+        IVA: Number(m.iva || 0),
+        Total: Number(m.total || 0),
+        "Registrado Por": m.created_by || ""
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Auxiliar_Caja_Chica");
+      XLSX.writeFile(wb, `Caja_Chica_${activeCompanyId}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
+  </script>
+</body>
+</html>

@@ -46,7 +46,7 @@
       </a>
       <div>
         <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-          <span>Cuentas por Pagar (CxP)</span>
+          <span>Cuentas por Pagar (CxP) & Gastos</span>
           <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">CESAR GEOVANNI</span>
         </h2>
         <span class="text-xs text-slate-400 font-mono">Receptor: <strong class="text-slate-200">Cesar Geovanni Gonzalez Contreras</strong> | BD: emco-accounting</span>
@@ -62,7 +62,7 @@
         <i class="ph-bold ph-microsoft-excel-logo"></i> Exportar
       </button>
       <button onclick="openModalFactura()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-rose-600/20">
-        <i class="ph-bold ph-file-arrow-up"></i> + Factura de Proveedor
+        <i class="ph-bold ph-file-arrow-up"></i> + Gasto / Factura Proveedor
       </button>
     </div>
   </header>
@@ -79,13 +79,13 @@
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total Liquidado a Proveedores</span>
+        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total Liquidado / Pagado</span>
         <p id="kpi-liquidado" class="text-2xl font-bold font-mono text-emerald-400 mt-2">$0.00</p>
-        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-liquidado-sub">0 facturas pagadas</span>
+        <span class="text-[11px] text-slate-500 mt-1 block" id="kpi-liquidado-sub">0 registros pagados</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
-        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total Pasivo Registrado</span>
+        <span class="text-xs font-mono text-slate-400 uppercase font-semibold">Total Egresos Registrados</span>
         <p id="kpi-total" class="text-2xl font-bold font-mono text-white mt-2">$0.00</p>
         <span class="text-[11px] text-slate-500 mt-1 block">Cesar Geovanni Gonzalez Contreras</span>
       </div>
@@ -97,13 +97,21 @@
         <div class="flex flex-wrap items-center gap-3">
           <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
             <i class="ph ph-magnifying-glass text-slate-400"></i>
-            <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar proveedor, folio, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-56">
+            <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar proveedor, Facebook, DiDi, UUID..." class="bg-transparent text-white focus:outline-none text-xs w-60">
           </div>
 
           <select id="filter-status" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
             <option value="ALL">Todos los Estados</option>
             <option value="PENDING">Pendientes / Por Pagar</option>
             <option value="PAID">Pagadas / Liquidadas</option>
+          </select>
+
+          <select id="filter-rubro" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
+            <option value="ALL">Todos los Rubros</option>
+            <option value="601.02">Publicidad (Facebook Ads)</option>
+            <option value="601.03">Movilidad (DiDi / Viáticos)</option>
+            <option value="601.04">Gastos Generales / Proveedores</option>
+            <option value="501.01">Costo Directo Operación</option>
           </select>
         </div>
 
@@ -116,7 +124,7 @@
           <button onclick="setPresetPeriod('all')" class="px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">Todo</button>
         </div>
 
-        <span id="counter-records" class="font-mono text-slate-500 text-xs">0 facturas</span>
+        <span id="counter-records" class="font-mono text-slate-500 text-xs">0 registros</span>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
@@ -170,11 +178,11 @@
         <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
           <tr>
             <th class="p-4">Folio / UUID</th>
-            <th class="p-4">Proveedor / Emisor</th>
-            <th class="p-4">Vencimiento</th>
-            <th class="p-4">Importe Neto</th>
+            <th class="p-4">Proveedor / Rubro Contable</th>
+            <th class="p-4">Fecha / Venc.</th>
+            <th class="p-4">Importe Total</th>
             <th class="p-4">Comprobante</th>
-            <th class="p-4">Estado Pago</th>
+            <th class="p-4">Estado / Fondeo</th>
             <th class="p-4 text-right">Acciones</th>
           </tr>
         </thead>
@@ -186,13 +194,13 @@
 
   </main>
 
-  <!-- MODAL: REGISTRAR / IMPORTAR FACTURA PROVEEDOR -->
-  <div id="modal-invoice" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4">
+  <!-- MODAL: REGISTRAR / IMPORTAR FACTURA PROVEEDOR O GASTO -->
+  <div id="modal-invoice" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-4 my-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
-          <h4 class="text-base font-bold text-white">Importar Factura de Proveedor (CxP)</h4>
-          <span class="text-[11px] font-mono text-rose-400">Receptor: Cesar Geovanni Gonzalez Contreras</span>
+          <h4 class="text-base font-bold text-white">Registrar Egreso / Factura de Proveedor (CxP)</h4>
+          <span class="text-[11px] font-mono text-rose-400">Receptor: Cesar Geovanni Gonzalez Contreras | Sincronizado con Libro Diario</span>
         </div>
         <button onclick="toggleModalInvoice(false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
@@ -201,7 +209,7 @@
         <input type="file" id="invoice-file" accept=".xml, .pdf, .jpg, .jpeg, .png" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="handleFileUpload(event)">
         <div id="upload-idle" class="space-y-1">
           <i class="ph-bold ph-file-arrow-up text-2xl text-rose-400 inline-block"></i>
-          <p class="text-xs font-semibold text-slate-200">Arrastra factura de proveedor (PDF o XML)</p>
+          <p class="text-xs font-semibold text-slate-200">Arrastra factura de proveedor, Facebook Ads o DiDi (PDF, XML o Ticket)</p>
           <p class="text-[10px] text-slate-500 font-mono">Lectura inteligente blindada: Gemini 3.8 / 2.5 / 2.0</p>
         </div>
         <div id="upload-processing" class="hidden space-y-2 py-2">
@@ -213,28 +221,65 @@
       <form id="form-invoice" class="space-y-4 text-xs font-medium text-slate-300">
         <input type="hidden" id="uploaded-doc-url" value="">
         <input type="hidden" id="uploaded-doc-name" value="">
-        <!-- Metadatos fiscales capturados -->
         <input type="hidden" id="raw-fiscal-data" value="">
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Proveedor / Emisor</label>
-            <input type="text" id="invoice-entity" placeholder="Razón Social o Nombre del Proveedor" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500">
+            <input type="text" id="invoice-entity" oninput="autodetectarRubroPorProveedor()" placeholder="Ej: Meta Platforms, DiDi, Proveedor..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500">
           </div>
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Folio o UUID Fiscal</label>
-            <input type="text" id="invoice-folio" placeholder="602B1C8B-..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono uppercase">
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Folio, UUID o Referencia</label>
+            <input type="text" id="invoice-folio" placeholder="602B1C8B-... o FB-ADS-01" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono uppercase">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <!-- CLASIFICACIÓN CONTABLE Y MÉTODO DE FONDEO -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Monto Total Neto ($ MXN)</label>
-            <input type="number" step="0.01" id="invoice-total" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono">
+            <label class="block uppercase tracking-wider text-[10px] text-indigo-300 mb-1 font-bold">Rubro Contable (Estado de Resultados)</label>
+            <select id="invoice-account-code" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-rose-500 text-xs">
+              <option value="601.04">601.04 - Gastos Generales / Proveedores</option>
+              <option value="601.02">601.02 - Publicidad y Marketing (Facebook Ads)</option>
+              <option value="601.03">601.03 - Movilidad y Viáticos (DiDi / Transporte)</option>
+              <option value="501.01">501.01 - Costo Directo de Operación y Servicio</option>
+            </select>
           </div>
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha Límite / Vencimiento</label>
+            <label class="block uppercase tracking-wider text-[10px] text-emerald-300 mb-1 font-bold">Condición / Cuenta de Pago (Balance)</label>
+            <select id="invoice-funding-source" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-rose-500 text-xs">
+              <option value="CREDITO">Por Pagar a Crédito (Pasivo Proveedores 201.01)</option>
+              <option value="BANCO">Pagado con Transferencia / Banco (102.01)</option>
+              <option value="TDC">Pagado con Tarjeta de Crédito Corp. (Pasivo 205.01)</option>
+              <option value="CAJA_CHICA">Pagado con Caja Chica (Activo 101.01)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DESGLOSE FISCAL SUBTOTAL / IVA / TOTAL -->
+        <div class="grid grid-cols-3 gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+          <div>
+            <label class="block uppercase tracking-wider text-[10px] text-slate-400 mb-1">Subtotal Gasto ($)</label>
+            <input type="number" step="0.01" id="invoice-subtotal" oninput="recalcularTotalDesdeSubIva()" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-[10px] text-slate-400 mb-1">IVA ($ MXN)</label>
+            <input type="number" step="0.01" id="invoice-iva" oninput="recalcularTotalDesdeSubIva()" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-[10px] text-rose-400 mb-1 font-bold">Monto Total ($ MXN)</label>
+            <input type="number" step="0.01" id="invoice-total" oninput="recalcularSubDesdeTotal()" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-900 border border-rose-500/40 rounded-xl text-rose-300 font-bold outline-none focus:border-rose-500 font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Gasto / Vencimiento</label>
             <input type="date" id="invoice-date" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Concepto / Notas Contables</label>
+            <input type="text" id="invoice-concept" placeholder="Ej: Campaña reclutamiento, traslado cliente..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500">
           </div>
         </div>
 
@@ -242,7 +287,7 @@
           <span id="doc-status-msg" class="text-[11px] font-mono text-slate-400">Sin archivo seleccionado</span>
           <div class="flex gap-2">
             <button type="button" onclick="toggleModalInvoice(false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
-            <button type="submit" id="btn-submit-invoice" class="px-5 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-500 font-semibold transition shadow-lg shadow-rose-600/20">Registrar Pasivo</button>
+            <button type="submit" id="btn-submit-invoice" class="px-5 py-2 bg-rose-600 text-white rounded-xl hover:bg-rose-500 font-semibold transition shadow-lg shadow-rose-600/20">Registrar Egreso y Póliza</button>
           </div>
         </div>
       </form>
@@ -259,10 +304,20 @@
       
       <input type="hidden" id="pay-record-id" value="">
       
-      <div class="space-y-2">
+      <div class="space-y-3">
         <p id="pay-record-desc" class="text-xs text-slate-400 font-mono"></p>
-        <label class="block uppercase tracking-wider text-[11px] text-slate-400 font-medium">Fecha en que se liquidó / pagó:</label>
-        <input type="date" id="pay-record-date" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono text-xs">
+        <div>
+          <label class="block uppercase tracking-wider text-[11px] text-slate-400 font-medium mb-1">Fecha en que se liquidó / pagó:</label>
+          <input type="date" id="pay-record-date" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 font-mono text-xs">
+        </div>
+        <div id="pay-source-wrapper">
+          <label class="block uppercase tracking-wider text-[11px] text-slate-400 font-medium mb-1">Cuenta de Origen del Pago:</label>
+          <select id="pay-record-source" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-rose-500 text-xs">
+            <option value="BANCO">Bancos Nacionales (102.01)</option>
+            <option value="TDC">Tarjeta de Crédito Corp. (205.01)</option>
+            <option value="CAJA_CHICA">Caja Chica (101.01)</option>
+          </select>
+        </div>
       </div>
 
       <div class="flex justify-end gap-2 pt-3 border-t border-slate-800 text-xs">
@@ -312,6 +367,7 @@
       getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDoc, 
       query, where, orderBy, onSnapshot, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { polizaGastoOperativo, emitirPolizaContable, CATALOGO_CUENTAS } from "./contabilidad_core.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
@@ -333,6 +389,40 @@
     let currentUser = null;
     let rawData = [];
     let currentExtractedFiscal = null;
+
+    const r2 = (n) => Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100;
+
+    window.recalcularTotalDesdeSubIva = () => {
+      const sub = parseFloat(document.getElementById('invoice-subtotal').value) || 0;
+      const iva = parseFloat(document.getElementById('invoice-iva').value) || 0;
+      document.getElementById('invoice-total').value = r2(sub + iva).toFixed(2);
+    };
+
+    window.recalcularSubDesdeTotal = () => {
+      const tot = parseFloat(document.getElementById('invoice-total').value) || 0;
+      const rubro = document.getElementById('invoice-account-code').value;
+      // Facebook Ads extranjero normalmente no causa IVA trasladado mexicano
+      if (rubro === "601.02") {
+        document.getElementById('invoice-subtotal').value = tot.toFixed(2);
+        document.getElementById('invoice-iva').value = "0.00";
+      } else {
+        const sub = r2(tot / 1.16);
+        document.getElementById('invoice-subtotal').value = sub.toFixed(2);
+        document.getElementById('invoice-iva').value = r2(tot - sub).toFixed(2);
+      }
+    };
+
+    window.autodetectarRubroPorProveedor = () => {
+      const prov = (document.getElementById('invoice-entity').value || '').toLowerCase();
+      const selRubro = document.getElementById('invoice-account-code');
+      const selFondeo = document.getElementById('invoice-funding-source');
+      if (prov.includes('facebook') || prov.includes('meta platforms') || prov.includes('instagram')) {
+        selRubro.value = "601.02";
+        if (selFondeo.value === "CREDITO") selFondeo.value = "TDC";
+      } else if (prov.includes('didi') || prov.includes('uber')) {
+        selRubro.value = "601.03";
+      }
+    };
 
     async function logAudit(action, details = {}, moduleSlug = "cxp") {
       try {
@@ -482,11 +572,13 @@
     window.renderTable = () => {
       const search = (document.getElementById('filter-search')?.value || '').toLowerCase().trim();
       const st = document.getElementById('filter-status')?.value || 'ALL';
+      const rubro = document.getElementById('filter-rubro')?.value || 'ALL';
       const dateFrom = document.getElementById('filter-date-from')?.value || '';
       const dateTo = document.getElementById('filter-date-to')?.value || '';
 
       const filtered = rawData.filter(i => {
         if (st !== 'ALL' && i.status !== st) return false;
+        if (rubro !== 'ALL' && (i.account_code || '601.04') !== rubro) return false;
 
         const targetDate = (i.status === 'PAID' && i.paid_date) ? i.paid_date : (i.due_date || i.issue_date || '');
         if (dateFrom && targetDate && targetDate < dateFrom) return false;
@@ -495,7 +587,8 @@
         if (search) {
           const f = (i.folio || '').toLowerCase().includes(search);
           const e = (i.entity_name || '').toLowerCase().includes(search);
-          if (!f && !e) return false;
+          const c = (i.concept || '').toLowerCase().includes(search);
+          if (!f && !e && !c) return false;
         }
         return true;
       });
@@ -520,10 +613,10 @@
       document.getElementById('kpi-pendiente-sub').innerText = `${pendCount} facturas pendientes`;
 
       document.getElementById('kpi-liquidado').innerText = `$${pagTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-      document.getElementById('kpi-liquidado-sub').innerText = `${pagCount} facturas liquidadas`;
+      document.getElementById('kpi-liquidado-sub').innerText = `${pagCount} registros pagados`;
 
       document.getElementById('kpi-total').innerText = `$${grossTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-      document.getElementById('counter-records').innerText = `${filtered.length} facturas`;
+      document.getElementById('counter-records').innerText = `${filtered.length} registros`;
 
       const tbody = document.getElementById('table-cxp');
       if (filtered.length === 0) {
@@ -531,10 +624,18 @@
         return;
       }
 
+      const etiquetaRubro = {
+        "601.02": "Facebook Ads",
+        "601.03": "DiDi / Movilidad",
+        "601.04": "Gasto General",
+        "501.01": "Costo Operación"
+      };
+
       let html = '';
       filtered.forEach(i => {
         const isPaid = i.status === "PAID";
         const acuseUrl = `acuse_fiscal.html?id=${i.id}&col=accounts_payable&empresa=${COMPANY_ID}`;
+        const rubroTxt = etiquetaRubro[i.account_code] || "Gasto General";
         
         const docBtn = i.document_url
           ? `<div class="flex items-center gap-1.5">
@@ -551,7 +652,7 @@
 
         const statusBadge = isPaid 
           ? `<div class="flex flex-col">
-               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-center">PAGADA</span>
+               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-center">PAGADA (${i.funding_source || 'BANCO'})</span>
                <span class="text-[10px] font-mono text-slate-400 mt-0.5 text-center">${i.paid_date || 'S/F'}</span>
              </div>`
           : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20">POR PAGAR</span>`;
@@ -566,8 +667,11 @@
 
         html += `
           <tr class="hover:bg-slate-800/40 transition">
-            <td class="p-4 font-mono font-bold text-white text-xs max-w-[150px] truncate" title="${i.folio}">${i.folio}</td>
-            <td class="p-4 text-slate-200 font-medium">${i.entity_name}</td>
+            <td class="p-4 font-mono font-bold text-white text-xs max-w-[140px] truncate" title="${i.folio}">${i.folio}</td>
+            <td class="p-4">
+              <div class="text-slate-200 font-medium">${i.entity_name}</div>
+              <span class="text-[10px] font-mono text-indigo-400">${i.account_code || '601.04'} &bull; ${rubroTxt}</span>
+            </td>
             <td class="p-4 font-mono text-xs text-slate-400">${i.due_date || 'S/F'}</td>
             <td class="p-4 font-mono text-white font-semibold">$${Number(i.total_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
             <td class="p-4">${docBtn}</td>
@@ -651,7 +755,6 @@
       proc.classList.remove('hidden');
 
       try {
-        // Almacenamiento local del nombre para generar acuse digital nativo
         document.getElementById('uploaded-doc-name').value = file.name;
         document.getElementById('uploaded-doc-url').value = ""; 
         document.getElementById('doc-status-msg').innerText = `Procesando: ${file.name}`;
@@ -664,7 +767,6 @@
           const text = await file.text();
           const parsedOk = parseXMLUniversalCxP(text);
 
-          // Si el parser local falla o el XML está dañado, Gemini entra en cascada
           if (!parsedOk) {
             procTxt.innerText = "Estructura no estándar. Analizando con Gemini...";
             const key = localStorage.getItem('GEMINI_API_KEY');
@@ -675,7 +777,6 @@
             }
           }
         } else {
-          // PDF o Imagen
           const key = localStorage.getItem('GEMINI_API_KEY');
           if (!key) {
             alert("Para autocompletar comprobantes mediante Gemini, ingresa tu Gemini API Key en el botón superior.");
@@ -754,7 +855,6 @@
         let selloSAT = getAttr(timbreNode, "SelloSAT", "sellosat");
         let selloCFD = getAttr(timbreNode, "SelloCFD", "sellocfd") || getAttr(compNode, "Sello", "sello");
 
-        // En CxP: El emisor es el Proveedor externo
         let rfcEmisor = getAttr(emisorNode, "Rfc", "rfc");
         let nombreEmisor = getAttr(emisorNode, "Nombre", "nombre") || rfcEmisor;
         let regimenFiscalEmisor = getAttr(emisorNode, "RegimenFiscal", "regimenfiscal") || "";
@@ -765,9 +865,20 @@
 
         if (!total && !uuid && !nombreEmisor) return false;
 
-        if (total) document.getElementById('invoice-total').value = parseFloat(total).toFixed(2);
+        const totNum = parseFloat(total || 0);
+        const subNum = parseFloat(subtotal || total || 0);
+        const ivaNum = r2(totNum - subNum) > 0 ? r2(totNum - subNum) : 0;
+
+        if (total) {
+          document.getElementById('invoice-total').value = totNum.toFixed(2);
+          document.getElementById('invoice-subtotal').value = subNum.toFixed(2);
+          document.getElementById('invoice-iva').value = ivaNum.toFixed(2);
+        }
         if (uuid) document.getElementById('invoice-folio').value = uuid;
-        if (nombreEmisor) document.getElementById('invoice-entity').value = nombreEmisor;
+        if (nombreEmisor) {
+          document.getElementById('invoice-entity').value = nombreEmisor;
+          autodetectarRubroPorProveedor();
+        }
         if (fecha) document.getElementById('invoice-date').value = fecha.split('T')[0];
 
         const versionTFD = getAttr(timbreNode, "Version", "version") || "1.1";
@@ -789,9 +900,9 @@
           rfc_receptor: rfcReceptor,
           nombre_receptor: nombreReceptor,
           uso_cfdi: usoCFDI,
-          subtotal: parseFloat(subtotal || total || 0),
-          iva: (parseFloat(total || 0) - parseFloat(subtotal || total || 0)) > 0 ? (parseFloat(total) - parseFloat(subtotal)) : 0,
-          total: parseFloat(total || 0),
+          subtotal: subNum,
+          iva: ivaNum,
+          total: totNum,
           no_certificado_sat: noCertificadoSAT,
           rfc_prov_certif: rfcProvCertif,
           sello_cfdi: selloCFD,
@@ -834,13 +945,13 @@
     }
 
     async function parseWithGeminiTextCascadaCxP(extractedText, apiKey, statusEl) {
-      const prompt = `Analiza el contenido de esta FACTURA DE PROVEEDOR (Cuentas por Pagar - CxP) de México.
+      const prompt = `Analiza el contenido de esta FACTURA DE PROVEEDOR, RECIBO DE FACEBOOK ADS, DIDI O COMPROBANTE DE GASTO (CxP) de México.
 Extrae los datos fiscales obligatoriamente en JSON plano:
 {
-  "proveedor": "Nombre o Razón Social del PROVEEDOR o Emisor",
+  "proveedor": "Nombre o Razón Social del PROVEEDOR o Emisor (ej. Meta Platforms, DiDi, etc.)",
   "rfc_emisor": "RFC del proveedor emisor",
   "rfc_receptor": "RFC del receptor",
-  "folio": "UUID fiscal de 36 caracteres",
+  "folio": "UUID fiscal de 36 caracteres o Folio de recibo",
   "monto_total": 0.00,
   "subtotal": 0.00,
   "iva": 0.00,
@@ -865,13 +976,13 @@ ${extractedText.substring(0, 12000)}`;
     }
 
     async function parseWithGeminiVisionCascadaCxP(base64Data, mimeType, apiKey, statusEl) {
-      const prompt = `Analiza la imagen de la FACTURA DE PROVEEDOR (CxP) de México.
+      const prompt = `Analiza la imagen de la FACTURA DE PROVEEDOR, TICKET DIDI O RECIBO FACEBOOK ADS (CxP) de México.
 Extrae los datos fiscales en JSON plano:
 {
   "proveedor": "Nombre o Razón Social del Proveedor Emisor",
   "rfc_emisor": "RFC del proveedor",
   "rfc_receptor": "RFC del receptor",
-  "folio": "UUID fiscal de 36 caracteres",
+  "folio": "UUID fiscal o folio de recibo",
   "monto_total": 0.00,
   "subtotal": 0.00,
   "iva": 0.00,
@@ -924,9 +1035,20 @@ Extrae los datos fiscales en JSON plano:
           const p = JSON.parse(rawText.replace(/```json/gi, '').replace(/```/g, '').trim());
 
           const prov = p.proveedor || p.rfc_emisor || "";
-          if (prov) document.getElementById('invoice-entity').value = prov;
+          const totNum = parseFloat(p.monto_total || 0);
+          const subNum = parseFloat(p.subtotal || totNum);
+          const ivaNum = parseFloat(p.iva || 0);
+
+          if (prov) {
+            document.getElementById('invoice-entity').value = prov;
+            autodetectarRubroPorProveedor();
+          }
           if (p.folio) document.getElementById('invoice-folio').value = p.folio;
-          if (p.monto_total) document.getElementById('invoice-total').value = parseFloat(p.monto_total).toFixed(2);
+          if (totNum > 0) {
+            document.getElementById('invoice-total').value = totNum.toFixed(2);
+            document.getElementById('invoice-subtotal').value = subNum.toFixed(2);
+            document.getElementById('invoice-iva').value = ivaNum.toFixed(2);
+          }
           if (p.fecha_emision) document.getElementById('invoice-date').value = p.fecha_emision;
 
           currentExtractedFiscal = {
@@ -938,9 +1060,9 @@ Extrae los datos fiscales en JSON plano:
             nombre_emisor: prov,
             rfc_receptor: p.rfc_receptor || "",
             nombre_receptor: COMPANY_NAME,
-            subtotal: parseFloat(p.subtotal || p.monto_total || 0),
-            iva: parseFloat(p.iva || 0),
-            total: parseFloat(p.monto_total || 0),
+            subtotal: subNum,
+            iva: ivaNum,
+            total: totNum,
             no_certificado_sat: p.no_certificado_sat || "",
             sello_cfdi: p.sello_cfdi || "",
             sello_sat: p.sello_sat || "",
@@ -961,17 +1083,24 @@ Extrae los datos fiscales en JSON plano:
       }
     }
 
-    // REGISTRO DE CUENTA POR PAGAR CON METADATOS FISCALES HEREDADOS
+    // REGISTRO DE CUENTA POR PAGAR / GASTO OPERATIVO + PÓLIZA CONTABLE
     document.getElementById('form-invoice').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-invoice');
       btn.disabled = true;
-      btn.innerText = "Registrando pasivo...";
+      btn.innerText = "Registrando y contabilizando...";
 
-      const total = parseFloat(document.getElementById('invoice-total').value) || 0;
+      const subtotal = r2(document.getElementById('invoice-subtotal').value);
+      const iva = r2(document.getElementById('invoice-iva').value);
+      const total = r2(document.getElementById('invoice-total').value);
       const folio = document.getElementById('invoice-folio').value.trim();
       const entity = document.getElementById('invoice-entity').value.trim();
       const rawDate = document.getElementById('invoice-date').value;
+      const accountCode = document.getElementById('invoice-account-code').value;
+      const fundingSource = document.getElementById('invoice-funding-source').value; // CREDITO | BANCO | TDC | CAJA_CHICA
+      const concept = document.getElementById('invoice-concept').value.trim() || CATALOGO_CUENTAS[accountCode]?.nombre || "Gasto Operativo";
+
+      const isAlreadyPaid = fundingSource !== "CREDITO";
 
       let fiscalObj = currentExtractedFiscal;
       if (!fiscalObj && document.getElementById('raw-fiscal-data').value) {
@@ -985,8 +1114,14 @@ Extrae los datos fiscales en JSON plano:
           fecha_emision: rawDate,
           nombre_emisor: entity,
           nombre_receptor: COMPANY_NAME,
+          subtotal: subtotal,
+          iva: iva,
           total: total
         };
+      } else {
+        fiscalObj.subtotal = subtotal;
+        fiscalObj.iva = iva;
+        fiscalObj.total = total;
       }
 
       try {
@@ -995,13 +1130,19 @@ Extrae los datos fiscales en JSON plano:
           company_name: COMPANY_NAME,
           entity_name: entity,
           folio: folio,
+          account_code: accountCode,
+          funding_source: fundingSource,
+          concept: concept,
+          subtotal_amount: subtotal,
+          iva_amount: iva,
           total_amount: total,
-          balance: total,
-          paid_amount: 0.0,
+          balance: isAlreadyPaid ? 0.0 : total,
+          paid_amount: isAlreadyPaid ? total : 0.0,
           issue_date: rawDate,
           due_date: rawDate,
-          paid_date: null,
-          status: "PENDING",
+          paid_date: isAlreadyPaid ? rawDate : null,
+          status: isAlreadyPaid ? "PAID" : "PENDING",
+          poliza_pago_emitida: isAlreadyPaid,
           document_url: document.getElementById('uploaded-doc-url').value || "",
           document_filename: document.getElementById('uploaded-doc-name').value || "",
           fiscal_metadata: fiscalObj,
@@ -1010,13 +1151,28 @@ Extrae los datos fiscales en JSON plano:
           created_at: serverTimestamp()
         });
 
-        await logAudit("INVOICE_CXP_CREATED", { doc_id: docRef.id, folio, entity, total }, "cxp");
+        // Emitir póliza en Libro Diario (reconoce gasto inmediato en P&L y afecta Pasivo o Activo según fuente)
+        await polizaGastoOperativo(db, {
+          company_id: COMPANY_ID,
+          fecha: rawDate,
+          gasto_id: docRef.id,
+          proveedor: entity,
+          concepto_gasto: concept,
+          cuenta_gasto: accountCode,
+          subtotal: subtotal,
+          iva: iva,
+          total: total,
+          fuente_pago: fundingSource,
+          user_uid: auth.currentUser?.uid || "SYSTEM"
+        });
+
+        await logAudit("INVOICE_CXP_CREATED", { doc_id: docRef.id, folio, entity, accountCode, fundingSource, total }, "cxp");
         toggleModalInvoice(false);
       } catch (err) {
-        alert("Error al registrar pasivo: " + err.message);
+        alert("Error al registrar egreso: " + err.message);
       } finally {
         btn.disabled = false;
-        btn.innerText = "Registrar Pasivo";
+        btn.innerText = "Registrar Egreso y Póliza";
       }
     });
 
@@ -1028,6 +1184,7 @@ Extrae los datos fiscales en JSON plano:
       document.getElementById('pay-record-id').value = id;
       document.getElementById('pay-record-desc').innerText = `Folio: ${folio}`;
       document.getElementById('pay-modal-title').innerText = isEdit ? "Editar Fecha de Pago" : "Registrar Liquidación";
+      document.getElementById('pay-source-wrapper').classList.toggle('hidden', isEdit);
 
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('pay-record-date').value = currentPaidDate || today;
@@ -1037,10 +1194,12 @@ Extrae los datos fiscales en JSON plano:
     window.confirmarPagoConFecha = async () => {
       const id = document.getElementById('pay-record-id').value;
       const payDate = document.getElementById('pay-record-date').value;
+      const source = document.getElementById('pay-record-source').value || "BANCO";
       if (!payDate) return alert("Por favor selecciona una fecha válida.");
 
       const item = rawData.find(x => x.id === id);
       const total = item ? Number(item.total_amount || 0) : 0;
+      const ivaAmt = item && item.iva_amount !== undefined ? Number(item.iva_amount) : 0;
 
       const btn = document.getElementById('btn-save-pay-date');
       btn.disabled = true;
@@ -1052,9 +1211,35 @@ Extrae los datos fiscales en JSON plano:
           balance: 0.0,
           paid_amount: total,
           paid_date: payDate,
+          funding_source: item?.funding_source && item.funding_source !== "CREDITO" ? item.funding_source : source,
+          poliza_pago_emitida: true,
           paid_at: serverTimestamp(),
           paid_by: currentUser?.email || auth.currentUser?.email
         });
+
+        // Emitir póliza de cancelación de Pasivo Proveedores contra Banco/TDC/Caja Chica (solo primera vez)
+        if (item && !item.poliza_pago_emitida && item.status !== "PAID") {
+          const mapaCuentas = { BANCO: "102.01", TDC: "205.01", CAJA_CHICA: "101.01" };
+          const ctaSalida = mapaCuentas[source] || "102.01";
+          const movs = [
+            { cuenta: "201.01", debe: total, haber: 0, referencia: item.folio || "" },
+            { cuenta: ctaSalida, debe: 0, haber: total, referencia: item.entity_name || "" }
+          ];
+          if (ivaAmt > 0) {
+            movs.push({ cuenta: "118.01", debe: ivaAmt, haber: 0, referencia: item.folio || "" });
+            movs.push({ cuenta: "119.01", debe: 0, haber: ivaAmt, referencia: item.folio || "" });
+          }
+
+          await emitirPolizaContable(db, {
+            company_id: COMPANY_ID,
+            fecha: payDate,
+            origen_modulo: "CXP_PAGO",
+            origen_doc_id: id,
+            concepto: `Liquidación Proveedor ${item.entity_name || ""} | Folio ${item.folio || ""}`,
+            movimientos: movs,
+            user_uid: auth.currentUser?.uid || "SYSTEM"
+          });
+        }
 
         await logAudit("INVOICE_CXP_PAID", { doc_id: id, folio: item?.folio, paid_date: payDate, total }, "cxp");
         toggleModalPayDate(false);
@@ -1080,9 +1265,14 @@ Extrae los datos fiscales en JSON plano:
       const rows = rawData.map(i => ({
         "Folio/UUID": i.folio || '',
         "Proveedor": i.entity_name || '',
+        "Rubro Contable": i.account_code || '601.04',
+        "Concepto": i.concept || '',
         "Vencimiento": i.due_date || '',
         "Fecha de Pago": i.paid_date || '',
+        "Subtotal MXN": Number(i.subtotal_amount || 0),
+        "IVA MXN": Number(i.iva_amount || 0),
         "Monto Total MXN": Number(i.total_amount || 0),
+        "Fuente Pago": i.funding_source || '',
         "Saldo Pendiente": Number(i.balance !== undefined ? i.balance : 0),
         "Estado": i.status === 'PAID' ? 'PAGADA' : 'POR PAGAR',
         "Comprobante": i.document_url ? 'ARCHIVO FÍSICO' : 'ACUSE FISCAL DIGITAL',

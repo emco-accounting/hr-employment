@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -31,26 +32,26 @@
     <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
       <i class="ph-bold ph-chart-polar text-indigo-400 text-3xl"></i>
     </div>
-    <p class="text-xs text-slate-400 font-mono">Consolidando flujos de cobranza, pasivos, gastos y depreciación...</p>
+    <p class="text-xs text-slate-400 font-mono">Consolidando flujos de cobranza, pasivos, gastos y estados financieros...</p>
   </div>
 
   <!-- ENCABEZADO SUPERIOR -->
-  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex justify-between items-center backdrop-blur-md sticky top-0 z-20">
+  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex flex-wrap justify-between items-center gap-4 backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
       <a href="portal_catalogo.html" id="btn-back-portal" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
         <i class="ph-bold ph-arrow-left text-lg"></i>
       </a>
       <div>
         <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-          <span>Tablero de Decisiones Financieras</span>
+          <span>Tablero de Decisiones & Estados Financieros</span>
           <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20">DIRECCIÓN EJECUTIVA</span>
         </h2>
-        <span class="text-xs text-slate-400 font-mono">Flujo Efectivo: Cobranza Real vs Pasivos Exigibles + Gastos + Desgaste</span>
+        <span class="text-xs text-slate-400 font-mono">Flujo Efectivo + Estado de Resultados (P&L) + Balance General (NIF)</span>
       </div>
     </div>
 
     <!-- SELECTOR DE CONTEXTO GERENCIAL -->
-    <div class="flex items-center gap-3">
+    <div class="flex flex-wrap items-center gap-3">
       <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
         <label class="text-[11px] font-mono uppercase text-slate-400 px-2">Razón Social:</label>
         <select id="select-scope" onchange="cambiarEntidadAnalisis(this.value)" class="bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500">
@@ -59,6 +60,10 @@
           <option value="CONSOLIDATED">★ Grupo Consolidado (Ambas Entidades)</option>
         </select>
       </div>
+
+      <button onclick="exportarEstadosFinancierosExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5" title="Exportar Estado de Resultados y Balance General a Excel">
+        <i class="ph-bold ph-microsoft-excel-logo"></i> Exportar EE.FF.
+      </button>
 
       <button onclick="window.print()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition" title="Imprimir Informe">
         <i class="ph-bold ph-printer text-base"></i>
@@ -168,6 +173,165 @@
       </div>
     </div>
 
+    <!-- ====================================================================== -->
+    <!-- SECCIÓN CONTABLE PROFESIONAL: ESTADO DE RESULTADOS Y BALANCE GENERAL   -->
+    <!-- ====================================================================== -->
+    <section class="pt-4 border-t border-slate-800 space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900/90 border border-indigo-500/30 rounded-2xl p-5 shadow-xl">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="ph-bold ph-books text-indigo-400"></i>
+            <span>Contabilidad General (Libro Diario &bull; Partida Doble NIF)</span>
+          </h3>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">
+            Pólizas procesadas: <strong id="contab-polizas-count" class="text-slate-200">0</strong> | Validación Ecuación Contable: 
+            <span id="contab-cuadre-badge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">VERIFICANDO...</span>
+          </p>
+        </div>
+
+        <!-- CONTROLES DE PERIODO CONTABLE -->
+        <div class="flex flex-wrap items-center gap-2 text-xs font-mono">
+          <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+            <span class="text-slate-400">Periodo P&L Desde:</span>
+            <input type="date" id="contab-fecha-inicio" onchange="refrescarEstadosFinancieros()" class="bg-transparent text-white outline-none">
+          </div>
+          <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+            <span class="text-slate-400">Corte Balance Hasta:</span>
+            <input type="date" id="contab-fecha-corte" onchange="refrescarEstadosFinancieros()" class="bg-transparent text-white outline-none">
+          </div>
+          <button onclick="establecerMesActualContable()" class="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl transition font-semibold">
+            Mes Actual
+          </button>
+          <button onclick="establecerTodoHistoricoContable()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl transition">
+            Todo
+          </button>
+        </div>
+      </div>
+
+      <!-- DOS COLUMNAS DE ESTADOS FINANCIEROS -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- 1. ESTADO DE RESULTADOS (P&L) -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between">
+          <div>
+            <div class="px-6 py-4 bg-slate-950/70 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h4 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                  <i class="ph-bold ph-chart-line-up text-emerald-400"></i> Estado de Resultados (P&L)
+                </h4>
+                <span class="text-[11px] text-slate-400 font-mono" id="pl-subtitulo">Ingresos devengados menos costos y gastos operativos</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SIN IVA</span>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+              <!-- INGRESOS -->
+              <div>
+                <div class="text-[11px] font-mono uppercase text-emerald-400 font-bold mb-1.5 border-b border-slate-800 pb-1">1. Ingresos Operativos</div>
+                <div id="pl-ingresos-list" class="space-y-1.5"></div>
+                <div class="flex justify-between font-mono font-bold text-white pt-1.5 mt-1.5 border-t border-slate-800/80">
+                  <span>TOTAL INGRESOS NETOS</span>
+                  <span id="pl-total-ingresos" class="text-emerald-400">$0.00</span>
+                </div>
+              </div>
+
+              <!-- COSTOS DIRECTOS -->
+              <div>
+                <div class="text-[11px] font-mono uppercase text-amber-400 font-bold mb-1.5 border-b border-slate-800 pb-1">2. Costos Directos de Operación</div>
+                <div id="pl-costos-list" class="space-y-1.5"></div>
+                <div class="flex justify-between font-mono font-semibold text-slate-300 pt-1.5 mt-1.5 border-t border-slate-800/80">
+                  <span>TOTAL COSTOS DIRECTOS</span>
+                  <span id="pl-total-costos" class="text-amber-400">$0.00</span>
+                </div>
+              </div>
+
+              <!-- UTILIDAD BRUTA -->
+              <div class="bg-slate-950/80 px-3.5 py-2.5 rounded-xl border border-slate-800 flex justify-between font-mono font-bold text-white">
+                <span>(=) UTILIDAD BRUTA</span>
+                <span id="pl-utilidad-bruta">$0.00</span>
+              </div>
+
+              <!-- GASTOS DE OPERACIÓN -->
+              <div>
+                <div class="text-[11px] font-mono uppercase text-rose-400 font-bold mb-1.5 border-b border-slate-800 pb-1">3. Gastos de Venta y Administración</div>
+                <div id="pl-gastos-list" class="space-y-1.5"></div>
+                <div class="flex justify-between font-mono font-semibold text-slate-300 pt-1.5 mt-1.5 border-t border-slate-800/80">
+                  <span>TOTAL GASTOS DE OPERACIÓN</span>
+                  <span id="pl-total-gastos" class="text-rose-400">$0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- UTILIDAD NETA FINAL -->
+          <div class="px-6 py-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center font-mono">
+            <div>
+              <span class="text-xs font-bold text-white block">(=) UTILIDAD / PÉRDIDA NETA DEL PERIODO</span>
+              <span class="text-[10px] text-slate-400">Se traslada automáticamente al Capital Contable</span>
+            </div>
+            <span id="pl-utilidad-neta" class="text-lg font-extrabold text-emerald-400">$0.00</span>
+          </div>
+        </div>
+
+        <!-- 2. BALANCE GENERAL (ESTADO DE SITUACIÓN FINANCIERA) -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between">
+          <div>
+            <div class="px-6 py-4 bg-slate-950/70 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h4 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                  <i class="ph-bold ph-scales text-indigo-400"></i> Balance General
+                </h4>
+                <span class="text-[11px] text-slate-400 font-mono">Activo = Pasivo + Capital Contable</span>
+              </div>
+              <span id="bg-badge-status" class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">CUADRADO</span>
+            </div>
+
+            <div class="p-6 space-y-4 text-xs">
+              <!-- ACTIVO -->
+              <div>
+                <div class="text-[11px] font-mono uppercase text-blue-400 font-bold mb-1.5 border-b border-slate-800 pb-1">ACTIVO (Bienes y Derechos)</div>
+                <div id="bg-activo-list" class="space-y-1.5"></div>
+                <div class="flex justify-between font-mono font-bold text-white pt-1.5 mt-1.5 border-t border-slate-800">
+                  <span>TOTAL ACTIVO</span>
+                  <span id="bg-total-activo" class="text-blue-400">$0.00</span>
+                </div>
+              </div>
+
+              <!-- PASIVO -->
+              <div>
+                <div class="text-[11px] font-mono uppercase text-rose-400 font-bold mb-1.5 border-b border-slate-800 pb-1">PASIVO (Deudas y Obligaciones)</div>
+                <div id="bg-pasivo-list" class="space-y-1.5"></div>
+                <div class="flex justify-between font-mono font-bold text-white pt-1.5 mt-1.5 border-t border-slate-800">
+                  <span>TOTAL PASIVO</span>
+                  <span id="bg-total-pasivo" class="text-rose-400">$0.00</span>
+                </div>
+              </div>
+
+              <!-- CAPITAL CONTABLE -->
+              <div>
+                <div class="text-[11px] font-mono uppercase text-indigo-400 font-bold mb-1.5 border-b border-slate-800 pb-1">CAPITAL CONTABLE (Patrimonio)</div>
+                <div id="bg-capital-list" class="space-y-1.5"></div>
+                <div class="flex justify-between font-mono font-bold text-white pt-1.5 mt-1.5 border-t border-slate-800">
+                  <span>TOTAL CAPITAL CONTABLE</span>
+                  <span id="bg-total-capital" class="text-indigo-400">$0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUMA PASIVO + CAPITAL -->
+          <div class="px-6 py-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center font-mono">
+            <div>
+              <span class="text-xs font-bold text-white block">SUMA PASIVO + CAPITAL CONTABLE</span>
+              <span id="bg-diferencia-txt" class="text-[10px] text-emerald-400">Diferencia de cuadre: $0.00</span>
+            </div>
+            <span id="bg-pasivo-mas-capital" class="text-lg font-extrabold text-indigo-400">$0.00</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <script type="module">
@@ -176,6 +340,7 @@
     import { 
       getFirestore, collection, doc, getDoc, onSnapshot 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { generarEstadosFinancieros } from "./contabilidad_core.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
@@ -207,11 +372,33 @@
     let rawGastos = [];
     let rawOtrosIngresos = [];
     let rawActivos = [];
+    let ultimoReporteContable = null;
 
     let chartFlujos = null;
     let chartEgresos = null;
     let chartClients = null;
     let chartDeprec = null;
+
+    const fmtMXN = (val) => {
+      const num = Number(val || 0);
+      return `${num < 0 ? "-" : ""}$${Math.abs(num).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+
+    window.establecerMesActualContable = () => {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const lastDay = new Date(y, now.getMonth() + 1, 0).getDate();
+      document.getElementById("contab-fecha-inicio").value = `${y}-${m}-01`;
+      document.getElementById("contab-fecha-corte").value = `${y}-${m}-${String(lastDay).padStart(2, "0")}`;
+      refrescarEstadosFinancieros();
+    };
+
+    window.establecerTodoHistoricoContable = () => {
+      document.getElementById("contab-fecha-inicio").value = "";
+      document.getElementById("contab-fecha-corte").value = new Date().toISOString().split("T")[0];
+      refrescarEstadosFinancieros();
+    };
 
     onAuthStateChanged(auth, async (user) => {
       const shield = document.getElementById("auth-shield");
@@ -231,6 +418,8 @@
         const selector = document.getElementById("select-scope");
         selector.value = scopeCompany;
 
+        // Inicializar fechas contables al mes actual
+        establecerMesActualContable();
         initLiveFinancialData();
 
         shield.classList.add("opacity-0", "pointer-events-none");
@@ -248,44 +437,201 @@
         if (btnBack) btnBack.href = `portal_catalogo.html?empresa=${encodeURIComponent(val)}`;
       }
       actualizarDashboard();
+      refrescarEstadosFinancieros();
     };
 
     function initLiveFinancialData() {
-      // 1. Cuentas por Cobrar
       onSnapshot(collection(db, "accounts_receivable"), (snap) => {
         rawCxC = [];
         snap.forEach(d => rawCxC.push({ id: d.id, ...d.data() }));
         actualizarDashboard();
       });
 
-      // 2. Cuentas por Pagar
       onSnapshot(collection(db, "accounts_payable"), (snap) => {
         rawCxP = [];
         snap.forEach(d => rawCxP.push({ id: d.id, ...d.data() }));
         actualizarDashboard();
       });
 
-      // 3. Control de Gastos (Módulo Dinámico)
       onSnapshot(collection(db, "mod_control_gastos"), (snap) => {
         rawGastos = [];
         snap.forEach(d => rawGastos.push({ id: d.id, ...d.data() }));
         actualizarDashboard();
       }, err => console.warn("mod_control_gastos sin inicializar:", err));
 
-      // 4. Otros Ingresos (Módulo Dinámico)
       onSnapshot(collection(db, "mod_otros_ingresos"), (snap) => {
         rawOtrosIngresos = [];
         snap.forEach(d => rawOtrosIngresos.push({ id: d.id, ...d.data() }));
         actualizarDashboard();
       }, err => console.warn("mod_otros_ingresos sin inicializar:", err));
 
-      // 5. Activos Fijos con Depreciación LISR
       onSnapshot(collection(db, "fixed_assets"), (snap) => {
         rawActivos = [];
         snap.forEach(d => rawActivos.push({ id: d.id, ...d.data() }));
         actualizarDashboard();
       });
+
+      // Escuchar cambios en tiempo real del Libro Diario para actualizar EE.FF.
+      onSnapshot(collection(db, "accounting_ledger"), () => {
+        refrescarEstadosFinancieros();
+      }, err => console.warn("accounting_ledger aún sin pólizas:", err));
     }
+
+    // ========================================================================
+    // RENDERIZADO DE ESTADO DE RESULTADOS Y BALANCE GENERAL (CONTABILIDAD_CORE)
+    // ========================================================================
+    window.refrescarEstadosFinancieros = async () => {
+      try {
+        const companyParam = scopeCompany === "CONSOLIDATED" ? "CONSOLIDADO" : scopeCompany;
+        const fInicio = document.getElementById("contab-fecha-inicio").value || "";
+        const fCorte = document.getElementById("contab-fecha-corte").value || "";
+
+        const reporte = await generarEstadosFinancieros(db, companyParam, fInicio, fCorte);
+        ultimoReporteContable = reporte;
+
+        const { meta, estadoResultados: pl, balanceGeneral: bg } = reporte;
+
+        document.getElementById("contab-polizas-count").innerText = meta.polizasProcesadas;
+        const badgeCuadre = document.getElementById("contab-cuadre-badge");
+        if (bg.estaCuadrado) {
+          badgeCuadre.innerText = "CUADRADO 100% (A = P + C)";
+          badgeCuadre.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+        } else {
+          badgeCuadre.innerText = `DESCUADRE: ${fmtMXN(bg.diferenciaCuadre)}`;
+          badgeCuadre.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20";
+        }
+
+        // 1. Pintar Estado de Resultados
+        const renderFilasCuenta = (lista, emptyMsg = "Sin movimientos en el periodo") => {
+          const conSaldo = lista.filter(c => c.saldo !== 0);
+          if (conSaldo.length === 0) {
+            return `<div class="text-slate-500 font-mono text-[11px] italic">${emptyMsg}</div>`;
+          }
+          return conSaldo.map(c => `
+            <div class="flex justify-between items-center text-slate-300 font-mono">
+              <span><strong class="text-slate-400">${c.codigo}</strong> ${c.nombre}</span>
+              <span>${fmtMXN(c.saldo)}</span>
+            </div>
+          `).join("");
+        };
+
+        document.getElementById("pl-ingresos-list").innerHTML = renderFilasCuenta(pl.ingresos, "Sin ingresos facturados en el periodo");
+        document.getElementById("pl-total-ingresos").innerText = fmtMXN(pl.totalIngresos);
+
+        document.getElementById("pl-costos-list").innerHTML = renderFilasCuenta(pl.costos, "Sin costos directos en el periodo");
+        document.getElementById("pl-total-costos").innerText = fmtMXN(pl.totalCostos);
+
+        document.getElementById("pl-utilidad-bruta").innerText = fmtMXN(pl.utilidadBruta);
+
+        document.getElementById("pl-gastos-list").innerHTML = renderFilasCuenta(pl.gastos, "Sin gastos operativos en el periodo");
+        document.getElementById("pl-total-gastos").innerText = fmtMXN(pl.totalGastos);
+
+        const utNetaEl = document.getElementById("pl-utilidad-neta");
+        utNetaEl.innerText = fmtMXN(pl.utilidadNeta);
+        utNetaEl.className = `text-lg font-extrabold ${pl.utilidadNeta >= 0 ? "text-emerald-400" : "text-rose-400"}`;
+
+        // 2. Pintar Balance General
+        const todasActivos = [...bg.activo.circulante, ...bg.activo.noCirculante].filter(c => c.saldo !== 0);
+        document.getElementById("bg-activo-list").innerHTML = todasActivos.length
+          ? todasActivos.map(c => {
+              const signoNeg = c.naturaleza === "ACREEDORA" ? "-" : "";
+              return `
+                <div class="flex justify-between items-center text-slate-300 font-mono">
+                  <span><strong class="text-slate-400">${c.codigo}</strong> ${c.nombre}</span>
+                  <span>${signoNeg}${fmtMXN(c.saldo)}</span>
+                </div>
+              `;
+            }).join("")
+          : `<div class="text-slate-500 font-mono text-[11px] italic">Sin saldos de activo registrados</div>`;
+
+        document.getElementById("bg-total-activo").innerText = fmtMXN(bg.activo.totalActivo);
+
+        const pasivosConSaldo = bg.pasivo.circulante.filter(c => c.saldo !== 0);
+        document.getElementById("bg-pasivo-list").innerHTML = pasivosConSaldo.length
+          ? pasivosConSaldo.map(c => `
+              <div class="flex justify-between items-center text-slate-300 font-mono">
+                <span><strong class="text-slate-400">${c.codigo}</strong> ${c.nombre}</span>
+                <span>${fmtMXN(c.saldo)}</span>
+              </div>
+            `).join("")
+          : `<div class="text-slate-500 font-mono text-[11px] italic">Sin pasivos pendientes</div>`;
+
+        document.getElementById("bg-total-pasivo").innerText = fmtMXN(bg.pasivo.totalPasivo);
+
+        const capitalRows = bg.capital.cuentas.filter(c => c.saldo !== 0).map(c => `
+          <div class="flex justify-between items-center text-slate-300 font-mono">
+            <span><strong class="text-slate-400">${c.codigo}</strong> ${c.nombre}</span>
+            <span>${fmtMXN(c.saldo)}</span>
+          </div>
+        `).join("");
+
+        const utilidadRow = `
+          <div class="flex justify-between items-center text-indigo-300 font-mono">
+            <span><strong class="text-indigo-400">306.01</strong> Utilidad / Pérdida Neta del Ejercicio</span>
+            <span>${fmtMXN(bg.capital.utilidadEjercicio)}</span>
+          </div>
+        `;
+        document.getElementById("bg-capital-list").innerHTML = capitalRows + utilidadRow;
+        document.getElementById("bg-total-capital").innerText = fmtMXN(bg.capital.totalCapital);
+
+        document.getElementById("bg-pasivo-mas-capital").innerText = fmtMXN(bg.totalPasivoMasCapital);
+        document.getElementById("bg-diferencia-txt").innerText = `Diferencia de cuadre: ${fmtMXN(bg.diferenciaCuadre)}`;
+
+        const bgBadge = document.getElementById("bg-badge-status");
+        bgBadge.innerText = bg.estaCuadrado ? "CUADRADO 100%" : "REVISAR";
+        bgBadge.className = bg.estaCuadrado
+          ? "px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+          : "px-2 py-0.5 rounded text-[10px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20";
+
+      } catch (err) {
+        console.error("Error al calcular estados financieros:", err);
+      }
+    };
+
+    window.exportarEstadosFinancierosExcel = () => {
+      if (!ultimoReporteContable) return alert("Aún no se han generado los estados financieros.");
+      const { meta, estadoResultados: pl, balanceGeneral: bg } = ultimoReporteContable;
+
+      const rowsPL = [
+        { Seccion: "ESTADO DE RESULTADOS", Cuenta: meta.company_id.toUpperCase(), Importe: "" },
+        { Seccion: "INGRESOS", Cuenta: "Total Ingresos Netos", Importe: pl.totalIngresos },
+        ...pl.ingresos.filter(c => c.saldo !== 0).map(c => ({ Seccion: "Ingreso", Cuenta: `${c.codigo} - ${c.nombre}`, Importe: c.saldo })),
+        { Seccion: "COSTOS", Cuenta: "Total Costos Directos", Importe: pl.totalCostos },
+        ...pl.costos.filter(c => c.saldo !== 0).map(c => ({ Seccion: "Costo", Cuenta: `${c.codigo} - ${c.nombre}`, Importe: c.saldo })),
+        { Seccion: "RESULTADO", Cuenta: "UTILIDAD BRUTA", Importe: pl.utilidadBruta },
+        { Seccion: "GASTOS", Cuenta: "Total Gastos de Operación", Importe: pl.totalGastos },
+        ...pl.gastos.filter(c => c.saldo !== 0).map(c => ({ Seccion: "Gasto", Cuenta: `${c.codigo} - ${c.nombre}`, Importe: c.saldo })),
+        { Seccion: "RESULTADO FINAL", Cuenta: "UTILIDAD NETA DEL PERIODO", Importe: pl.utilidadNeta }
+      ];
+
+      const rowsBG = [
+        { Clasificacion: "ACTIVO", Cuenta: "TOTAL ACTIVO", Saldo: bg.activo.totalActivo },
+        ...[...bg.activo.circulante, ...bg.activo.noCirculante].filter(c => c.saldo !== 0).map(c => ({
+          Clasificacion: c.subtipo,
+          Cuenta: `${c.codigo} - ${c.nombre}`,
+          Saldo: c.naturaleza === "ACREEDORA" ? -c.saldo : c.saldo
+        })),
+        { Clasificacion: "PASIVO", Cuenta: "TOTAL PASIVO", Saldo: bg.pasivo.totalPasivo },
+        ...bg.pasivo.circulante.filter(c => c.saldo !== 0).map(c => ({
+          Clasificacion: "PASIVO CIRCULANTE",
+          Cuenta: `${c.codigo} - ${c.nombre}`,
+          Saldo: c.saldo
+        })),
+        { Clasificacion: "CAPITAL", Cuenta: "TOTAL CAPITAL CONTABLE", Saldo: bg.capital.totalCapital },
+        ...bg.capital.cuentas.filter(c => c.saldo !== 0).map(c => ({
+          Clasificacion: "CAPITAL",
+          Cuenta: `${c.codigo} - ${c.nombre}`,
+          Saldo: c.saldo
+        })),
+        { Clasificacion: "CAPITAL", Cuenta: "306.01 - Utilidad Neta del Ejercicio", Saldo: bg.capital.utilidadEjercicio },
+        { Clasificacion: "CUADRE", Cuenta: "SUMA PASIVO + CAPITAL", Saldo: bg.totalPasivoMasCapital }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsPL), "Estado_Resultados");
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rowsBG), "Balance_General");
+      XLSX.writeFile(wb, `Estados_Financieros_${meta.company_id}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    };
 
     function parseSafeNumber(val) {
       const num = Number(val);
@@ -304,7 +650,6 @@
       const otrosIng = filtrarTenant(rawOtrosIngresos);
       const activos = filtrarTenant(rawActivos);
 
-      // 1. Ingresos Cobrados Reales
       let cxcCobrada = 0, cxcPendiente = 0;
       cxc.forEach(i => {
         const total = parseSafeNumber(i.total_amount);
@@ -323,7 +668,6 @@
 
       const totalIngresosEfectivos = cxcCobrada + otrosIngresosTotal;
 
-      // 2. Pasivos Exigibles y Gastos
       let cxpExigible = 0, cxpPagado = 0;
       cxp.forEach(i => {
         const total = parseSafeNumber(i.total_amount);
@@ -340,7 +684,6 @@
         gastosOperativosTotal += parseSafeNumber(i.monto_total || i.monto || i.total || i.importe);
       });
 
-      // 3. Depreciación Mensual de Activos Fijos (LISR Art. 34/35)
       let depreciacionMensualTotal = 0;
       let depHardware = 0, depNetwork = 0, depSoftware = 0;
 
@@ -348,7 +691,6 @@
         const costo = parseSafeNumber(a.purchase_cost);
         let tasaAnual = parseSafeNumber(a.depreciation_rate_annual);
 
-        // Si no tiene tasa específica guardada, recurrir a la tasa por categoría
         if (tasaAnual <= 0) {
           if (a.category === "INTANGIBLE_SOFTWARE") {
             tasaAnual = 33.33;
@@ -370,12 +712,10 @@
         depreciacionMensualTotal += depMes;
       });
 
-      // 4. Margen Operativo Real
       const totalCompromisos = cxpExigible + gastosOperativosTotal + depreciacionMensualTotal;
       const margenNeto = totalIngresosEfectivos - totalCompromisos;
       const ratio = totalCompromisos > 0 ? (totalIngresosEfectivos / totalCompromisos) : (totalIngresosEfectivos > 0 ? 99 : 1);
 
-      // Tarjetas de KPI
       document.getElementById("kpi-ingresos-totales").innerText = `$${totalIngresosEfectivos.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
       document.getElementById("kpi-ingresos-sub").innerText = `Cobrado: $${cxcCobrada.toLocaleString("es-MX")} | Extra: $${otrosIngresosTotal.toLocaleString("es-MX")}`;
 
@@ -392,7 +732,6 @@
 
       document.getElementById("kpi-margen-ratio").innerText = `Cobertura: ${ratio.toFixed(2)}x`;
 
-      // Dictamen Automatizado
       const dictamenEl = document.getElementById("executive-summary");
       if (margenNeto >= 0 && ratio >= 1.25) {
         dictamenEl.innerHTML = `<strong class="text-emerald-400">Posición Financiera Sólida:</strong> La cobranza efectiva ($${totalIngresosEfectivos.toLocaleString("es-MX")}) supera los pasivos a pagar, gastos y depreciación ($${depreciacionMensualTotal.toLocaleString("es-MX")}/mes), generando un margen neto favorable de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> con ratio de cobertura de <strong>${ratio.toFixed(2)}x</strong>.`;

@@ -43,8 +43,8 @@
         </div>
       </div>
 
-      <nav class="p-4 space-y-1 text-sm font-medium">
-        <a href="portal_catalogo.html" id="link-back-portal" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+      <nav class="p-4 space-y-1 text-sm font-medium overflow-y-auto">
+        <a href="portal_catalogo.html" id="link-back-portal" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
           <span>Volver al Portal</span>
         </a>
@@ -52,7 +52,7 @@
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
         <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Herramientas Studio</div>
 
-        <button onclick="cambiarVista('schemas')" id="tab-btn-schemas" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
+        <button onclick="cambiarVista('schemas')" id="tab-btn-schemas" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm">
           <div class="flex items-center gap-3">
             <i class="ph-bold ph-squares-four text-lg text-indigo-400"></i>
             <span>Catálogo & Diseñador</span>
@@ -60,7 +60,7 @@
           <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Core</span>
         </button>
 
-        <button onclick="cambiarVista('ide')" id="tab-btn-ide" class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+        <button onclick="cambiarVista('ide')" id="tab-btn-ide" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
           <div class="flex items-center gap-3">
             <i class="ph-bold ph-code text-lg text-emerald-400"></i>
             <span>Editor de Código (IDE)</span>
@@ -69,19 +69,54 @@
         </button>
 
         <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Operación Contable Core</div>
+
+        <a href="otros_ingresos.html" id="link-otros-ingresos" class="w-full flex items-center justify-between px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-coins text-base text-teal-400"></i>
+            <span>Otros Ingresos</span>
+          </div>
+          <span class="text-[10px] bg-teal-500/10 text-teal-400 px-2 py-0.5 rounded font-mono">Core</span>
+        </a>
+
+        <a href="control_gastos.html" id="link-control-gastos" class="w-full flex items-center justify-between px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-receipt text-base text-orange-400"></i>
+            <span>Control de Gastos</span>
+          </div>
+          <span class="text-[10px] bg-orange-500/10 text-orange-400 px-2 py-0.5 rounded font-mono">Core</span>
+        </a>
+
+        <a href="prenomina.html" id="link-prenomina" class="w-full flex items-center justify-between px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-calculator text-base text-cyan-400"></i>
+            <span>Pre-Nómina</span>
+          </div>
+          <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded font-mono">Core</span>
+        </a>
+
+        <a href="nomina.html" id="link-nomina" class="w-full flex items-center justify-between px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-bank text-base text-sky-400"></i>
+            <span>Nómina Oficial</span>
+          </div>
+          <span class="text-[10px] bg-sky-500/10 text-sky-400 px-2 py-0.5 rounded font-mono">Core</span>
+        </a>
+
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
         <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Administración & Auditoría</div>
 
-        <button onclick="abrirTableroGerencialDirecto()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 text-left">
-          <i class="ph-bold ph-chart-polar text-lg text-purple-400"></i>
+        <button onclick="abrirTableroGerencialDirecto()" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60 text-left">
+          <i class="ph-bold ph-chart-polar text-base text-purple-400"></i>
           <span>Tablero Gerencial</span>
         </button>
 
-        <a href="modulo_logs.html" id="link-logs" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
-          <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
+        <a href="modulo_logs.html" id="link-logs" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-shield-warning text-base text-amber-400"></i>
           <span>Consola de Auditoría</span>
         </a>
-        <a href="staff.html" id="link-staff" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
-          <i class="ph-bold ph-users-three text-lg text-emerald-400"></i>
+        <a href="staff.html" id="link-staff" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-users-three text-base text-emerald-400"></i>
           <span>Staff & Gobernanza</span>
         </a>
       </nav>
@@ -127,6 +162,10 @@
           <select id="ide-file-selector" onchange="cargarArchivoEnEditor(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-mono text-indigo-300 outline-none focus:border-indigo-500">
             <optgroup label="Módulos Oficiales del Núcleo">
               <option value="portal_catalogo.html">portal_catalogo.html (Catálogo Maestro)</option>
+              <option value="otros_ingresos.html">otros_ingresos.html (Otros Ingresos Core)</option>
+              <option value="control_gastos.html">control_gastos.html (Control de Gastos Core)</option>
+              <option value="prenomina.html">prenomina.html (Pre-Nómina & Padrón)</option>
+              <option value="nomina.html">nomina.html (Nómina Oficial & Pólizas)</option>
               <option value="cg_cxc.html">cg_cxc.html (CxC Cesar Geovanni)</option>
               <option value="hr_cxc.html">hr_cxc.html (CxC HR Employment)</option>
               <option value="cg_cxp.html">cg_cxp.html (CxP Cesar Geovanni)</option>
@@ -138,9 +177,7 @@
               <option value="staff.html">staff.html (Gobernanza RBAC)</option>
               <option value="modulo_logs.html">modulo_logs.html (Consola de Auditoría)</option>
             </optgroup>
-            <optgroup label="Módulos Dinámicos e Importados" id="optgroup-dynamic-modules">
-              <!-- Inyección automática -->
-            </optgroup>
+            <optgroup label="Módulos Dinámicos e Importados" id="optgroup-dynamic-modules"></optgroup>
           </select>
 
           <span id="ide-status-tag" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400 border border-slate-700">Modo Inspección</span>
@@ -194,11 +231,11 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Descriptivo</label>
-              <input type="text" id="mod-name" placeholder="Ej: Control de Gastos Operativos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <input type="text" id="mod-name" placeholder="Ej: Viáticos de Campo" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug / Colección en Firestore</label>
-              <input type="text" id="mod-slug" placeholder="mod_control_gastos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
+              <input type="text" id="mod-slug" placeholder="mod_viaticos_campo" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
             </div>
           </div>
 
@@ -264,11 +301,11 @@
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Título del Módulo</label>
-              <input type="text" id="import-title" placeholder="Ej: Control de Gastos Avanzado" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
+              <input type="text" id="import-title" placeholder="Ej: Módulo Auxiliar" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-indigo-500">
             </div>
             <div>
               <label class="block uppercase tracking-wider text-slate-400 mb-1">Slug Clave / Colección</label>
-              <input type="text" id="import-slug" placeholder="mod_control_gastos" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
+              <input type="text" id="import-slug" placeholder="mod_auxiliar" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono lowercase outline-none focus:border-indigo-500">
             </div>
           </div>
 
@@ -341,16 +378,16 @@
     let currentImportMode = "html";
 
     function syncNavLinks() {
-      const sep = '?';
-      const backLink = document.getElementById('link-back-portal');
-      const logsLink = document.getElementById('link-logs');
-      const staffLink = document.getElementById('link-staff');
+      const q = `?empresa=${encodeURIComponent(activeCompanyId)}`;
+      document.getElementById('link-back-portal').href = `portal_catalogo.html${q}`;
+      document.getElementById('link-otros-ingresos').href = `otros_ingresos.html${q}`;
+      document.getElementById('link-control-gastos').href = `control_gastos.html${q}`;
+      document.getElementById('link-prenomina').href = `prenomina.html${q}`;
+      document.getElementById('link-nomina').href = `nomina.html${q}`;
+      document.getElementById('link-logs').href = `modulo_logs.html${q}`;
+      document.getElementById('link-staff').href = `staff.html${q}`;
+
       const tenantTag = document.getElementById('active-tenant-tag');
-
-      if (backLink) backLink.href = `portal_catalogo.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
-      if (logsLink) logsLink.href = `modulo_logs.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
-      if (staffLink) staffLink.href = `staff.html${sep}empresa=${encodeURIComponent(activeCompanyId)}`;
-
       if (tenantTag) {
         tenantTag.innerText = activeCompanyId === 'hr_employment' ? 'HR Employment' : 'Cesar Geovanni';
       }
@@ -373,6 +410,12 @@
       if (staffSnap.exists()) {
         currentUserStaff = staffSnap.data();
       }
+
+      // Auto-registrar permisos RBAC para los módulos core fusionados
+      await inyectarPermisosEnRoles("otros_ingresos");
+      await inyectarPermisosEnRoles("control_gastos");
+      await inyectarPermisosEnRoles("prenomina");
+      await inyectarPermisosEnRoles("nomina");
 
       initModulesListener();
       cargarArchivoEnEditor(currentFileName);
@@ -406,13 +449,13 @@
       if (vista === 'schemas') {
         viewSchemas.classList.remove('hidden');
         viewIde.classList.add('hidden');
-        btnSchemas.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm";
-        btnIde.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+        btnSchemas.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-white bg-indigo-600/15 border border-indigo-500/20 shadow-sm";
+        btnIde.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
       } else {
         viewSchemas.classList.add('hidden');
         viewIde.classList.remove('hidden');
-        btnIde.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-white bg-emerald-600/15 border border-emerald-500/20 shadow-sm";
-        btnSchemas.className = "w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
+        btnIde.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-white bg-emerald-600/15 border border-emerald-500/20 shadow-sm";
+        btnSchemas.className = "w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60";
       }
     };
 
@@ -468,14 +511,69 @@
         optgroup.innerHTML = '';
         modulesCache = {};
 
-        if (snap.empty) {
-          container.innerHTML = `
-            <div class="p-8 text-center text-slate-500 font-mono text-xs col-span-full border border-slate-800/80 rounded-2xl bg-slate-900/30">
-              No hay módulos dinámicos creados aún. Haz clic en "+ Diseñar Esquema No-Code" o "+ Importar Módulo Externo".
+        const coreModules = [
+          {
+            title: "Otros Ingresos (Core)",
+            slug: "otros_ingresos",
+            icon: "ph-coins",
+            description: "Registro de ingresos extraordinarios y diversos conectado directo a pólizas contables (402.01).",
+            file: "otros_ingresos.html",
+            accent: "teal"
+          },
+          {
+            title: "Control de Gastos (Core)",
+            slug: "control_gastos",
+            icon: "ph-receipt",
+            description: "Control de gastos operativos por rubro NIF/SAT con emisión automática de póliza contable (601.xx).",
+            file: "control_gastos.html",
+            accent: "orange"
+          },
+          {
+            title: "Pre-Nómina & Padrón (Core)",
+            slug: "prenomina",
+            icon: "ph-calculator",
+            description: "Alta de trabajadores, cálculo semanal/quincenal de percepciones, ISR e IMSS previo a dispersión.",
+            file: "prenomina.html",
+            accent: "cyan"
+          },
+          {
+            title: "Nómina Oficial (Core)",
+            slug: "nomina",
+            icon: "ph-bank",
+            description: "Provisión contable automática (601.07 / 201.03), dispersión bancaria y exportación CSV.",
+            file: "nomina.html",
+            accent: "sky"
+          }
+        ];
+
+        coreModules.forEach((cm) => {
+          const cardCore = document.createElement('div');
+          cardCore.className = "bg-slate-900/90 border border-indigo-500/30 rounded-2xl p-6 shadow-xl flex flex-col justify-between";
+          cardCore.innerHTML = `
+            <div class="space-y-4">
+              <div class="flex justify-between items-start">
+                <div class="w-12 h-12 rounded-xl bg-${cm.accent}-500/10 border border-${cm.accent}-500/20 text-${cm.accent}-400 flex items-center justify-center text-2xl">
+                  <i class="ph-bold ${cm.icon}"></i>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">FUSIONADO CORE</span>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white leading-tight">${cm.title}</h3>
+                <span class="text-[11px] font-mono text-${cm.accent}-400 block mt-0.5">Archivo: ${cm.file}</span>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">${cm.description}</p>
+              </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-800 flex gap-2">
+              <a href="${cm.file}?empresa=cesar_gonzalez" class="flex-1 text-center py-2 px-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/20 text-blue-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+                <i class="ph-bold ph-briefcase"></i> Cesar G.
+              </a>
+              <a href="${cm.file}?empresa=hr_employment" class="flex-1 text-center py-2 px-2 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/20 text-emerald-300 text-xs font-semibold transition flex items-center justify-center gap-1">
+                <i class="ph-bold ph-buildings"></i> HR Empl.
+              </a>
             </div>
           `;
-          return;
-        }
+          container.appendChild(cardCore);
+        });
 
         snap.forEach(docSnap => {
           const mod = docSnap.data();
@@ -540,43 +638,39 @@
       });
     }
 
-    // INYECCIÓN BLINDADA DE PERMISOS EN LA MATRIZ RBAC PARA TODOS LOS ROLES
     async function inyectarPermisosEnRoles(slug) {
       const readPerm = `${slug}.read`;
       const writePerm = `${slug}.write`;
       const deletePerm = `${slug}.delete`;
 
       const rolesConfig = [
-        { roleId: "SUPERADMIN", perms: ["*"] },
         { roleId: "CONTADOR", perms: [readPerm, writePerm, deletePerm] },
         { roleId: "AUXILIAR", perms: [readPerm, writePerm] },
         { roleId: "AUDITOR",  perms: [readPerm] }
       ];
 
       for (const item of rolesConfig) {
-        if (item.roleId === "SUPERADMIN") continue; // Siempre mantiene comodín total
         const roleRef = doc(db, "system_roles", item.roleId);
         const roleSnap = await getDoc(roleRef);
-        let existingPerms = [];
+        let existingPerms = roleSnap.exists() ? (roleSnap.data().permissions || []) : [];
 
-        if (roleSnap.exists()) {
-          existingPerms = roleSnap.data().permissions || [];
-        }
-
+        let changed = false;
         item.perms.forEach(p => {
-          if (!existingPerms.includes(p)) existingPerms.push(p);
+          if (!existingPerms.includes(p)) {
+            existingPerms.push(p);
+            changed = true;
+          }
         });
 
-        await setDoc(roleRef, {
-          permissions: existingPerms,
-          updated_at: serverTimestamp()
-        }, { merge: true });
+        if (changed) {
+          await setDoc(roleRef, {
+            permissions: existingPerms,
+            updated_at: serverTimestamp()
+          }, { merge: true });
+        }
       }
-
-      await logAudit("RBAC_PERMISSIONS_INJECTED", { slug, permissions: [readPerm, writePerm, deletePerm] });
     }
 
-    // GUARDAR ESQUEMA NO-CODE
     document.getElementById('form-module').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit');
@@ -631,7 +725,6 @@
 
         await inyectarPermisosEnRoles(slug);
         alert(`Módulo "${title}" desplegado exitosamente.\nLos permisos "${slug}.read" y "${slug}.write" han sido inyectados en la matriz de Staff.`);
-
         toggleModal(false);
       } catch (err) {
         alert("Error al procesar el módulo: " + err.message);
@@ -729,7 +822,6 @@
       reader.readAsText(file);
     };
 
-    // INYECCIÓN DE MÓDULO EXTERNO (HTML AUTÓNOMO O JSON)
     document.getElementById('form-import').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit-import');
@@ -803,7 +895,6 @@
 
         alert(`¡Módulo "${title}" inyectado exitosamente!\n\n• Colección registrada: ${slug}\n• Permisos RBAC auto-configurados en Staff.\n• Disponible para Cesar Geovanni y HR Employment.`);
         toggleModalImport(false);
-
       } catch (err) {
         alert(`Fallo en la importación: ${err.message}`);
       } finally {

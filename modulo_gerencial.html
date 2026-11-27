@@ -31,7 +31,7 @@
     <div class="w-16 h-16 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 animate-pulse flex items-center justify-center">
       <i class="ph-bold ph-chart-polar text-indigo-400 text-3xl"></i>
     </div>
-    <p class="text-xs text-slate-400 font-mono">Consolidando flujos de cobranza, pasivos, gastos y depreciación...</p>
+    <p class="text-xs text-slate-400 font-mono">Consolidando cobranza, pasivos, gastos, nómina y depreciación...</p>
   </div>
 
   <!-- ENCABEZADO SUPERIOR -->
@@ -45,21 +45,27 @@
           <span>Tablero de Decisiones Financieras</span>
           <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20">DIRECCIÓN EJECUTIVA</span>
         </h2>
-        <span class="text-xs text-slate-400 font-mono">Flujo Efectivo: Cobranza Real vs Pasivos Exigibles + Gastos + Desgaste</span>
+        <span class="text-xs text-slate-400 font-mono">Flujo Efectivo: Cobranza Real vs Pasivos + Gastos + Nómina + Desgaste</span>
       </div>
     </div>
 
     <!-- ACCESOS DIRECTOS Y SELECTOR DE CONTEXTO GERENCIAL -->
-    <div class="flex flex-wrap items-center gap-2.5">
-      <a href="otros_ingresos.html" id="btn-nav-otros-ingresos" class="px-3 py-2 rounded-xl bg-teal-600/15 hover:bg-teal-600/25 border border-teal-500/30 text-teal-300 text-xs font-semibold transition flex items-center gap-1.5">
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="otros_ingresos.html" id="btn-nav-otros-ingresos" class="px-2.5 py-2 rounded-xl bg-teal-600/15 hover:bg-teal-600/25 border border-teal-500/30 text-teal-300 text-xs font-semibold transition flex items-center gap-1.5">
         <i class="ph-bold ph-coins"></i> Otros Ingresos
       </a>
-      <a href="control_gastos.html" id="btn-nav-control-gastos" class="px-3 py-2 rounded-xl bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/30 text-orange-300 text-xs font-semibold transition flex items-center gap-1.5">
-        <i class="ph-bold ph-wallet"></i> Control de Gastos
+      <a href="control_gastos.html" id="btn-nav-control-gastos" class="px-2.5 py-2 rounded-xl bg-orange-600/15 hover:bg-orange-600/25 border border-orange-500/30 text-orange-300 text-xs font-semibold transition flex items-center gap-1.5">
+        <i class="ph-bold ph-wallet"></i> Gastos
+      </a>
+      <a href="prenomina.html" id="btn-nav-prenomina" class="px-2.5 py-2 rounded-xl bg-cyan-600/15 hover:bg-cyan-600/25 border border-cyan-500/30 text-cyan-300 text-xs font-semibold transition flex items-center gap-1.5">
+        <i class="ph-bold ph-calculator"></i> Pre-Nómina
+      </a>
+      <a href="nomina.html" id="btn-nav-nomina" class="px-2.5 py-2 rounded-xl bg-sky-600/15 hover:bg-sky-600/25 border border-sky-500/30 text-sky-300 text-xs font-semibold transition flex items-center gap-1.5">
+        <i class="ph-bold ph-bank"></i> Nómina
       </a>
 
       <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-        <label class="text-[11px] font-mono uppercase text-slate-400 px-2">Razón Social:</label>
+        <label class="text-[11px] font-mono uppercase text-slate-400 px-2">Empresa:</label>
         <select id="select-scope" onchange="cambiarEntidadAnalisis(this.value)" class="bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500">
           <option value="cesar_gonzalez">Cesar Geovanni Gonzalez Contreras</option>
           <option value="hr_employment">HR Employment</option>
@@ -76,35 +82,41 @@
   <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
 
-    <!-- KPI ROW 1: FLUJOS REALES Y DEPRECIACIÓN -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <!-- KPI ROW 1: FLUJOS REALES, NÓMINA Y DEPRECIACIÓN -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
         <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Ingresos Cobrados</span>
-        <p id="kpi-ingresos-totales" class="text-xl font-bold font-mono text-emerald-400 mt-2">$0.00</p>
-        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-ingresos-sub">CxC Cobrada + Otros Ingresos</span>
+        <p id="kpi-ingresos-totales" class="text-lg font-bold font-mono text-emerald-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-ingresos-sub">CxC + Otros Ingresos</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
         <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Pasivos Exigibles (CxP)</span>
-        <p id="kpi-cxp-total" class="text-xl font-bold font-mono text-rose-400 mt-2">$0.00</p>
-        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-cxp-sub">Saldo pendiente a proveedores</span>
+        <p id="kpi-cxp-total" class="text-lg font-bold font-mono text-rose-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-cxp-sub">Saldo proveedores</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
-        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Gastos Registrados</span>
-        <p id="kpi-gastos-operativos" class="text-xl font-bold font-mono text-amber-400 mt-2">$0.00</p>
-        <span class="text-[10px] text-slate-500 mt-1 block">Control de Gastos Core</span>
+        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Gastos Operativos</span>
+        <p id="kpi-gastos-operativos" class="text-lg font-bold font-mono text-amber-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block">Control de Gastos</span>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
+        <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Nómina & Carga Social</span>
+        <p id="kpi-nomina-total" class="text-lg font-bold font-mono text-cyan-400 mt-2">$0.00</p>
+        <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-nomina-sub">Pagada + Por dispersar</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
         <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Depreciación Mensual</span>
-        <p id="kpi-depreciacion-mes" class="text-xl font-bold font-mono text-indigo-400 mt-2">$0.00</p>
+        <p id="kpi-depreciacion-mes" class="text-lg font-bold font-mono text-indigo-400 mt-2">$0.00</p>
         <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-depreciacion-sub">Desgaste patrimonial</span>
       </div>
 
       <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 relative overflow-hidden">
         <span class="text-[11px] font-mono text-slate-400 uppercase font-semibold block">Flujo Operativo / Margen</span>
-        <p id="kpi-margen-neto" class="text-xl font-bold font-mono text-white mt-2">$0.00</p>
+        <p id="kpi-margen-neto" class="text-lg font-bold font-mono text-white mt-2">$0.00</p>
         <span class="text-[10px] text-slate-500 mt-1 block" id="kpi-margen-ratio">Cobertura: 0.00x</span>
       </div>
     </div>
@@ -117,7 +129,7 @@
           <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
             <i class="ph-bold ph-scales text-indigo-400"></i> Cobranza vs Compromisos Operativos
           </h3>
-          <span class="text-[11px] text-slate-400">Ingresos liquidados frente a pasivos exigibles, gastos y depreciación</span>
+          <span class="text-[11px] text-slate-400">Ingresos liquidados frente a pasivos, gastos, nómina y depreciación</span>
         </div>
         <div class="h-64 relative">
           <canvas id="chart-flujos-comparativos"></canvas>
@@ -129,7 +141,7 @@
           <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
             <i class="ph-bold ph-chart-pie-slice text-rose-400"></i> Composición de Salidas y Desgaste
           </h3>
-          <span class="text-[11px] text-slate-400">Proporción de Proveedores por pagar, Gastos y Depreciación</span>
+          <span class="text-[11px] text-slate-400">Proporción de Proveedores, Gastos, Nómina y Depreciación</span>
         </div>
         <div class="h-64 relative flex items-center justify-center">
           <canvas id="chart-egresos-donut"></canvas>
@@ -210,10 +222,14 @@
       const btnBack = document.getElementById("btn-back-portal");
       const btnIng = document.getElementById("btn-nav-otros-ingresos");
       const btnGas = document.getElementById("btn-nav-control-gastos");
+      const btnPre = document.getElementById("btn-nav-prenomina");
+      const btnNom = document.getElementById("btn-nav-nomina");
 
       if (btnBack) btnBack.href = `portal_catalogo.html${q}`;
       if (btnIng) btnIng.href = `otros_ingresos.html${q}`;
       if (btnGas) btnGas.href = `control_gastos.html${q}`;
+      if (btnPre) btnPre.href = `prenomina.html${q}`;
+      if (btnNom) btnNom.href = `nomina.html${q}`;
     }
 
     syncHeaderLinks();
@@ -222,6 +238,7 @@
     let rawCxP = [];
     let rawGastos = [];
     let rawOtrosIngresos = [];
+    let rawNominas = [];
     let rawActivos = [];
 
     let chartFlujos = null;
@@ -295,7 +312,14 @@
         actualizarDashboard();
       }, err => console.warn("otros_ingresos sin inicializar:", err));
 
-      // 5. Activos Fijos con Depreciación LISR
+      // 5. Nóminas Oficiales (Colección Oficial Core)
+      onSnapshot(collection(db, "nominas"), (snap) => {
+        rawNominas = [];
+        snap.forEach(d => rawNominas.push({ id: d.id, ...d.data() }));
+        actualizarDashboard();
+      }, err => console.warn("nominas sin inicializar:", err));
+
+      // 6. Activos Fijos con Depreciación LISR
       onSnapshot(collection(db, "fixed_assets"), (snap) => {
         rawActivos = [];
         snap.forEach(d => rawActivos.push({ id: d.id, ...d.data() }));
@@ -318,6 +342,7 @@
       const cxp = filtrarTenant(rawCxP);
       const gastos = filtrarTenant(rawGastos);
       const otrosIng = filtrarTenant(rawOtrosIngresos);
+      const nominas = filtrarTenant(rawNominas);
       const activos = filtrarTenant(rawActivos);
 
       // 1. Ingresos Cobrados Reales
@@ -356,7 +381,19 @@
         gastosOperativosTotal += parseSafeNumber(i.total || i.subtotal || i.monto_total);
       });
 
-      // 3. Depreciación Mensual de Activos Fijos (LISR Art. 34/35)
+      // 3. Nómina y Carga Patronal
+      let nominaTotalCosto = 0;
+      let nominaPendienteDispersion = 0;
+      nominas.forEach(n => {
+        const percep = parseSafeNumber(n.total_percepciones);
+        const carga = parseSafeNumber(n.carga_patronal);
+        nominaTotalCosto += (percep + carga);
+        if (n.estatus_pago !== "PAGADA") {
+          nominaPendienteDispersion += parseSafeNumber(n.total_neto);
+        }
+      });
+
+      // 4. Depreciación Mensual de Activos Fijos (LISR Art. 34/35)
       let depreciacionMensualTotal = 0;
       let depHardware = 0, depNetwork = 0, depSoftware = 0;
 
@@ -381,8 +418,8 @@
         depreciacionMensualTotal += depMes;
       });
 
-      // 4. Margen Operativo Real
-      const totalCompromisos = cxpExigible + gastosOperativosTotal + depreciacionMensualTotal;
+      // 5. Margen Operativo Real
+      const totalCompromisos = cxpExigible + gastosOperativosTotal + nominaTotalCosto + depreciacionMensualTotal;
       const margenNeto = totalIngresosEfectivos - totalCompromisos;
       const ratio = totalCompromisos > 0 ? (totalIngresosEfectivos / totalCompromisos) : (totalIngresosEfectivos > 0 ? 99 : 1);
 
@@ -393,41 +430,45 @@
       document.getElementById("kpi-cxp-sub").innerText = `Liquidado: $${cxpPagado.toLocaleString("es-MX")}`;
 
       document.getElementById("kpi-gastos-operativos").innerText = `$${gastosOperativosTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+
+      document.getElementById("kpi-nomina-total").innerText = `$${nominaTotalCosto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("kpi-nomina-sub").innerText = `Por dispersar: $${nominaPendienteDispersion.toLocaleString("es-MX")}`;
+
       document.getElementById("kpi-depreciacion-mes").innerText = `$${depreciacionMensualTotal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
       document.getElementById("kpi-depreciacion-sub").innerText = `${activos.length} activos en libros`;
 
       const margenEl = document.getElementById("kpi-margen-neto");
       margenEl.innerText = `$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
-      margenEl.className = `text-xl font-bold font-mono mt-2 ${margenNeto >= 0 ? "text-emerald-400" : "text-rose-400"}`;
+      margenEl.className = `text-lg font-bold font-mono mt-2 ${margenNeto >= 0 ? "text-emerald-400" : "text-rose-400"}`;
 
       document.getElementById("kpi-margen-ratio").innerText = `Cobertura: ${ratio.toFixed(2)}x`;
 
       const dictamenEl = document.getElementById("executive-summary");
       if (margenNeto >= 0 && ratio >= 1.25) {
-        dictamenEl.innerHTML = `<strong class="text-emerald-400">Posición Financiera Sólida:</strong> La cobranza efectiva ($${totalIngresosEfectivos.toLocaleString("es-MX")}) supera los pasivos a pagar, gastos y depreciación ($${depreciacionMensualTotal.toLocaleString("es-MX")}/mes), generando un margen neto favorable de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> con ratio de cobertura de <strong>${ratio.toFixed(2)}x</strong>.`;
+        dictamenEl.innerHTML = `<strong class="text-emerald-400">Posición Financiera Sólida:</strong> La cobranza efectiva ($${totalIngresosEfectivos.toLocaleString("es-MX")}) cubre holgadamente proveedores, gastos operativos, costo de nómina ($${nominaTotalCosto.toLocaleString("es-MX")}) y depreciación ($${depreciacionMensualTotal.toLocaleString("es-MX")}/mes), generando un margen favorable de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> (Cobertura: <strong>${ratio.toFixed(2)}x</strong>).`;
       } else if (margenNeto >= 0) {
-        dictamenEl.innerHTML = `<strong class="text-amber-400">Margen Ajustado:</strong> La entidad cubre sus salidas con una reserva de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> (Cobertura: <strong>${ratio.toFixed(2)}x</strong>). Se aconseja acelerar la cartera pendiente de $${cxcPendiente.toLocaleString("es-MX")}.`;
+        dictamenEl.innerHTML = `<strong class="text-amber-400">Margen Ajustado:</strong> La entidad cubre sus salidas operativas y de nómina con una reserva de <strong>$${margenNeto.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong> (Cobertura: <strong>${ratio.toFixed(2)}x</strong>). Se recomienda agilizar la cobranza de cartera pendiente ($${cxcPendiente.toLocaleString("es-MX")}).`;
       } else {
-        dictamenEl.innerHTML = `<strong class="text-rose-400">Déficit Operativo:</strong> Los compromisos a proveedores, gastos y desgaste de activos superan la cobranza realizada por <strong>$${Math.abs(margenNeto).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong>. Se debe agilizar cobros y renegociar pasivos inmediatos.`;
+        dictamenEl.innerHTML = `<strong class="text-rose-400">Déficit Operativo:</strong> Los compromisos a proveedores, gastos, nómina ($${nominaTotalCosto.toLocaleString("es-MX")}) y desgaste de activos superan la cobranza realizada por <strong>$${Math.abs(margenNeto).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</strong>.`;
       }
 
-      renderChartFlujos(cxcCobrada, otrosIngresosTotal, cxpExigible, gastosOperativosTotal, depreciacionMensualTotal);
-      renderChartEgresos(cxpExigible, gastosOperativosTotal, depreciacionMensualTotal);
+      renderChartFlujos(cxcCobrada, otrosIngresosTotal, cxpExigible, gastosOperativosTotal, nominaTotalCosto, depreciacionMensualTotal);
+      renderChartEgresos(cxpExigible, gastosOperativosTotal, nominaTotalCosto, depreciacionMensualTotal);
       renderChartTopClients(cxc);
       renderChartDepreciacion(depHardware, depNetwork, depSoftware);
     }
 
-    function renderChartFlujos(cobros, otrosIng, cxp, gastos, dep) {
+    function renderChartFlujos(cobros, otrosIng, cxp, gastos, nomina, dep) {
       const ctx = document.getElementById("chart-flujos-comparativos").getContext("2d");
       if (chartFlujos) chartFlujos.destroy();
 
       chartFlujos = new Chart(ctx, {
         type: "bar",
         data: {
-          labels: ["Cobros CxC", "Otros Ingresos", "Pasivos CxP", "Gastos Operativos", "Depreciación / Mes"],
+          labels: ["Cobros CxC", "Otros Ingresos", "Pasivos CxP", "Gastos", "Nómina", "Depreciación"],
           datasets: [{
-            data: [cobros, otrosIng, cxp, gastos, dep],
-            backgroundColor: ["#10b981", "#059669", "#f43f5e", "#f59e0b", "#6366f1"],
+            data: [cobros, otrosIng, cxp, gastos, nomina, dep],
+            backgroundColor: ["#10b981", "#14b8a6", "#f43f5e", "#f59e0b", "#06b6d4", "#6366f1"],
             borderRadius: 6
           }]
         },
@@ -443,17 +484,17 @@
       });
     }
 
-    function renderChartEgresos(cxp, gastos, dep) {
+    function renderChartEgresos(cxp, gastos, nomina, dep) {
       const ctx = document.getElementById("chart-egresos-donut").getContext("2d");
       if (chartEgresos) chartEgresos.destroy();
 
       chartEgresos = new Chart(ctx, {
         type: "doughnut",
         data: {
-          labels: ["Proveedores (CxP)", "Gastos Registrados", "Depreciación de Activos"],
+          labels: ["Proveedores (CxP)", "Gastos Operativos", "Nómina & Carga Social", "Depreciación Activos"],
           datasets: [{
-            data: [cxp, gastos, dep],
-            backgroundColor: ["#f43f5e", "#f59e0b", "#6366f1"],
+            data: [cxp, gastos, nomina, dep],
+            backgroundColor: ["#f43f5e", "#f59e0b", "#06b6d4", "#6366f1"],
             borderWidth: 0
           }]
         },

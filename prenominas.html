@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContaCore EMCO | Pre-Nómina & Padrón de Trabajadores</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-cyan-500 selection:text-white">
+
+  <!-- SIDEBAR UNIFICADO EMCO -->
+  <aside class="w-72 bg-slate-900/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl z-20">
+    <div>
+      <div class="p-6 border-b border-slate-800/60 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <i class="ph-bold ph-identification-badge text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-cyan-400 font-light">EMCO</span></h1>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">Pre-Nómina & Plantilla</span>
+        </div>
+      </div>
+
+      <nav class="p-4 space-y-1 text-sm font-medium">
+        <a href="portal_catalogo.html" id="link-back-portal" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
+          <span>Volver al Portal</span>
+        </a>
+
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Capital Humano & Nómina</div>
+
+        <a href="prenomina.html" id="link-prenomina" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-white bg-cyan-600/15 border border-cyan-500/25 shadow-sm">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-calculator text-lg text-cyan-400"></i>
+            <span>Pre-Nómina</span>
+          </div>
+          <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-mono">Paso 1</span>
+        </a>
+
+        <a href="nomina.html" id="link-nomina" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-bank text-lg text-emerald-400"></i>
+            <span>Nómina Oficial</span>
+          </div>
+          <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">Paso 2</span>
+        </a>
+
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Operación & Dirección</div>
+
+        <a href="otros_ingresos.html" id="link-otros-ingresos" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-coins text-lg text-teal-400"></i>
+          <span>Otros Ingresos</span>
+        </a>
+        <a href="control_gastos.html" id="link-control-gastos" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-receipt text-lg text-rose-400"></i>
+          <span>Control de Gastos</span>
+        </a>
+        <a href="modulo_gerencial.html" id="link-gerencial" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-chart-polar text-lg text-purple-400"></i>
+          <span>Tablero Gerencial</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60 space-y-2">
+      <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+        <span>Razón Social:</span>
+        <span id="active-tenant-tag" class="px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">--</span>
+      </div>
+      <div class="flex gap-1.5">
+        <button onclick="cambiarEmpresa('cesar_gonzalez')" id="btn-tenant-cg" class="flex-1 py-1.5 rounded-lg text-[11px] font-semibold border transition">Cesar G.</button>
+        <button onclick="cambiarEmpresa('hr_employment')" id="btn-tenant-hr" class="flex-1 py-1.5 rounded-lg text-[11px] font-semibold border transition">HR Empl.</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950">
+    <header class="bg-slate-900/70 border-b border-slate-800/80 px-8 py-4 flex flex-wrap justify-between items-center gap-4 sticky top-0 z-10 backdrop-blur-md">
+      <div>
+        <h2 class="text-xl font-bold text-white tracking-tight">Pre-Nómina y Padrón de Trabajadores</h2>
+        <span class="text-xs text-slate-400 font-mono">Alta de personal operativo/administrativo, cálculo de percepciones y autorización previa a póliza</span>
+      </div>
+
+      <div class="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <button onclick="cambiarPestana('lotes')" id="tab-lotes" class="px-4 py-2 rounded-lg text-xs font-bold transition bg-cyan-600 text-white">
+          1. Lotes de Pre-Nómina
+        </button>
+        <button onclick="cambiarPestana('trabajadores')" id="tab-trabajadores" class="px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white">
+          2. Padrón de Trabajadores (<span id="badge-count-emp">0</span>)
+        </button>
+      </div>
+    </header>
+
+    <!-- VISTA 1: LOTES DE PRE-NÓMINA -->
+    <div id="vista-lotes" class="p-8 space-y-6">
+      <div class="flex flex-wrap justify-between items-center gap-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div>
+          <h3 class="text-sm font-bold text-white">Generar Nuevo Lote de Pre-Nómina</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Carga automáticamente a todos los trabajadores activos según su esquema de pago.</p>
+        </div>
+        <button onclick="abrirModalNuevoLote()" class="bg-cyan-600 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-cyan-600/20">
+          <i class="ph-bold ph-plus-circle text-base"></i> Crear Lote de Pre-Nómina
+        </button>
+      </div>
+
+      <!-- LISTADO DE LOTES -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="contenedor-lotes">
+        <div class="col-span-full py-10 text-center text-slate-500 font-mono text-xs">Cargando lotes de pre-nómina...</div>
+      </div>
+    </div>
+
+    <!-- VISTA 2: PADRÓN DE TRABAJADORES -->
+    <div id="vista-trabajadores" class="hidden p-8 space-y-6">
+      <div class="flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+          <input type="text" id="buscador-trabajador" oninput="renderTablaTrabajadores()" placeholder="Buscar por nombre, CURP, RFC o puesto..." class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-xs text-white w-80 outline-none focus:border-cyan-500">
+          <select id="filtro-estatus-emp" onchange="renderTablaTrabajadores()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 outline-none focus:border-cyan-500">
+            <option value="ACTIVO">Solo Activos</option>
+            <option value="TODOS">Todos</option>
+            <option value="BAJA">Bajas</option>
+          </select>
+        </div>
+        <button onclick="abrirModalTrabajador()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+          <i class="ph-bold ph-user-plus text-base"></i> Alta de Trabajador
+        </button>
+      </div>
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-950/70 text-slate-400 font-mono uppercase border-b border-slate-800">
+                <th class="py-3 px-4">Trabajador</th>
+                <th class="py-3 px-4">CURP / RFC</th>
+                <th class="py-3 px-4">Puesto & Rubro</th>
+                <th class="py-3 px-4">Periodicidad</th>
+                <th class="py-3 px-4 text-right">Sueldo Base</th>
+                <th class="py-3 px-4">CLABE / Banco</th>
+                <th class="py-3 px-4 text-center">Estatus</th>
+                <th class="py-3 px-4 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-trabajadores-body" class="divide-y divide-slate-800/60">
+              <tr><td colspan="8" class="py-8 text-center text-slate-500 font-mono">Cargando padrón...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL 1: ALTA / EDICIÓN DE TRABAJADOR -->
+  <div id="modal-trabajador" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-user-plus text-emerald-400 text-xl"></i>
+          <div>
+            <h4 id="titulo-modal-trabajador" class="text-base font-bold text-white">Alta de Trabajador en Padrón Contable</h4>
+            <span class="text-[11px] font-mono text-slate-400">Validación anti-duplicados por CURP, RFC y Nombre Completo</span>
+          </div>
+        </div>
+        <button onclick="cerrarModalTrabajador()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-trabajador" class="space-y-4 text-xs font-medium text-slate-300">
+        <input type="hidden" id="emp-id" value="">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="md:col-span-2">
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre Completo (Nombre(s) + Apellido Paterno + Apellido Materno)</label>
+            <input type="text" id="emp-nombre" placeholder="Ej: Juan Carlos Pérez López" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white uppercase outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">CURP (18 caracteres)</label>
+            <input type="text" id="emp-curp" maxlength="18" placeholder="ABCD900101HDFXXX00" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono uppercase outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">RFC (13 caracteres)</label>
+            <input type="text" id="emp-rfc" maxlength="13" placeholder="ABCD900101XXX" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono uppercase outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">NSS (Número de Seguro Social - Opcional)</label>
+            <input type="text" id="emp-nss" maxlength="11" placeholder="11 dígitos IMSS" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Puesto / Cargo</label>
+            <input type="text" id="emp-puesto" placeholder="Ej: Reclutador de Campo, Auxiliar Contable..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Esquema de Pago</label>
+            <select id="emp-periodicidad" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500">
+              <option value="QUINCENAL">Quincenal</option>
+              <option value="SEMANAL">Semanal</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Sueldo Base por Periodo ($)</label>
+            <input type="number" step="0.01" min="0" id="emp-sueldo" placeholder="0.00" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-emerald-400 font-mono font-bold outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Cuenta Contable Gasto</label>
+            <select id="emp-cuenta-gasto" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:border-emerald-500">
+              <option value="601.07">601.07 - Sueldos Administrativos</option>
+              <option value="501.01">501.01 - Costo Directo Operación</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Banco Receptor</label>
+            <input type="text" id="emp-banco" placeholder="Ej: BBVA, Banorte, Santander" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">CLABE Interbancaria (18 dígitos)</label>
+            <input type="text" id="emp-clabe" maxlength="18" placeholder="012..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Estatus Laboral</label>
+            <select id="emp-estatus" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="BAJA">BAJA</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="cerrarModalTrabajador()" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-guardar-emp" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-600/20">
+            Guardar en Padrón de Trabajadores
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: CREAR NUEVO LOTE DE PRE-NÓMINA -->
+  <div id="modal-nuevo-lote" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-calculator text-cyan-400 text-xl"></i>
+          <h4 class="text-base font-bold text-white">Inicializar Lote de Pre-Nómina</h4>
+        </div>
+        <button onclick="cerrarModalNuevoLote()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-nuevo-lote" class="space-y-4 text-xs font-medium text-slate-300">
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Nombre / Identificador del Periodo</label>
+          <input type="text" id="lote-label" placeholder="Ej: Quincena 2 Noviembre 2026 | Semana 48" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-cyan-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Tipo de Nómina</label>
+            <select id="lote-periodicidad" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-cyan-500">
+              <option value="QUINCENAL">Quincenal</option>
+              <option value="SEMANAL">Semanal</option>
+              <option value="TODOS">Todos los Activos</option>
+            </select>
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Pago Programada</label>
+            <input type="date" id="lote-fecha-pago" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha Inicio Periodo</label>
+            <input type="date" id="lote-inicio" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha Fin Periodo</label>
+            <input type="date" id="lote-fin" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-cyan-500">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="cerrarModalNuevoLote()" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-crear-lote" class="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-semibold shadow-lg shadow-cyan-600/20">
+            Generar Pre-Nómina
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: EDITOR DE DETALLE DE PRE-NÓMINA -->
+  <div id="modal-detalle-lote" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-6xl w-full p-6 shadow-2xl border border-slate-700/80 flex flex-col max-h-[92vh]">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3 shrink-0">
+        <div>
+          <h4 id="det-titulo" class="text-base font-bold text-white">Detalle de Pre-Nómina</h4>
+          <span id="det-subtitulo" class="text-xs font-mono text-slate-400">--</span>
+        </div>
+        <button onclick="cerrarModalDetalle()" class="text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+      </div>
+
+      <div class="overflow-auto flex-1 my-4 border border-slate-800 rounded-xl">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-slate-950 text-slate-400 font-mono uppercase border-b border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3">Trabajador</th>
+              <th class="py-2.5 px-3">Rubro</th>
+              <th class="py-2.5 px-3 text-right">Sueldo Base</th>
+              <th class="py-2.5 px-3 text-right">Bonos / Comis.</th>
+              <th class="py-2.5 px-3 text-right">Desc. / Faltas</th>
+              <th class="py-2.5 px-3 text-right">ISR Retenido</th>
+              <th class="py-2.5 px-3 text-right">IMSS Obrero</th>
+              <th class="py-2.5 px-3 text-right">Neto a Pagar</th>
+            </tr>
+          </thead>
+          <tbody id="det-tabla-body" class="divide-y divide-slate-800/60"></tbody>
+        </table>
+      </div>
+
+      <div class="border-t border-slate-800 pt-4 flex flex-wrap justify-between items-center gap-4 shrink-0">
+        <div class="flex flex-wrap gap-5 text-xs font-mono">
+          <div><span class="text-slate-400">Total Percepciones:</span> <strong id="det-sum-percepciones" class="text-white">$0.00</strong></div>
+          <div><span class="text-slate-400">Retenciones (ISR+IMSS):</span> <strong id="det-sum-retenciones" class="text-amber-400">$0.00</strong></div>
+          <div><span class="text-slate-400">Neto a Dispersar:</span> <strong id="det-sum-neto" class="text-emerald-400 text-sm">$0.00</strong></div>
+        </div>
+
+        <div class="flex items-center gap-2.5" id="det-acciones-footer">
+          <button onclick="guardarCambiosLote('BORRADOR')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold border border-slate-700 transition">
+            Guardar Borrador
+          </button>
+          <button onclick="guardarCambiosLote('APROBADA')" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5">
+            <i class="ph-bold ph-seal-check"></i> Aprobar y Enviar a Nómina
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, updateDoc, doc, getDoc, query, where, orderBy,
+      onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeCompanyId = urlParams.get("empresa") || localStorage.getItem("active_company_id") || "cesar_gonzalez";
+    localStorage.setItem("active_company_id", activeCompanyId);
+
+    let currentUser = null;
+    let currentUserStaff = null;
+    let empleadosCache = [];
+    let lotesCache = [];
+    let loteActivoEdit = null;
+    let unsubEmp = null;
+    let unsubLotes = null;
+
+    const fmtMXN = (v) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(Number(v || 0));
+    const r2 = (n) => Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100;
+    const norm = (s) => (s || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    function syncNavLinks() {
+      const q = `?empresa=${encodeURIComponent(activeCompanyId)}`;
+      document.getElementById("link-back-portal").href = `portal_catalogo.html${q}`;
+      document.getElementById("link-prenomina").href = `prenomina.html${q}`;
+      document.getElementById("link-nomina").href = `nomina.html${q}`;
+      document.getElementById("link-otros-ingresos").href = `otros_ingresos.html${q}`;
+      document.getElementById("link-control-gastos").href = `control_gastos.html${q}`;
+      document.getElementById("link-gerencial").href = `modulo_gerencial.html${q}`;
+
+      document.getElementById("active-tenant-tag").innerText = activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Geovanni";
+      document.getElementById("btn-tenant-cg").className = activeCompanyId === "cesar_gonzalez"
+        ? "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border bg-blue-600/20 border-blue-500/40 text-blue-300"
+        : "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-800 text-slate-400 hover:text-white";
+      document.getElementById("btn-tenant-hr").className = activeCompanyId === "hr_employment"
+        ? "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border bg-emerald-600/20 border-emerald-500/40 text-emerald-300"
+        : "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-800 text-slate-400 hover:text-white";
+    }
+
+    window.cambiarEmpresa = (empId) => {
+      activeCompanyId = empId;
+      localStorage.setItem("active_company_id", empId);
+      const url = new URL(window.location.href);
+      url.searchParams.set("empresa", empId);
+      window.history.replaceState({}, "", url);
+      syncNavLinks();
+      iniciarListeners();
+    };
+
+    syncNavLinks();
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+      currentUser = user;
+      const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+      if (staffSnap.exists()) currentUserStaff = staffSnap.data();
+      iniciarListeners();
+    });
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: currentUser?.email || "admin",
+          user_name: currentUserStaff?.full_name || currentUserStaff?.name || currentUser?.email?.split("@")[0] || "Operador",
+          role_id: currentUserStaff?.role_id || "SUPERADMIN",
+          company_id: activeCompanyId,
+          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Geovanni Gonzalez Contreras",
+          module_slug: "prenomina",
+          action,
+          details,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        console.warn("Log auditoría omitido:", e);
+      }
+    }
+
+    window.cambiarPestana = (tab) => {
+      const vLotes = document.getElementById("vista-lotes");
+      const vTrab = document.getElementById("vista-trabajadores");
+      const bLotes = document.getElementById("tab-lotes");
+      const bTrab = document.getElementById("tab-trabajadores");
+
+      if (tab === "lotes") {
+        vLotes.classList.remove("hidden");
+        vTrab.classList.add("hidden");
+        bLotes.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-cyan-600 text-white";
+        bTrab.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+      } else {
+        vLotes.classList.add("hidden");
+        vTrab.classList.remove("hidden");
+        bTrab.className = "px-4 py-2 rounded-lg text-xs font-bold transition bg-cyan-600 text-white";
+        bLotes.className = "px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+      }
+    };
+
+    function iniciarListeners() {
+      if (unsubEmp) unsubEmp();
+      if (unsubLotes) unsubLotes();
+
+      const qEmp = query(collection(db, "empleados_nomina"), where("company_id", "==", activeCompanyId));
+      unsubEmp = onSnapshot(qEmp, (snap) => {
+        empleadosCache = [];
+        snap.forEach((d) => empleadosCache.push({ id: d.id, ...d.data() }));
+        empleadosCache.sort((a, b) => (a.nombre_completo || "").localeCompare(b.nombre_completo || ""));
+        const activos = empleadosCache.filter((e) => e.estatus === "ACTIVO").length;
+        document.getElementById("badge-count-emp").innerText = activos;
+        renderTablaTrabajadores();
+      });
+
+      const qLotes = query(collection(db, "pre_nominas"), where("company_id", "==", activeCompanyId), orderBy("fecha_pago", "desc"));
+      unsubLotes = onSnapshot(qLotes, (snap) => {
+        lotesCache = [];
+        snap.forEach((d) => lotesCache.push({ id: d.id, ...d.data() }));
+        renderTarjetasLotes();
+      });
+    }
+
+    // =========================================================================
+    // GESTIÓN DEL PADRÓN DE TRABAJADORES
+    // =========================================================================
+    window.abrirModalTrabajador = (empId = null) => {
+      document.getElementById("form-trabajador").reset();
+      document.getElementById("emp-id").value = "";
+      document.getElementById("titulo-modal-trabajador").innerText = "Alta de Trabajador en Padrón Contable";
+
+      if (empId) {
+        const emp = empleadosCache.find((e) => e.id === empId);
+        if (emp) {
+          document.getElementById("titulo-modal-trabajador").innerText = `Editar Trabajador: ${emp.nombre_completo}`;
+          document.getElementById("emp-id").value = emp.id;
+          document.getElementById("emp-nombre").value = emp.nombre_completo || "";
+          document.getElementById("emp-curp").value = emp.curp || "";
+          document.getElementById("emp-rfc").value = emp.rfc || "";
+          document.getElementById("emp-nss").value = emp.nss || "";
+          document.getElementById("emp-puesto").value = emp.puesto || "";
+          document.getElementById("emp-periodicidad").value = emp.periodicidad || "QUINCENAL";
+          document.getElementById("emp-sueldo").value = emp.sueldo_base || 0;
+          document.getElementById("emp-cuenta-gasto").value = emp.cuenta_gasto || "601.07";
+          document.getElementById("emp-banco").value = emp.banco || "";
+          document.getElementById("emp-clabe").value = emp.clabe || "";
+          document.getElementById("emp-estatus").value = emp.estatus || "ACTIVO";
+        }
+      }
+      document.getElementById("modal-trabajador").classList.remove("hidden");
+    };
+
+    window.cerrarModalTrabajador = () => {
+      document.getElementById("modal-trabajador").classList.add("hidden");
+    };
+
+    document.getElementById("form-trabajador").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-guardar-emp");
+      btn.disabled = true;
+
+      try {
+        const editId = document.getElementById("emp-id").value;
+        const nombre_completo = document.getElementById("emp-nombre").value.trim().toUpperCase();
+        const curp = document.getElementById("emp-curp").value.trim().toUpperCase();
+        const rfc = document.getElementById("emp-rfc").value.trim().toUpperCase();
+        const nss = document.getElementById("emp-nss").value.trim();
+        const puesto = document.getElementById("emp-puesto").value.trim();
+        const periodicidad = document.getElementById("emp-periodicidad").value;
+        const sueldo_base = r2(document.getElementById("emp-sueldo").value);
+        const cuenta_gasto = document.getElementById("emp-cuenta-gasto").value;
+        const banco = document.getElementById("emp-banco").value.trim().toUpperCase();
+        const clabe = document.getElementById("emp-clabe").value.trim();
+        const estatus = document.getElementById("emp-estatus").value;
+
+        // Validación anti-duplicados (CURP, RFC o Nombre Completo dentro de la misma empresa)
+        const duplicado = empleadosCache.find((emp) => {
+          if (editId && emp.id === editId) return false;
+          return (
+            (curp && norm(emp.curp) === norm(curp)) ||
+            (rfc && norm(emp.rfc) === norm(rfc)) ||
+            (norm(emp.nombre_completo) === norm(nombre_completo))
+          );
+        });
+
+        if (duplicado) {
+          throw new Error(`Registro duplicado detectado: ya existe "${duplicado.nombre_completo}" con CURP ${duplicado.curp} o RFC ${duplicado.rfc}.`);
+        }
+
+        const payload = {
+          company_id: activeCompanyId,
+          nombre_completo,
+          curp,
+          rfc,
+          nss,
+          puesto,
+          periodicidad,
+          sueldo_base,
+          cuenta_gasto,
+          banco,
+          clabe,
+          estatus,
+          updated_at: serverTimestamp()
+        };
+
+        if (editId) {
+          await updateDoc(doc(db, "empleados_nomina", editId), payload);
+          await logAudit("TRABAJADOR_NOMINA_ACTUALIZADO", { empId: editId, nombre_completo, curp });
+        } else {
+          payload.created_by = currentUser?.email || "SYSTEM";
+          payload.created_at = serverTimestamp();
+          const ref = await addDoc(collection(db, "empleados_nomina"), payload);
+          await logAudit("TRABAJADOR_NOMINA_ALTA", { empId: ref.id, nombre_completo, curp });
+        }
+
+        cerrarModalTrabajador();
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    window.renderTablaTrabajadores = () => {
+      const tbody = document.getElementById("tabla-trabajadores-body");
+      const qTexto = norm(document.getElementById("buscador-trabajador").value);
+      const fEstatus = document.getElementById("filtro-estatus-emp").value;
+
+      const filtrados = empleadosCache.filter((e) => {
+        if (fEstatus !== "TODOS" && e.estatus !== fEstatus) return false;
+        if (!qTexto) return true;
+        return (
+          norm(e.nombre_completo).includes(qTexto) ||
+          norm(e.curp).includes(qTexto) ||
+          norm(e.rfc).includes(qTexto) ||
+          norm(e.puesto).includes(qTexto)
+        );
+      });
+
+      if (filtrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500 font-mono">No se encontraron trabajadores con los filtros actuales.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtrados.map((e) => {
+        const badgeEst = e.estatus === "ACTIVO"
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">ACTIVO</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/15 text-rose-400 border border-rose-500/30">BAJA</span>`;
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="py-3 px-4 font-semibold text-white">${e.nombre_completo}</td>
+            <td class="py-3 px-4 font-mono text-[11px] text-slate-300">
+              <div>CURP: ${e.curp || "--"}</div>
+              <div class="text-slate-500">RFC: ${e.rfc || "--"}</div>
+            </td>
+            <td class="py-3 px-4">
+              <div class="text-slate-200">${e.puesto}</div>
+              <span class="text-[10px] font-mono text-indigo-400">Cuenta ${e.cuenta_gasto || "601.07"}</span>
+            </td>
+            <td class="py-3 px-4 font-mono text-cyan-300">${e.periodicidad}</td>
+            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-400">${fmtMXN(e.sueldo_base)}</td>
+            <td class="py-3 px-4 font-mono text-[11px] text-slate-400">
+              <div>${e.banco || "--"}</div>
+              <div>${e.clabe || "--"}</div>
+            </td>
+            <td class="py-3 px-4 text-center">${badgeEst}</td>
+            <td class="py-3 px-4 text-center">
+              <button onclick="abrirModalTrabajador('${e.id}')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg border border-slate-700 transition">
+                Editar
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    };
+
+    // =========================================================================
+    // LOTES DE PRE-NÓMINA
+    // =========================================================================
+    window.abrirModalNuevoLote = () => {
+      document.getElementById("form-nuevo-lote").reset();
+      const hoy = new Date().toISOString().split("T")[0];
+      document.getElementById("lote-fecha-pago").value = hoy;
+      document.getElementById("lote-inicio").value = hoy;
+      document.getElementById("lote-fin").value = hoy;
+      document.getElementById("modal-nuevo-lote").classList.remove("hidden");
+    };
+
+    window.cerrarModalNuevoLote = () => {
+      document.getElementById("modal-nuevo-lote").classList.add("hidden");
+    };
+
+    document.getElementById("form-nuevo-lote").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-crear-lote");
+      btn.disabled = true;
+
+      try {
+        const periodo_label = document.getElementById("lote-label").value.trim();
+        const periodicidad = document.getElementById("lote-periodicidad").value;
+        const fecha_pago = document.getElementById("lote-fecha-pago").value;
+        const fecha_inicio = document.getElementById("lote-inicio").value;
+        const fecha_fin = document.getElementById("lote-fin").value;
+
+        const plantilla = empleadosCache.filter((emp) => {
+          if (emp.estatus !== "ACTIVO") return false;
+          if (periodicidad === "TODOS") return true;
+          return emp.periodicidad === periodicidad;
+        });
+
+        if (plantilla.length === 0) {
+          throw new Error(`No hay trabajadores activos con esquema "${periodicidad}" en esta empresa. Da de alta trabajadores primero.`);
+        }
+
+        const partidas = plantilla.map((emp) => {
+          const sueldo = r2(emp.sueldo_base);
+          return {
+            empleado_id: emp.id,
+            nombre_completo: emp.nombre_completo,
+            curp: emp.curp || "",
+            rfc: emp.rfc || "",
+            puesto: emp.puesto || "",
+            banco: emp.banco || "",
+            clabe: emp.clabe || "",
+            cuenta_gasto: emp.cuenta_gasto || "601.07",
+            sueldo_base: sueldo,
+            bonos_comisiones: 0,
+            descuentos: 0,
+            isr_retenido: 0,
+            imss_obrero: 0,
+            total_percepciones: sueldo,
+            total_retenciones: 0,
+            neto_pagar: sueldo
+          };
+        });
+
+        const totalNeto = r2(partidas.reduce((a, b) => a + b.neto_pagar, 0));
+
+        const docRef = await addDoc(collection(db, "pre_nominas"), {
+          company_id: activeCompanyId,
+          periodo_label,
+          periodicidad,
+          fecha_pago,
+          fecha_inicio,
+          fecha_fin,
+          estatus: "BORRADOR", // BORRADOR | APROBADA | PROCESADA_NOMINA
+          partidas,
+          total_percepciones: totalNeto,
+          total_retenciones: 0,
+          total_neto: totalNeto,
+          created_by: currentUser?.email || "SYSTEM",
+          created_at: serverTimestamp()
+        });
+
+        await logAudit("PRENOMINA_LOTE_CREADO", { loteId: docRef.id, periodo_label, trabajadores: partidas.length });
+        cerrarModalNuevoLote();
+        abrirDetalleLote(docRef.id);
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    function renderTarjetasLotes() {
+      const container = document.getElementById("contenedor-lotes");
+      if (lotesCache.length === 0) {
+        container.innerHTML = `<div class="col-span-full py-10 text-center text-slate-500 font-mono text-xs border border-slate-800 rounded-2xl">No hay lotes de pre-nómina registrados para esta razón social.</div>`;
+        return;
+      }
+
+      container.innerHTML = lotesCache.map((lote) => {
+        const badgeMap = {
+          BORRADOR: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+          APROBADA: "bg-cyan-500/15 text-cyan-300 border-cyan-500/30",
+          PROCESADA_NOMINA: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+        };
+        const badgeCls = badgeMap[lote.estatus] || badgeMap.BORRADOR;
+
+        return `
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-cyan-500/40 transition">
+            <div class="space-y-3">
+              <div class="flex justify-between items-start gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono border ${badgeCls} font-bold">${lote.estatus}</span>
+                <span class="text-[11px] font-mono text-slate-400">${lote.periodicidad}</span>
+              </div>
+              <div>
+                <h4 class="text-base font-bold text-white">${lote.periodo_label}</h4>
+                <span class="text-xs font-mono text-slate-400 block mt-0.5">Pago programado: ${lote.fecha_pago}</span>
+              </div>
+              <div class="pt-2 border-t border-slate-800/70 flex justify-between text-xs font-mono">
+                <span class="text-slate-400">${(lote.partidas || []).length} trabajadores</span>
+                <strong class="text-emerald-400">${fmtMXN(lote.total_neto)}</strong>
+              </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-t border-slate-800 flex gap-2">
+              <button onclick="abrirDetalleLote('${lote.id}')" class="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition">
+                ${lote.estatus === "PROCESADA_NOMINA" ? "Ver Desglose" : "Capturar / Revisar"}
+              </button>
+              ${lote.estatus === "APROBADA"
+                ? `<a href="nomina.html?empresa=${encodeURIComponent(activeCompanyId)}" class="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">Ir a Nómina &rarr;</a>`
+                : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.abrirDetalleLote = (loteId) => {
+      const lote = lotesCache.find((l) => l.id === loteId);
+      if (!lote) return;
+
+      loteActivoEdit = JSON.parse(JSON.stringify(lote));
+      document.getElementById("det-titulo").innerText = `Pre-Nómina: ${lote.periodo_label}`;
+      document.getElementById("det-subtitulo").innerText = `Periodo ${lote.fecha_inicio} al ${lote.fecha_fin} | Pago: ${lote.fecha_pago} | Estatus: ${lote.estatus}`;
+
+      const soloLectura = lote.estatus === "PROCESADA_NOMINA";
+      document.getElementById("det-acciones-footer").classList.toggle("hidden", soloLectura);
+
+      renderFilasDetalle(soloLectura);
+      document.getElementById("modal-detalle-lote").classList.remove("hidden");
+    };
+
+    window.cerrarModalDetalle = () => {
+      document.getElementById("modal-detalle-lote").classList.add("hidden");
+      loteActivoEdit = null;
+    };
+
+    function renderFilasDetalle(soloLectura = false) {
+      const tbody = document.getElementById("det-tabla-body");
+      const dis = soloLectura ? "disabled" : "";
+
+      tbody.innerHTML = loteActivoEdit.partidas.map((p, idx) => `
+        <tr class="hover:bg-slate-800/30">
+          <td class="py-2 px-3">
+            <div class="font-semibold text-white">${p.nombre_completo}</div>
+            <div class="text-[10px] font-mono text-slate-400">${p.puesto}</div>
+          </td>
+          <td class="py-2 px-3 font-mono text-indigo-400">${p.cuenta_gasto}</td>
+          <td class="py-2 px-3 text-right">
+            <input type="number" step="0.01" value="${p.sueldo_base}" ${dis} oninput="actualizarPartida(${idx}, 'sueldo_base', this.value)" class="w-24 text-right bg-slate-950 border border-slate-800 rounded px-2 py-1 font-mono text-white">
+          </td>
+          <td class="py-2 px-3 text-right">
+            <input type="number" step="0.01" value="${p.bonos_comisiones}" ${dis} oninput="actualizarPartida(${idx}, 'bonos_comisiones', this.value)" class="w-24 text-right bg-slate-950 border border-slate-800 rounded px-2 py-1 font-mono text-cyan-300">
+          </td>
+          <td class="py-2 px-3 text-right">
+            <input type="number" step="0.01" value="${p.descuentos}" ${dis} oninput="actualizarPartida(${idx}, 'descuentos', this.value)" class="w-24 text-right bg-slate-950 border border-slate-800 rounded px-2 py-1 font-mono text-rose-300">
+          </td>
+          <td class="py-2 px-3 text-right">
+            <input type="number" step="0.01" value="${p.isr_retenido}" ${dis} oninput="actualizarPartida(${idx}, 'isr_retenido', this.value)" class="w-24 text-right bg-slate-950 border border-slate-800 rounded px-2 py-1 font-mono text-amber-300">
+          </td>
+          <td class="py-2 px-3 text-right">
+            <input type="number" step="0.01" value="${p.imss_obrero}" ${dis} oninput="actualizarPartida(${idx}, 'imss_obrero', this.value)" class="w-24 text-right bg-slate-950 border border-slate-800 rounded px-2 py-1 font-mono text-amber-300">
+          </td>
+          <td id="celda-neto-${idx}" class="py-2 px-3 text-right font-mono font-bold text-emerald-400">${fmtMXN(p.neto_pagar)}</td>
+        </tr>
+      `).join("");
+
+      recalcularTotalesLote();
+    }
+
+    window.actualizarPartida = (idx, campo, valor) => {
+      const p = loteActivoEdit.partidas[idx];
+      p[campo] = r2(valor);
+      p.total_percepciones = r2(p.sueldo_base + p.bonos_comisiones - p.descuentos);
+      p.total_retenciones = r2(p.isr_retenido + p.imss_obrero);
+      p.neto_pagar = r2(p.total_percepciones - p.total_retenciones);
+
+      const celda = document.getElementById(`celda-neto-${idx}`);
+      if (celda) celda.innerText = fmtMXN(p.neto_pagar);
+      recalcularTotalesLote();
+    };
+
+    function recalcularTotalesLote() {
+      const sumPer = r2(loteActivoEdit.partidas.reduce((a, b) => a + r2(b.total_percepciones), 0));
+      const sumRet = r2(loteActivoEdit.partidas.reduce((a, b) => a + r2(b.total_retenciones), 0));
+      const sumNet = r2(loteActivoEdit.partidas.reduce((a, b) => a + r2(b.neto_pagar), 0));
+
+      loteActivoEdit.total_percepciones = sumPer;
+      loteActivoEdit.total_retenciones = sumRet;
+      loteActivoEdit.total_neto = sumNet;
+
+      document.getElementById("det-sum-percepciones").innerText = fmtMXN(sumPer);
+      document.getElementById("det-sum-retenciones").innerText = fmtMXN(sumRet);
+      document.getElementById("det-sum-neto").innerText = fmtMXN(sumNet);
+    }
+
+    window.guardarCambiosLote = async (nuevoEstatus) => {
+      try {
+        recalcularTotalesLote();
+        await updateDoc(doc(db, "pre_nominas", loteActivoEdit.id), {
+          partidas: loteActivoEdit.partidas,
+          total_percepciones: loteActivoEdit.total_percepciones,
+          total_retenciones: loteActivoEdit.total_retenciones,
+          total_neto: loteActivoEdit.total_neto,
+          estatus: nuevoEstatus,
+          updated_by: currentUser?.email || "SYSTEM",
+          updated_at: serverTimestamp()
+        });
+
+        await logAudit("PRENOMINA_ACTUALIZADA", {
+          loteId: loteActivoEdit.id,
+          estatus: nuevoEstatus,
+          total_neto: loteActivoEdit.total_neto
+        });
+
+        cerrarModalDetalle();
+        if (nuevoEstatus === "APROBADA") {
+          alert("Pre-Nómina aprobada correctamente. Ya está disponible en el módulo de Nómina Oficial para contabilización y dispersión.");
+        }
+      } catch (err) {
+        alert("Error al guardar pre-nómina: " + err.message);
+      }
+    };
+  </script>
+</body>
+</html>

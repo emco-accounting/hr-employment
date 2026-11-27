@@ -23,6 +23,46 @@
       }
     };
   </script>
+
+  <style>
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #modal-acuse,
+      #modal-acuse #acuse-printable-area,
+      #modal-acuse #acuse-printable-area * {
+        visibility: visible !important;
+      }
+      #modal-acuse {
+        position: fixed !important;
+        inset: 0 !important;
+        background: #ffffff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        overflow: visible !important;
+      }
+      #modal-acuse > div {
+        max-width: 100% !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+      }
+      #acuse-printable-area {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 12mm !important;
+        width: 100% !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
 <body class="h-full text-slate-100 flex flex-col bg-gradient-to-b from-slate-900 to-slate-950 font-sans antialiased selection:bg-amber-500 selection:text-white">
 
@@ -35,13 +75,13 @@
   </div>
 
   <!-- BARRA DE NAVEGACIÓN -->
-  <header class="bg-slate-900/80 border-b border-slate-800 px-8 py-4 flex flex-wrap justify-between items-center gap-4 backdrop-blur-md sticky top-0 z-20">
+  <header class="bg-slate-900/80 border-b border-slate-800 px-6 md:px-8 py-4 flex flex-wrap justify-between items-center gap-4 backdrop-blur-md sticky top-0 z-20">
     <div class="flex items-center gap-3">
       <a id="btn-back-portal" href="portal_catalogo.html" class="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition" title="Volver al Portal Maestro">
         <i class="ph-bold ph-arrow-left text-lg"></i>
       </a>
       <div>
-        <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+        <h2 class="text-base md:text-lg font-bold text-white tracking-tight flex items-center gap-2 flex-wrap">
           <span>Caja Chica, Arqueo & Saldos Iniciales</span>
           <span id="header-tenant-badge" class="px-2 py-0.5 rounded text-[10px] font-mono border">--</span>
         </h2>
@@ -49,10 +89,17 @@
       </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2.5">
+    <div class="flex flex-wrap items-center gap-2">
       <select id="select-company" onchange="cambiarEmpresa(this.value)" class="bg-slate-950 text-white text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700 outline-none focus:border-amber-500">
         <!-- Opciones dinámicas -->
       </select>
+
+      <!-- BOTÓN DISCRETO CONFIGURACIÓN MOTOR IA -->
+      <button onclick="openModalApiKey()" id="btn-config-ia" class="bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700 px-3 py-2 rounded-xl text-xs font-mono transition flex items-center gap-1.5" title="Configurar Llave de Motor Gemini IA">
+        <span id="ia-status-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+        <i class="ph-bold ph-sparkle text-amber-400"></i>
+        <span class="hidden sm:inline">Motor IA</span>
+      </button>
 
       <button onclick="openModalApertura()" class="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
         <i class="ph-bold ph-bank"></i> Saldos Iniciales
@@ -63,13 +110,13 @@
       </button>
 
       <button onclick="openModalGastoCaja()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-amber-600/20">
-        <i class="ph-bold ph-receipt"></i> - Comprobar Gasto
+        <i class="ph-bold ph-receipt"></i> - Comprobar Gasto / XML / Ticket
       </button>
     </div>
   </header>
 
   <!-- CUERPO PRINCIPAL -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-8 space-y-6 overflow-y-auto">
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-6 overflow-y-auto">
 
     <!-- KPI ROW + ARQUEO RÁPIDO -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
@@ -115,7 +162,7 @@
       <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
           <i class="ph ph-magnifying-glass text-slate-400"></i>
-          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar concepto, proveedor, folio..." class="bg-transparent text-white focus:outline-none text-xs w-56">
+          <input type="text" id="filter-search" oninput="renderTable()" placeholder="Buscar concepto, proveedor, folio, voucher..." class="bg-transparent text-white focus:outline-none text-xs w-64">
         </div>
 
         <select id="filter-tipo" onchange="renderTable()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-slate-300 text-xs outline-none">
@@ -134,28 +181,80 @@
     </div>
 
     <!-- TABLA AUXILIAR DE CAJA CHICA -->
-    <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
-      <table class="w-full text-left text-sm text-slate-300">
+    <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-x-auto shadow-2xl">
+      <table class="w-full text-left text-sm text-slate-300 min-w-[940px]">
         <thead class="bg-slate-950/70 text-slate-400 font-mono border-b border-slate-800 text-[11px] uppercase tracking-wider">
           <tr>
             <th class="p-4">Fecha</th>
-            <th class="p-4">Tipo</th>
-            <th class="p-4">Concepto / Proveedor</th>
+            <th class="p-4">Tipo / Origen</th>
+            <th class="p-4">Concepto / Proveedor / Folios</th>
             <th class="p-4">Cuenta Contable</th>
             <th class="p-4 text-right">Entrada (+)</th>
-            <th class="p-4 text-right">Salida (-)</th>
+            <th class="p-4 text-right">Salida (-) & Desglose</th>
             <th class="p-4 text-right">Saldo Acumulado</th>
+            <th class="p-4 text-center">Acuse</th>
           </tr>
         </thead>
         <tbody id="table-caja" class="divide-y divide-slate-800/60 font-sans text-xs">
-          <tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono">Cargando auxiliar de caja chica...</td></tr>
+          <tr><td colspan="8" class="p-8 text-center text-slate-500 font-mono">Cargando auxiliar de caja chica...</td></tr>
         </tbody>
       </table>
     </div>
 
   </main>
 
-  <!-- MODAL 1: SALDOS INICIALES DE APERTURA (PARA CUADRAR BALANCE DESDE DÍA 1) -->
+  <!-- MODAL 0: CONFIGURACIÓN DISCRETA DE API KEY GEMINI -->
+  <div id="modal-apikey" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-amber-500/30 space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div>
+          <h4 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="ph-bold ph-key text-amber-400"></i> Configuración Motor de Lectura IA
+          </h4>
+          <span class="text-[11px] font-mono text-slate-400">Almacenamiento local seguro en este navegador</span>
+        </div>
+        <button onclick="toggleModal('modal-apikey', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-1 font-mono text-[11px]">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Procesador CFDI (.xml):</span>
+            <span class="text-emerald-400 font-bold">Nativo Directo (Sin costo)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Motor Principal Docs/Tickets:</span>
+            <span class="text-amber-400 font-bold">gemini-2.5-flash</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Motor Respaldo Rápido:</span>
+            <span class="text-indigo-300 font-bold">gemini-2.5-flash-lite</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Google Gemini API Key</label>
+          <div class="relative">
+            <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full px-3 py-2.5 pr-10 bg-slate-950 border border-slate-700 rounded-xl text-white font-mono text-xs outline-none focus:border-amber-500">
+            <button type="button" onclick="toggleKeyVisibility()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-white">
+              <i id="icon-eye-key" class="ph-bold ph-eye"></i>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1.5">Necesaria para leer tickets en .jpg, .png, vouchers en .pdf y archivos .txt. Los archivos .xml fiscales funcionan incluso sin clave.</p>
+        </div>
+
+        <div class="flex justify-between items-center pt-3 border-t border-slate-800">
+          <button type="button" onclick="eliminarApiKey()" class="px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-xl font-semibold transition">Borrar Clave</button>
+          <div class="flex gap-2">
+            <button type="button" onclick="toggleModal('modal-apikey', false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cerrar</button>
+            <button type="button" onclick="guardarApiKey()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-semibold transition">Guardar en Navegador</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 1: SALDOS INICIALES DE APERTURA -->
   <div id="modal-apertura" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-indigo-500/30 space-y-4">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -234,22 +333,105 @@
     </div>
   </div>
 
-  <!-- MODAL 3: COMPROBACIÓN RÁPIDA DE GASTO CON CAJA CHICA -->
-  <div id="modal-gasto" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-amber-500/30 space-y-4">
+  <!-- MODAL 3: COMPROBACIÓN INTELIGENTE DE GASTO (XML / PDF / TXT / JPG / PNG + COLA MÚLTIPLE) -->
+  <div id="modal-gasto" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-4 z-50 overflow-y-auto">
+    <div class="bg-slate-900 rounded-2xl max-w-2xl w-full p-5 md:p-6 shadow-2xl border border-amber-500/30 space-y-4 my-auto max-h-[94vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
-          <h4 class="text-base font-bold text-white">Comprobar Gasto Menor / DiDi con Caja Chica</h4>
-          <span class="text-[11px] font-mono text-amber-400">Impacta Estado de Resultados y descuenta 101.01 Caja Chica</span>
+          <h4 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="ph-bold ph-scan text-amber-400"></i> Comprobar Gasto / Importador Inteligente
+          </h4>
+          <span class="text-[11px] font-mono text-amber-400">Soporta .XML (CFDI), .PDF, .TXT, .JPG y .PNG — Individual o en Lote</span>
         </div>
-        <button onclick="toggleModal('modal-gasto', false)" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        <button onclick="cerrarModalGasto()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
       </div>
 
-      <form id="form-gasto" class="space-y-4 text-xs text-slate-300">
-        <div class="grid grid-cols-2 gap-3">
+      <!-- ZONA DE IMPORTACIÓN DRAG & DROP (1 O VARIOS ARCHIVOS) -->
+      <div id="dropzone-comprobantes"
+           ondragover="handleDragOver(event)"
+           ondragleave="handleDragLeave(event)"
+           ondrop="handleDropFiles(event)"
+           onclick="document.getElementById('input-files-comprobantes').click()"
+           class="border-2 border-dashed border-slate-700 hover:border-amber-500/70 bg-slate-950/60 hover:bg-slate-950 rounded-2xl p-4 text-center cursor-pointer transition group">
+        <input type="file" id="input-files-comprobantes" multiple accept=".xml,.pdf,.txt,.jpg,.jpeg,.png,application/xml,text/xml,application/pdf,text/plain,image/jpeg,image/png" class="hidden" onchange="handleSelectFiles(event)">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-105 transition">
+            <i class="ph-bold ph-cloud-arrow-up text-xl"></i>
+          </div>
+          <div class="text-left">
+            <p class="text-xs font-semibold text-slate-200">Arrastra aquí o haz clic para subir uno o varios comprobantes</p>
+            <p class="text-[11px] font-mono text-slate-400 mt-0.5">
+              <span class="text-emerald-400">.XML</span> (CFDI directo) &bull;
+              <span class="text-amber-400">.PDF / .JPG / .PNG / .TXT</span> (Vouchers, tickets, notas vía Gemini 2.5 Flash)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- BANNER DE ESTADO DE PROCESAMIENTO -->
+      <div id="ai-processing-banner" class="hidden bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <i class="ph-bold ph-spinner animate-spin text-amber-400 text-lg"></i>
+          <div>
+            <p id="ai-processing-title" class="text-xs font-semibold text-amber-300">Analizando documento...</p>
+            <p id="ai-processing-sub" class="text-[11px] font-mono text-slate-400">Extrayendo fechas, números de voucher, conceptos e impuestos</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- BARRA DE COLA PARA CARGAS MÚLTIPLES -->
+      <div id="batch-queue-panel" class="hidden bg-slate-950 border border-indigo-500/30 rounded-xl p-3 space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono text-[10px] font-bold">LOTE EN COLA</span>
+            <span id="batch-queue-counter" class="text-xs font-mono text-slate-300">Archivo 1 de 1</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="navegarCola(-1)" id="btn-queue-prev" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-mono disabled:opacity-40">&larr; Ant.</button>
+            <button type="button" onclick="omitirItemCola()" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-rose-900/40 text-slate-400 hover:text-rose-300 text-[11px] font-mono">Omitir</button>
+            <button type="button" onclick="navegarCola(1)" id="btn-queue-next" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-mono disabled:opacity-40">Sig. &rarr;</button>
+          </div>
+        </div>
+        <div id="batch-queue-pills" class="flex gap-1.5 overflow-x-auto pb-1">
+          <!-- Pills dinámicas de los archivos en cola -->
+        </div>
+      </div>
+
+      <!-- TARJETA RESUMEN DE EXTRACCIÓN DETECTADA -->
+      <div id="extraction-summary-card" class="hidden bg-slate-950/90 border border-emerald-500/30 rounded-xl p-3 space-y-1.5 text-[11px] font-mono">
+        <div class="flex items-center justify-between">
+          <span class="text-emerald-400 font-bold flex items-center gap-1.5">
+            <i class="ph-bold ph-check-circle"></i>
+            <span id="ext-engine-label">Datos Extraídos Correctamente</span>
+          </span>
+          <span id="ext-filename-badge" class="text-slate-400 truncate max-w-[220px]">archivo.xml</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-slate-300">
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-[9px] text-slate-500 block">FECHA OPERACIÓN</span>
+            <strong id="ext-preview-fecha" class="text-white">--</strong>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-[9px] text-slate-500 block">SUBTOTAL</span>
+            <strong id="ext-preview-sub" class="text-slate-200">$0.00</strong>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-[9px] text-slate-500 block">IVA DETECTADO</span>
+            <strong id="ext-preview-iva" class="text-indigo-300">$0.00</strong>
+          </div>
+          <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+            <span class="text-[9px] text-slate-500 block">TOTAL OPERACIÓN</span>
+            <strong id="ext-preview-total" class="text-amber-400">$0.00</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DE VALIDACIÓN Y CONTABILIZACIÓN -->
+      <form id="form-gasto" class="space-y-3.5 text-xs text-slate-300">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Proveedor / Establecimiento</label>
-            <input type="text" id="gasto-proveedor" placeholder="Ej: DiDi, Papelería, Oxxo..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-amber-500">
+            <input type="text" id="gasto-proveedor" placeholder="Ej: DiDi, Oxxo, Gasolinera, Papelería..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-amber-500">
           </div>
           <div>
             <label class="block uppercase tracking-wider text-slate-400 mb-1">Rubro Contable</label>
@@ -268,31 +450,162 @@
             <input type="number" step="0.01" id="gasto-subtotal" oninput="recalcGastoTotal()" placeholder="0.00" required class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono outline-none focus:border-amber-500">
           </div>
           <div>
-            <label class="block text-[10px] uppercase text-slate-400 mb-1">IVA ($ MXN)</label>
-            <input type="number" step="0.01" id="gasto-iva" oninput="recalcGastoTotal()" value="0.00" placeholder="0.00" required class="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-white font-mono outline-none focus:border-amber-500">
+            <label class="block text-[10px] uppercase text-indigo-300 mb-1">IVA ($ MXN)</label>
+            <input type="number" step="0.01" id="gasto-iva" oninput="recalcGastoTotal()" value="0.00" placeholder="0.00" required class="w-full px-2.5 py-1.5 bg-slate-900 border border-indigo-500/30 rounded-lg text-indigo-300 font-mono outline-none focus:border-amber-500">
           </div>
           <div>
-            <label class="block text-[10px] uppercase text-amber-400 font-bold mb-1">Total Ticket ($)</label>
+            <label class="block text-[10px] uppercase text-amber-400 font-bold mb-1">Total Operación ($)</label>
             <input type="number" step="0.01" id="gasto-total" oninput="recalcGastoSub()" placeholder="0.00" required class="w-full px-2.5 py-1.5 bg-slate-900 border border-amber-500/40 rounded-lg text-amber-300 font-bold font-mono outline-none focus:border-amber-500">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha del Ticket</label>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Operación</label>
             <input type="date" id="gasto-fecha" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-amber-500">
           </div>
-          <div>
-            <label class="block uppercase tracking-wider text-slate-400 mb-1">Concepto / Folio Ticket</label>
-            <input type="text" id="gasto-concepto" placeholder="Ej: Traslado reclutamiento / Ticket #45" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-amber-500">
+          <div class="sm:col-span-2">
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Números / Folios / Auth Voucher / UUID</label>
+            <input type="text" id="gasto-numeros" placeholder="Ej: Ticket #4582 | Auth: 994821 | Folio Fiscal..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-indigo-200 font-mono outline-none focus:border-amber-500">
           </div>
         </div>
 
-        <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
-          <button type="button" onclick="toggleModal('modal-gasto', false)" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
-          <button type="submit" id="btn-submit-gasto" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-semibold transition">Comprobar y Contabilizar</button>
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Conceptos Detallados de la Compra</label>
+          <textarea id="gasto-concepto" rows="2" placeholder="Ej: 2x Papel bond carta, 1x Tóner negro / Traslado reclutamiento" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-amber-500"></textarea>
+        </div>
+
+        <!-- Campos ocultos de metadatos de extracción -->
+        <input type="hidden" id="gasto-origen-tipo" value="MANUAL">
+        <input type="hidden" id="gasto-archivo-nombre" value="">
+
+        <div class="flex flex-wrap justify-between items-center gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="limpiarFormularioGasto()" class="px-3 py-2 text-slate-400 hover:text-white text-xs font-mono">Limpiar campos</button>
+          <div class="flex gap-2">
+            <button type="button" onclick="cerrarModalGasto()" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+            <button type="submit" id="btn-submit-gasto" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-semibold transition flex items-center gap-1.5 shadow-lg shadow-amber-600/20">
+              <i class="ph-bold ph-check"></i>
+              <span id="btn-submit-gasto-text">Contabilizar y Generar Acuse</span>
+            </button>
+          </div>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: ACUSE DIGITAL DE COMPROBACIÓN FISCAL (VISUALIZACIÓN E IMPRESIÓN) -->
+  <div id="modal-acuse" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-3 md:p-6 z-50 overflow-y-auto">
+    <div class="bg-slate-900 rounded-2xl max-w-3xl w-full p-4 md:p-6 shadow-2xl border border-slate-700 space-y-4 my-auto">
+      <!-- BARRA DE ACCIONES SUPERIOR (NO SE IMPRIME) -->
+      <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-3 no-print">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono text-xs font-bold flex items-center gap-1.5">
+            <i class="ph-bold ph-seal-check"></i> ACUSE DIGITAL GENERADO
+          </span>
+          <span id="acuse-top-folio" class="text-xs font-mono text-slate-400">Folio: --</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.print()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-lg shadow-amber-600/20">
+            <i class="ph-bold ph-printer text-base"></i> Imprimir / Guardar PDF
+          </button>
+          <button type="button" onclick="toggleModal('modal-acuse', false)" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition">
+            Cerrar
+          </button>
+        </div>
+      </div>
+
+      <!-- DOCUMENTO IMPRIMIBLE EN HOJA BLANCA EJECUTIVA -->
+      <div id="acuse-printable-area" class="bg-white text-slate-900 rounded-xl p-6 md:p-8 shadow-inner border border-slate-200 space-y-5 font-sans">
+        <!-- Encabezado Corporativo -->
+        <div class="flex flex-wrap justify-between items-start gap-4 border-b-2 border-slate-900 pb-4">
+          <div>
+            <p class="text-[10px] font-mono uppercase tracking-widest text-slate-500 font-bold">ContaCore EMCO &bull; Control de Fondo Fijo</p>
+            <h3 id="acuse-empresa-nombre" class="text-lg font-extrabold text-slate-900 mt-0.5">--</h3>
+            <p class="text-xs text-slate-600 mt-0.5">Comprobante Digital de Operación en Caja Chica (Cuenta 101.01)</p>
+          </div>
+          <div class="text-right font-mono">
+            <div class="inline-block bg-slate-900 text-white px-3 py-1 rounded text-xs font-bold tracking-wide" id="acuse-tipo-doc">ACUSE DE GASTO</div>
+            <p class="text-[11px] text-slate-700 mt-1.5">Folio Registro: <strong id="acuse-folio-id" class="text-slate-900">--</strong></p>
+            <p class="text-[11px] text-slate-600">Fecha Operación: <strong id="acuse-fecha-op" class="text-slate-900">--</strong></p>
+          </div>
+        </div>
+
+        <!-- Metadatos de Extracción y Proveedor -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200 text-xs">
+          <div class="space-y-1.5">
+            <p class="text-[10px] font-mono uppercase text-slate-500 font-bold">Proveedor / Establecimiento</p>
+            <p id="acuse-proveedor" class="text-sm font-bold text-slate-900">--</p>
+            <p class="text-[11px] text-slate-600">Cuenta Contable: <strong id="acuse-cuenta" class="font-mono text-slate-800">--</strong></p>
+          </div>
+          <div class="space-y-1.5">
+            <p class="text-[10px] font-mono uppercase text-slate-500 font-bold">Identificadores / Números Extraídos</p>
+            <p id="acuse-numeros" class="font-mono text-xs font-semibold text-slate-900 break-all">--</p>
+            <p class="text-[11px] text-slate-600">Método de Captura: <strong id="acuse-origen" class="font-mono text-slate-800">--</strong></p>
+          </div>
+        </div>
+
+        <!-- Tabla de Conceptos y Cifras Exactas -->
+        <div class="border border-slate-300 rounded-lg overflow-hidden">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-900 text-white font-mono text-[10px] uppercase">
+                <th class="p-3">Conceptos Detallados de la Operación</th>
+                <th class="p-3 text-right w-28">Subtotal</th>
+                <th class="p-3 text-right w-24">IVA</th>
+                <th class="p-3 text-right w-32">Total MXN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-slate-200 align-top">
+                <td class="p-3.5 text-slate-800 leading-relaxed" id="acuse-concepto">--</td>
+                <td class="p-3.5 text-right font-mono text-slate-800 whitespace-nowrap" id="acuse-subtotal">$0.00</td>
+                <td class="p-3.5 text-right font-mono text-slate-800 whitespace-nowrap" id="acuse-iva">$0.00</td>
+                <td class="p-3.5 text-right font-mono font-bold text-slate-900 whitespace-nowrap" id="acuse-total">$0.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Resumen Numérico y Auditoría -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pt-1">
+          <div class="text-[11px] font-mono text-slate-500 space-y-1">
+            <p>Archivo Fuente: <span id="acuse-archivo" class="text-slate-700 font-semibold">Captura Directa</span></p>
+            <p>Capturado por: <span id="acuse-usuario" class="text-slate-700 font-semibold">--</span></p>
+            <p>Sello de Emisión: <span id="acuse-timestamp" class="text-slate-700">--</span></p>
+          </div>
+
+          <div class="w-full sm:w-64 bg-slate-50 border border-slate-300 rounded-lg p-3 font-mono text-xs space-y-1.5">
+            <div class="flex justify-between text-slate-600">
+              <span>Subtotal Operación:</span>
+              <span id="acuse-box-sub">$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-600">
+              <span>IVA Acreditable:</span>
+              <span id="acuse-box-iva">$0.00</span>
+            </div>
+            <div class="flex justify-between text-sm font-extrabold text-slate-900 border-t border-slate-300 pt-1.5">
+              <span>TOTAL EXACTA:</span>
+              <span id="acuse-box-total">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloque de Firmas de Control Interno -->
+        <div class="grid grid-cols-3 gap-6 pt-10 text-center text-[11px] text-slate-600">
+          <div>
+            <div class="border-t border-slate-400 pt-1.5 font-semibold text-slate-800">Comprobó / Entregó</div>
+            <p class="text-[10px] text-slate-500 mt-0.5">Responsable del Gasto</p>
+          </div>
+          <div>
+            <div class="border-t border-slate-400 pt-1.5 font-semibold text-slate-800">Revisó Contabilidad</div>
+            <p class="text-[10px] text-slate-500 mt-0.5">Validación Fiscal y Póliza</p>
+          </div>
+          <div>
+            <div class="border-t border-slate-400 pt-1.5 font-semibold text-slate-800">Autorizó Caja Chica</div>
+            <p class="text-[10px] text-slate-500 mt-0.5">Dirección / Administración</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -337,6 +650,9 @@
       }
     };
 
+    const LS_GEMINI_KEY = "emco_gemini_api_key";
+    const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+
     const urlParams = new URLSearchParams(window.location.search);
     let activeCompanyId = urlParams.get("empresa") || localStorage.getItem("active_company_id") || "cesar_gonzalez";
     let currentUser = null;
@@ -344,7 +660,22 @@
     let saldoActualCaja = 0;
     let unsubscribeStream = null;
 
+    // Estado de cola múltiple de archivos
+    let batchQueue = [];
+    let currentQueueIndex = -1;
+
     const r2 = (n) => Math.round((Number(n || 0) + Number.EPSILON) * 100) / 100;
+
+    function actualizarEstadoBotonIA() {
+      const key = (localStorage.getItem(LS_GEMINI_KEY) || "").trim();
+      const dot = document.getElementById("ia-status-dot");
+      if (key.length > 10) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-amber-500";
+      }
+    }
+    actualizarEstadoBotonIA();
 
     onAuthStateChanged(auth, async (user) => {
       const shield = document.getElementById("auth-shield");
@@ -433,7 +764,6 @@
       let totalGastos = 0, countGastos = 0;
       let runningBalance = 0;
 
-      // Calcular saldo acumulado cronológicamente
       const conSaldo = movimientosCaja.map((m) => {
         const monto = Number(m.total || 0);
         if (m.tipo === "FONDEO") {
@@ -462,43 +792,120 @@
         if (search) {
           const c = (m.concepto || "").toLowerCase().includes(search);
           const p = (m.proveedor || "").toLowerCase().includes(search);
-          if (!c && !p) return false;
+          const n = (m.numeros_referencia || "").toLowerCase().includes(search);
+          if (!c && !p && !n) return false;
         }
         return true;
-      }).reverse(); // Mostrar más recientes arriba
+      }).reverse();
 
       document.getElementById("counter-records").innerText = `${filtrados.length} movimientos`;
       const tbody = document.getElementById("table-caja");
 
       if (filtrados.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500 font-mono text-xs">Sin movimientos registrados en Caja Chica para esta empresa.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500 font-mono text-xs">Sin movimientos registrados en Caja Chica para esta empresa.</td></tr>';
         return;
       }
 
       tbody.innerHTML = filtrados.map((m) => {
         const esFondeo = m.tipo === "FONDEO";
+        const origenTag = m.origen_captura && m.origen_captura !== "MANUAL"
+          ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-mono bg-indigo-500/15 text-indigo-300 border border-indigo-500/20">${m.origen_captura}</span>`
+          : "";
+
         const badge = esFondeo
           ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">ENTRADA</span>`
-          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20">COMPROBACIÓN</span>`;
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/20">GASTO</span>${origenTag}`;
 
         const ctaNombre = CATALOGO_CUENTAS[m.cuenta_contable]?.nombre || m.cuenta_contable || "101.01";
+        const subVal = Number(m.subtotal || 0);
+        const ivaVal = Number(m.iva || 0);
+        const totVal = Number(m.total || 0);
+
+        const desgloseHtml = !esFondeo
+          ? `<div class="font-mono text-rose-400 font-semibold">-$${totVal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+             <div class="text-[10px] font-mono text-slate-400 mt-0.5">Sub: $${subVal.toLocaleString("es-MX", { minimumFractionDigits: 2 })} | IVA: $${ivaVal.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>`
+          : "—";
 
         return `
           <tr class="hover:bg-slate-800/40 transition">
-            <td class="p-4 font-mono text-xs text-slate-400">${m.fecha}</td>
-            <td class="p-4">${badge}</td>
+            <td class="p-4 font-mono text-xs text-slate-400 whitespace-nowrap">${m.fecha}</td>
+            <td class="p-4 whitespace-nowrap">${badge}</td>
             <td class="p-4">
               <div class="text-slate-200 font-medium">${m.concepto}</div>
-              ${m.proveedor ? `<span class="text-[11px] text-slate-400">${m.proveedor}</span>` : ""}
+              <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                ${m.proveedor ? `<span class="text-[11px] text-slate-400">${m.proveedor}</span>` : ""}
+                ${m.numeros_referencia ? `<span class="text-[10px] font-mono text-indigo-300 bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-500/20">${m.numeros_referencia}</span>` : ""}
+              </div>
             </td>
             <td class="p-4 font-mono text-[11px] text-indigo-300">${m.cuenta_contable || "101.01"} &bull; ${ctaNombre}</td>
-            <td class="p-4 text-right font-mono text-emerald-400 font-semibold">${esFondeo ? "+$" + Number(m.total).toLocaleString("es-MX", { minimumFractionDigits: 2 }) : "—"}</td>
-            <td class="p-4 text-right font-mono text-rose-400 font-semibold">${!esFondeo ? "-$" + Number(m.total).toLocaleString("es-MX", { minimumFractionDigits: 2 }) : "—"}</td>
-            <td class="p-4 text-right font-mono text-white font-bold">$${Number(m.saldo_resultante).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+            <td class="p-4 text-right font-mono text-emerald-400 font-semibold whitespace-nowrap">${esFondeo ? "+$" + totVal.toLocaleString("es-MX", { minimumFractionDigits: 2 }) : "—"}</td>
+            <td class="p-4 text-right whitespace-nowrap">${desgloseHtml}</td>
+            <td class="p-4 text-right font-mono text-white font-bold whitespace-nowrap">$${Number(m.saldo_resultante).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+            <td class="p-4 text-center whitespace-nowrap">
+              <button type="button" onclick="abrirAcusePorId('${m.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-amber-600/20 text-slate-300 hover:text-amber-300 border border-slate-700 hover:border-amber-500/40 font-mono text-[11px] transition inline-flex items-center gap-1" title="Ver e imprimir Acuse Digital">
+                <i class="ph-bold ph-printer"></i> Acuse
+              </button>
+            </td>
           </tr>
         `;
       }).join("");
     };
+
+    // =========================================================================
+    // RENDERIZADO DEL ACUSE DIGITAL IMPRIMIBLE
+    // =========================================================================
+    window.abrirAcusePorId = (id) => {
+      const mov = movimientosCaja.find(m => m.id === id);
+      if (!mov) return alert("No se encontró el detalle del movimiento.");
+      mostrarAcuseDigital(mov);
+    };
+
+    function mostrarAcuseDigital(mov) {
+      const emp = EMPRESAS[activeCompanyId] || EMPRESAS.cesar_gonzalez;
+      const esFondeo = mov.tipo === "FONDEO";
+      const folioCorto = (mov.id || "TEMP").slice(0, 10).toUpperCase();
+      const ctaNombre = CATALOGO_CUENTAS[mov.cuenta_contable]?.nombre || "";
+      const sub = r2(mov.subtotal || 0);
+      const iva = r2(mov.iva || 0);
+      const tot = r2(mov.total || 0);
+
+      document.getElementById("acuse-top-folio").innerText = `Folio: #${folioCorto}`;
+      document.getElementById("acuse-empresa-nombre").innerText = emp.name;
+      document.getElementById("acuse-tipo-doc").innerText = esFondeo ? "ACUSE DE FONDEO / INGRESO" : "ACUSE DE COMPROBACIÓN FISCAL";
+      document.getElementById("acuse-folio-id").innerText = `#${folioCorto}`;
+      document.getElementById("acuse-fecha-op").innerText = mov.fecha || "--";
+
+      document.getElementById("acuse-proveedor").innerText = mov.proveedor || "No especificado";
+      document.getElementById("acuse-cuenta").innerText = `${mov.cuenta_contable || "101.01"} ${ctaNombre ? "- " + ctaNombre : ""}`;
+      document.getElementById("acuse-numeros").innerText = mov.numeros_referencia || "Sin folio / referencia adicional";
+
+      const origenMap = {
+        XML: "Importación CFDI .XML (Nativo)",
+        PDF: "Extracción IA Multimodal (.PDF)",
+        JPG: "Extracción IA Óptica (.JPG)",
+        JPEG: "Extracción IA Óptica (.JPEG)",
+        PNG: "Extracción IA Óptica (.PNG)",
+        TXT: "Extracción IA Texto (.TXT)",
+        MANUAL: "Captura Manual Directa"
+      };
+      const origenKey = (mov.origen_captura || "MANUAL").toUpperCase();
+      document.getElementById("acuse-origen").innerText = origenMap[origenKey] || origenKey;
+
+      document.getElementById("acuse-concepto").innerText = mov.concepto || "--";
+      document.getElementById("acuse-subtotal").innerText = `$${sub.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("acuse-iva").innerText = `$${iva.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("acuse-total").innerText = `$${tot.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+
+      document.getElementById("acuse-box-sub").innerText = `$${sub.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("acuse-box-iva").innerText = `$${iva.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("acuse-box-total").innerText = `$${tot.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+
+      document.getElementById("acuse-archivo").innerText = mov.archivo_origen || "Captura directa en sistema";
+      document.getElementById("acuse-usuario").innerText = mov.created_by || currentUser?.email || "Administrador";
+      document.getElementById("acuse-timestamp").innerText = new Date().toLocaleString("es-MX");
+
+      toggleModal("modal-acuse", true);
+    }
 
     window.calcularArqueo = () => {
       const val = document.getElementById("input-arqueo-fisico").value;
@@ -536,6 +943,46 @@
       document.getElementById(id).classList.toggle("hidden", !show);
     };
 
+    // =========================================================================
+    // GESTIÓN DE API KEY EN LOCALSTORAGE
+    // =========================================================================
+    window.openModalApiKey = () => {
+      document.getElementById("input-gemini-key").value = localStorage.getItem(LS_GEMINI_KEY) || "";
+      document.getElementById("input-gemini-key").type = "password";
+      document.getElementById("icon-eye-key").className = "ph-bold ph-eye";
+      toggleModal("modal-apikey", true);
+    };
+
+    window.toggleKeyVisibility = () => {
+      const inp = document.getElementById("input-gemini-key");
+      const icon = document.getElementById("icon-eye-key");
+      if (inp.type === "password") {
+        inp.type = "text";
+        icon.className = "ph-bold ph-eye-slash";
+      } else {
+        inp.type = "password";
+        icon.className = "ph-bold ph-eye";
+      }
+    };
+
+    window.guardarApiKey = () => {
+      const val = (document.getElementById("input-gemini-key").value || "").trim();
+      if (!val) return alert("Ingresa una API Key válida de Google Gemini.");
+      localStorage.setItem(LS_GEMINI_KEY, val);
+      actualizarEstadoBotonIA();
+      toggleModal("modal-apikey", false);
+    };
+
+    window.eliminarApiKey = () => {
+      localStorage.removeItem(LS_GEMINI_KEY);
+      document.getElementById("input-gemini-key").value = "";
+      actualizarEstadoBotonIA();
+      toggleModal("modal-apikey", false);
+    };
+
+    // =========================================================================
+    // MODALES APERTURA Y FONDEO
+    // =========================================================================
     window.openModalApertura = () => {
       document.getElementById("form-apertura").reset();
       document.getElementById("apertura-fecha").value = new Date().toISOString().split("T")[0];
@@ -555,10 +1002,37 @@
       toggleModal("modal-fondeo", true);
     };
 
+    // =========================================================================
+    // MODAL GASTO + IMPORTADOR DUAL (XML NATIVO + GEMINI MULTIMODAL + COLA)
+    // =========================================================================
     window.openModalGastoCaja = () => {
+      batchQueue = [];
+      currentQueueIndex = -1;
+      limpiarFormularioGasto();
+      renderBatchQueueUI();
+      toggleModal("modal-gasto", true);
+    };
+
+    window.cerrarModalGasto = () => {
+      const pendientes = batchQueue.filter(i => i.status === "ready" || i.status === "pending").length;
+      if (pendientes > 0) {
+        const ok = confirm(`Tienes ${pendientes} comprobante(s) en cola sin contabilizar. ¿Seguro que deseas cerrar?`);
+        if (!ok) return;
+      }
+      batchQueue = [];
+      currentQueueIndex = -1;
+      toggleModal("modal-gasto", false);
+    };
+
+    window.limpiarFormularioGasto = () => {
       document.getElementById("form-gasto").reset();
       document.getElementById("gasto-fecha").value = new Date().toISOString().split("T")[0];
-      toggleModal("modal-gasto", true);
+      document.getElementById("gasto-iva").value = "0.00";
+      document.getElementById("gasto-numeros").value = "";
+      document.getElementById("gasto-origen-tipo").value = "MANUAL";
+      document.getElementById("gasto-archivo-nombre").value = "";
+      document.getElementById("extraction-summary-card").classList.add("hidden");
+      document.getElementById("input-files-comprobantes").value = "";
     };
 
     window.recalcGastoTotal = () => {
@@ -570,10 +1044,421 @@
     window.recalcGastoSub = () => {
       const tot = parseFloat(document.getElementById("gasto-total").value) || 0;
       const iva = parseFloat(document.getElementById("gasto-iva").value) || 0;
-      document.getElementById("gasto-subtotal").value = r2(tot - iva).toFixed(2);
+      document.getElementById("gasto-subtotal").value = r2(Math.max(0, tot - iva)).toFixed(2);
     };
 
+    window.handleDragOver = (e) => {
+      e.preventDefault();
+      e.currentTarget.classList.add("border-amber-500", "bg-amber-500/5");
+    };
+
+    window.handleDragLeave = (e) => {
+      e.preventDefault();
+      e.currentTarget.classList.remove("border-amber-500", "bg-amber-500/5");
+    };
+
+    window.handleDropFiles = (e) => {
+      e.preventDefault();
+      e.currentTarget.classList.remove("border-amber-500", "bg-amber-500/5");
+      if (e.dataTransfer?.files?.length) {
+        procesarArchivosSeleccionados(Array.from(e.dataTransfer.files));
+      }
+    };
+
+    window.handleSelectFiles = (e) => {
+      if (e.target?.files?.length) {
+        procesarArchivosSeleccionados(Array.from(e.target.files));
+      }
+    };
+
+    async function procesarArchivosSeleccionados(files) {
+      const validExts = ["xml", "pdf", "txt", "jpg", "jpeg", "png"];
+      const filtrados = files.filter(f => {
+        const ext = (f.name.split(".").pop() || "").toLowerCase();
+        return validExts.includes(ext);
+      });
+
+      if (filtrados.length === 0) {
+        return alert("Formato no compatible. Sube archivos .xml, .pdf, .txt, .jpg o .png.");
+      }
+
+      const requiereIA = filtrados.some(f => !f.name.toLowerCase().endsWith(".xml"));
+      const apiKey = (localStorage.getItem(LS_GEMINI_KEY) || "").trim();
+      if (requiereIA && !apiKey) {
+        alert("Para procesar archivos .PDF, .TXT, .JPG o .PNG configura primero tu Google Gemini API Key en el botón 'Motor IA' de la barra superior.");
+        openModalApiKey();
+        return;
+      }
+
+      const startIndex = batchQueue.length;
+      filtrados.forEach(file => {
+        batchQueue.push({
+          file,
+          fileName: file.name,
+          status: "pending",
+          data: null,
+          errorMsg: ""
+        });
+      });
+
+      renderBatchQueueUI();
+      const banner = document.getElementById("ai-processing-banner");
+      banner.classList.remove("hidden");
+
+      for (let i = startIndex; i < batchQueue.length; i++) {
+        const item = batchQueue[i];
+        document.getElementById("ai-processing-title").innerText = `Procesando (${i - startIndex + 1}/${filtrados.length}): ${item.fileName}`;
+        renderBatchQueueUI();
+
+        try {
+          const ext = (item.fileName.split(".").pop() || "").toLowerCase();
+          if (ext === "xml") {
+            item.data = await parsearCFDIXml(item.file);
+          } else {
+            item.data = await analizarDocumentoConGemini(item.file, ext, apiKey);
+          }
+          item.status = "ready";
+
+          if (currentQueueIndex === -1 || batchQueue[currentQueueIndex]?.status === "saved") {
+            cargarItemColaEnFormulario(i);
+          }
+        } catch (err) {
+          console.error(`Error procesando ${item.fileName}:`, err);
+          item.status = "error";
+          item.errorMsg = err.message || "Error al leer documento";
+          if (currentQueueIndex === -1) {
+            currentQueueIndex = i;
+          }
+        }
+        renderBatchQueueUI();
+      }
+
+      banner.classList.add("hidden");
+    }
+
+    // =========================================================================
+    // PARSER DETERMINÍSTICO CFDI .XML (3.3 Y 4.0)
+    // =========================================================================
+    async function parsearCFDIXml(file) {
+      const text = await file.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(text, "application/xml");
+
+      if (xmlDoc.querySelector("parsererror")) {
+        throw new Error("El archivo XML está dañado o no es un CFDI válido.");
+      }
+
+      const comprobante = xmlDoc.getElementsByTagNameNS("*", "Comprobante")[0] || xmlDoc.documentElement;
+      const emisor = xmlDoc.getElementsByTagNameNS("*", "Emisor")[0];
+      const timbre = xmlDoc.getElementsByTagNameNS("*", "TimbreFiscalDigital")[0];
+      const conceptosNodes = Array.from(xmlDoc.getElementsByTagNameNS("*", "Concepto"));
+
+      const proveedor = emisor?.getAttribute("Nombre") || emisor?.getAttribute("Rfc") || "Proveedor CFDI";
+      const rfcEmisor = emisor?.getAttribute("Rfc") || "";
+      const fechaRaw = comprobante?.getAttribute("Fecha") || "";
+      const fecha = fechaRaw ? fechaRaw.split("T")[0] : new Date().toISOString().split("T")[0];
+
+      const serie = comprobante?.getAttribute("Serie") || "";
+      const folio = comprobante?.getAttribute("Folio") || "";
+      const uuid = timbre?.getAttribute("UUID") || "";
+
+      const subtotal = r2(comprobante?.getAttribute("SubTotal") || 0);
+      const total = r2(comprobante?.getAttribute("Total") || 0);
+
+      let iva = 0;
+      const impuestosNode = Array.from(xmlDoc.getElementsByTagNameNS("*", "Impuestos")).find(
+        el => el.parentNode === comprobante
+      );
+      if (impuestosNode) {
+        const traslados = Array.from(impuestosNode.getElementsByTagNameNS("*", "Traslado"));
+        traslados.forEach(t => {
+          if (t.getAttribute("Impuesto") === "002") {
+            iva = r2(iva + Number(t.getAttribute("Importe") || 0));
+          }
+        });
+      }
+      if (iva === 0 && total > subtotal) {
+        iva = r2(total - subtotal);
+      }
+
+      const conceptosList = conceptosNodes.map(c => {
+        const cant = c.getAttribute("Cantidad") || "1";
+        const desc = c.getAttribute("Descripcion") || "";
+        return `${cant}x ${desc}`.trim();
+      }).filter(Boolean);
+
+      const refs = [];
+      if (serie || folio) refs.push(`Folio: ${serie}${folio}`);
+      if (uuid) refs.push(`UUID: ${uuid}`);
+      if (rfcEmisor) refs.push(`RFC: ${rfcEmisor}`);
+
+      const textoInferencia = `${proveedor} ${conceptosList.join(" ")}`.toLowerCase();
+      let cuentaSugerida = "601.04";
+      if (/didi|uber|taxi|casetas|peaje|gasolina|combustible|transporte|autobus|ado|viatico/.test(textoInferencia)) {
+        cuentaSugerida = "601.03";
+      } else if (/facebook|meta|google|publicidad|anuncio|volante|lona/.test(textoInferencia)) {
+        cuentaSugerida = "601.02";
+      }
+
+      return {
+        engine: "CFDI XML Nativo",
+        origen_captura: "XML",
+        fileName: file.name,
+        proveedor,
+        fecha,
+        numeros_referencia: refs.join(" | "),
+        concepto: conceptosList.join("; ") || "Compra comprobada con CFDI XML",
+        subtotal,
+        iva,
+        total,
+        cuenta_contable: cuentaSugerida
+      };
+    }
+
+    // =========================================================================
+    // MOTOR MULTIMODAL GEMINI 2.5 FLASH (.PDF, .TXT, .JPG, .PNG)
+    // =========================================================================
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const res = reader.result || "";
+          resolve(res.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function analizarDocumentoConGemini(file, ext, apiKey) {
+      const parts = [];
+      const promptInstrucciones = `Eres un contador experto en México analizando un comprobante de compra de caja chica (ticket de compra, voucher de terminal bancaria, nota de remisión, recibo de DiDi/Uber o factura en PDF/TXT).
+Extrae con máxima precisión los datos solicitados en formato JSON estricto:
+1. proveedor: Nombre del comercio, establecimiento o prestador del servicio.
+2. fecha: Fecha de la operación en formato exacto YYYY-MM-DD (si no aparece el año, asume 2026).
+3. numeros_referencia: Todos los números clave detectados separados por " | " (Ej: Número de ticket, Folio, Referencia, Número de autorización bancaria, Últimos 4 dígitos de tarjeta, Operación, etc.).
+4. concepto: Lista clara y concisa de los artículos, conceptos o servicios adquiridos en la operación.
+5. subtotal: Cifra exacta del subtotal antes de IVA (número decimal). Si el ticket tiene precios con IVA incluido y desglosa el IVA aparte, calcula subtotal = total - iva. Si el ticket no desglosa IVA y es nota simple, subtotal = total.
+6. iva: Cifra exacta del IVA desglosado en el ticket/voucher (número decimal, 0 si no aparece desglosado o es tasa 0%).
+7. total: Cifra exacta total pagada en la operación (número decimal).
+8. cuenta_contable: Elige SOLO una de estas claves según el giro:
+   - "601.03" para movilidad, DiDi, Uber, gasolina, casetas, transporte, alimentos/viáticos de ruta.
+   - "601.04" para papelería, consumibles, tienda de conveniencia (Oxxo/7-Eleven), ferretería menor, insumos de oficina.
+   - "501.01" para materiales o costos directos de operación/obra/reclutamiento en campo.
+   - "601.02" para publicidad, impresiones promocionales o marketing.`;
+
+      parts.push({ text: promptInstrucciones });
+
+      if (ext === "txt") {
+        const txtContent = await file.text();
+        parts.push({ text: `CONTENIDO DEL ARCHIVO TXT:\n${txtContent}` });
+      } else {
+        const base64Data = await fileToBase64(file);
+        const mimeMap = {
+          pdf: "application/pdf",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          png: "image/png"
+        };
+        parts.push({
+          inline_data: {
+            mime_type: mimeMap[ext] || file.type || "image/jpeg",
+            data: base64Data
+          }
+        });
+      }
+
+      const payload = {
+        contents: [{ parts }],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              proveedor: { type: "STRING" },
+              fecha: { type: "STRING" },
+              numeros_referencia: { type: "STRING" },
+              concepto: { type: "STRING" },
+              subtotal: { type: "NUMBER" },
+              iva: { type: "NUMBER" },
+              total: { type: "NUMBER" },
+              cuenta_contable: { type: "STRING" }
+            },
+            required: ["proveedor", "fecha", "numeros_referencia", "concepto", "subtotal", "iva", "total", "cuenta_contable"]
+          }
+        }
+      };
+
+      let lastError = null;
+      for (const modelName of GEMINI_MODELS) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+          const resp = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (!resp.ok) {
+            const errJson = await resp.json().catch(() => ({}));
+            throw new Error(errJson?.error?.message || `HTTP ${resp.status} en ${modelName}`);
+          }
+
+          const json = await resp.json();
+          const rawText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!rawText) throw new Error("Respuesta vacía del motor IA");
+
+          const parsed = JSON.parse(rawText);
+          const total = r2(parsed.total || 0);
+          const iva = r2(parsed.iva || 0);
+          let subtotal = r2(parsed.subtotal || 0);
+          if (subtotal === 0 && total > 0) {
+            subtotal = r2(total - iva);
+          }
+
+          const validCuentas = ["601.03", "601.04", "501.01", "601.02"];
+          const cuenta = validCuentas.includes(parsed.cuenta_contable) ? parsed.cuenta_contable : "601.04";
+
+          return {
+            engine: `IA (${modelName})`,
+            origen_captura: ext.toUpperCase(),
+            fileName: file.name,
+            proveedor: (parsed.proveedor || "Establecimiento").trim(),
+            fecha: /^\d{4}-\d{2}-\d{2}$/.test(parsed.fecha) ? parsed.fecha : new Date().toISOString().split("T")[0],
+            numeros_referencia: (parsed.numeros_referencia || "").trim(),
+            concepto: (parsed.concepto || "Consumo comprobado").trim(),
+            subtotal,
+            iva,
+            total,
+            cuenta_contable: cuenta
+          };
+        } catch (err) {
+          lastError = err;
+          console.warn(`Fallo con modelo ${modelName}, intentando respaldo...`, err);
+        }
+      }
+
+      throw lastError || new Error("No se pudo procesar el comprobante con Gemini.");
+    }
+
+    // =========================================================================
+    // NAVEGACIÓN Y RENDER DE COLA MÚLTIPLE
+    // =========================================================================
+    function renderBatchQueueUI() {
+      const panel = document.getElementById("batch-queue-panel");
+      if (batchQueue.length <= 1) {
+        panel.classList.add("hidden");
+        return;
+      }
+
+      panel.classList.remove("hidden");
+      const guardados = batchQueue.filter(i => i.status === "saved").length;
+      document.getElementById("batch-queue-counter").innerText =
+        `Archivo ${Math.max(1, currentQueueIndex + 1)} de ${batchQueue.length} (${guardados} contabilizados)`;
+
+      document.getElementById("btn-queue-prev").disabled = currentQueueIndex <= 0;
+      document.getElementById("btn-queue-next").disabled = currentQueueIndex >= batchQueue.length - 1;
+
+      const pillsContainer = document.getElementById("batch-queue-pills");
+      pillsContainer.innerHTML = batchQueue.map((item, idx) => {
+        const isCurrent = idx === currentQueueIndex;
+        let colorCls = "bg-slate-900 border-slate-700 text-slate-400";
+        let icon = "ph-clock";
+
+        if (item.status === "saved") {
+          colorCls = "bg-emerald-500/15 border-emerald-500/40 text-emerald-300";
+          icon = "ph-check-circle";
+        } else if (item.status === "error") {
+          colorCls = "bg-rose-500/15 border-rose-500/40 text-rose-300";
+          icon = "ph-warning-circle";
+        } else if (item.status === "ready") {
+          colorCls = isCurrent
+            ? "bg-amber-500/20 border-amber-400 text-amber-200 font-bold"
+            : "bg-slate-800 border-slate-600 text-slate-200";
+          icon = "ph-file-text";
+        }
+
+        return `
+          <button type="button" onclick="seleccionarItemCola(${idx})"
+            class="px-2.5 py-1 rounded-lg border text-[11px] font-mono flex items-center gap-1.5 whitespace-nowrap transition ${colorCls}">
+            <i class="ph-bold ${icon}"></i>
+            <span class="max-w-[130px] truncate">${idx + 1}. ${item.fileName}</span>
+          </button>
+        `;
+      }).join("");
+    }
+
+    window.seleccionarItemCola = (idx) => {
+      if (idx >= 0 && idx < batchQueue.length) {
+        cargarItemColaEnFormulario(idx);
+        renderBatchQueueUI();
+      }
+    };
+
+    window.navegarCola = (delta) => {
+      const next = currentQueueIndex + delta;
+      if (next >= 0 && next < batchQueue.length) {
+        cargarItemColaEnFormulario(next);
+        renderBatchQueueUI();
+      }
+    };
+
+    window.omitirItemCola = () => {
+      if (currentQueueIndex < 0 || currentQueueIndex >= batchQueue.length) return;
+      batchQueue.splice(currentQueueIndex, 1);
+      if (batchQueue.length === 0) {
+        currentQueueIndex = -1;
+        limpiarFormularioGasto();
+      } else {
+        const nextIdx = Math.min(currentQueueIndex, batchQueue.length - 1);
+        cargarItemColaEnFormulario(nextIdx);
+      }
+      renderBatchQueueUI();
+    };
+
+    function cargarItemColaEnFormulario(idx) {
+      currentQueueIndex = idx;
+      const item = batchQueue[idx];
+      const summaryCard = document.getElementById("extraction-summary-card");
+
+      if (!item || item.status === "error" || !item.data) {
+        summaryCard.classList.add("hidden");
+        if (item?.status === "error") {
+          alert(`No se pudo extraer automáticamente "${item.fileName}": ${item.errorMsg}. Puedes capturarlo manualmente.`);
+        }
+        return;
+      }
+
+      const d = item.data;
+      document.getElementById("gasto-proveedor").value = d.proveedor || "";
+      document.getElementById("gasto-cuenta").value = d.cuenta_contable || "601.04";
+      document.getElementById("gasto-subtotal").value = r2(d.subtotal).toFixed(2);
+      document.getElementById("gasto-iva").value = r2(d.iva).toFixed(2);
+      document.getElementById("gasto-total").value = r2(d.total).toFixed(2);
+      document.getElementById("gasto-fecha").value = d.fecha || new Date().toISOString().split("T")[0];
+      document.getElementById("gasto-numeros").value = d.numeros_referencia || "";
+      document.getElementById("gasto-concepto").value = d.concepto || "";
+      document.getElementById("gasto-origen-tipo").value = d.origen_captura || "IA";
+      document.getElementById("gasto-archivo-nombre").value = d.fileName || "";
+
+      document.getElementById("ext-engine-label").innerText = `Leído vía ${d.engine}`;
+      document.getElementById("ext-filename-badge").innerText = d.fileName;
+      document.getElementById("ext-preview-fecha").innerText = d.fecha;
+      document.getElementById("ext-preview-sub").innerText = `$${r2(d.subtotal).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("ext-preview-iva").innerText = `$${r2(d.iva).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      document.getElementById("ext-preview-total").innerText = `$${r2(d.total).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      summaryCard.classList.remove("hidden");
+
+      const pendientesRestantes = batchQueue.filter((q, i) => i !== idx && q.status === "ready").length;
+      document.getElementById("btn-submit-gasto-text").innerText = pendientesRestantes > 0
+        ? "Contabilizar y Siguiente en Cola"
+        : "Contabilizar y Generar Acuse";
+    }
+
+    // =========================================================================
     // SUBMIT 1: SALDOS INICIALES DE APERTURA
+    // =========================================================================
     document.getElementById("form-apertura").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = document.getElementById("btn-submit-apertura");
@@ -630,7 +1515,9 @@
       }
     });
 
+    // =========================================================================
     // SUBMIT 2: FONDEO / REPOSICIÓN DESDE BANCOS
+    // =========================================================================
     document.getElementById("form-fondeo").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = document.getElementById("btn-submit-fondeo");
@@ -672,7 +1559,9 @@
       }
     });
 
-    // SUBMIT 3: COMPROBACIÓN DE GASTO CON CAJA CHICA
+    // =========================================================================
+    // SUBMIT 3: COMPROBACIÓN DE GASTO + GENERACIÓN AUTOMÁTICA DE ACUSE DIGITAL
+    // =========================================================================
     document.getElementById("form-gasto").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = document.getElementById("btn-submit-gasto");
@@ -684,29 +1573,39 @@
       const subtotal = r2(document.getElementById("gasto-subtotal").value);
       const iva = r2(document.getElementById("gasto-iva").value);
       const total = r2(document.getElementById("gasto-total").value);
+      const numerosRef = document.getElementById("gasto-numeros").value.trim();
       const concepto = document.getElementById("gasto-concepto").value.trim();
+      const origenCaptura = document.getElementById("gasto-origen-tipo").value || "MANUAL";
+      const archivoNombre = document.getElementById("gasto-archivo-nombre").value || "";
+
+      const conceptoPoliza = numerosRef ? `${concepto} [${numerosRef}]` : concepto;
 
       try {
-        const docRef = await addDoc(collection(db, "petty_cash_ledger"), {
+        const payloadRegistro = {
           company_id: activeCompanyId,
           tipo: "GASTO",
           fecha,
           concepto,
+          numeros_referencia: numerosRef,
           proveedor,
           cuenta_contable: cuenta,
           subtotal,
           iva,
           total,
+          origen_captura: origenCaptura,
+          archivo_origen: archivoNombre,
           created_by: currentUser?.email || "admin",
           created_at: serverTimestamp()
-        });
+        };
+
+        const docRef = await addDoc(collection(db, "petty_cash_ledger"), payloadRegistro);
 
         await polizaGastoOperativo(db, {
           company_id: activeCompanyId,
           fecha,
           gasto_id: docRef.id,
           proveedor,
-          concepto_gasto: concepto,
+          concepto_gasto: conceptoPoliza,
           cuenta_gasto: cuenta,
           subtotal,
           iva,
@@ -715,7 +1614,30 @@
           user_uid: auth.currentUser?.uid || "SYSTEM"
         });
 
+        // Si estamos dentro de una cola múltiple, marcar como guardado y avanzar al siguiente pendiente
+        if (currentQueueIndex >= 0 && batchQueue[currentQueueIndex]) {
+          batchQueue[currentQueueIndex].status = "saved";
+          const nextIdx = batchQueue.findIndex((item, idx) => idx > currentQueueIndex && item.status === "ready");
+          const fallbackIdx = nextIdx !== -1 ? nextIdx : batchQueue.findIndex(item => item.status === "ready");
+
+          if (fallbackIdx !== -1) {
+            cargarItemColaEnFormulario(fallbackIdx);
+            renderBatchQueueUI();
+            btn.disabled = false;
+            return;
+          }
+        }
+
+        // Cerrar modal de captura y desplegar automáticamente el Acuse Digital imprimible
+        batchQueue = [];
+        currentQueueIndex = -1;
+        document.getElementById("btn-submit-gasto-text").innerText = "Contabilizar y Generar Acuse";
         toggleModal("modal-gasto", false);
+
+        mostrarAcuseDigital({
+          id: docRef.id,
+          ...payloadRegistro
+        });
       } catch (err) {
         alert("Error al comprobar gasto: " + err.message);
       } finally {
@@ -723,11 +1645,16 @@
       }
     });
 
+    // =========================================================================
+    // EXPORTAR AUXILIAR A EXCEL CON DESGLOSE COMPLETO
+    // =========================================================================
     window.exportarExcel = () => {
       if (movimientosCaja.length === 0) return alert("Sin movimientos para exportar.");
       const rows = movimientosCaja.map((m) => ({
         Fecha: m.fecha,
         Tipo: m.tipo,
+        Origen: m.origen_captura || "MANUAL",
+        "Folios / Voucher / UUID": m.numeros_referencia || "",
         Concepto: m.concepto,
         Proveedor: m.proveedor || "",
         "Cuenta Contable": m.cuenta_contable || "101.01",

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ContaCore EMCO | Otros Ingresos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+</head>
+<body class="h-full text-slate-100 flex overflow-hidden antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- SIDEBAR UNIFICADO EMCO -->
+  <aside class="w-72 bg-slate-900/95 border-r border-slate-800/80 flex flex-col justify-between shrink-0 backdrop-blur-xl z-20">
+    <div>
+      <div class="p-6 border-b border-slate-800/60 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i class="ph-bold ph-trend-up text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-base tracking-tight text-white leading-tight">ContaCore <span class="text-emerald-400 font-light">EMCO</span></h1>
+          <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block mt-0.5">Otros Ingresos</span>
+        </div>
+      </div>
+
+      <nav class="p-4 space-y-1 text-sm font-medium">
+        <a href="portal_catalogo.html" id="link-back-portal" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-arrow-left text-lg text-indigo-400"></i>
+          <span>Volver al Portal</span>
+        </a>
+
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Operación Contable</div>
+
+        <a href="otros_ingresos.html" id="link-otros-ingresos" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-white bg-emerald-600/15 border border-emerald-500/25 shadow-sm">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-coins text-lg text-emerald-400"></i>
+            <span>Otros Ingresos</span>
+          </div>
+          <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">402.01</span>
+        </a>
+
+        <a href="control_gastos.html" id="link-control-gastos" class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <div class="flex items-center gap-3">
+            <i class="ph-bold ph-receipt text-lg text-rose-400"></i>
+            <span>Control de Gastos</span>
+          </div>
+          <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">601.xx</span>
+        </a>
+
+        <a href="modulo_gerencial.html" id="link-gerencial" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-chart-polar text-lg text-purple-400"></i>
+          <span>Tablero Gerencial</span>
+        </a>
+
+        <div class="pt-2 border-t border-slate-800/60 my-2"></div>
+        <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500">Sistema & Gobierno</div>
+
+        <a href="modulo_creador.html" id="link-studio" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-terminal-window text-lg text-indigo-400"></i>
+          <span>ContaCore Studio</span>
+        </a>
+        <a href="modulo_logs.html" id="link-logs" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-shield-warning text-lg text-amber-400"></i>
+          <span>Consola de Auditoría</span>
+        </a>
+        <a href="staff.html" id="link-staff" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-slate-400 hover:text-white hover:bg-slate-800/60">
+          <i class="ph-bold ph-users-three text-lg text-cyan-400"></i>
+          <span>Staff & Gobernanza</span>
+        </a>
+      </nav>
+    </div>
+
+    <div class="p-4 border-t border-slate-800/60 bg-slate-950/60 space-y-2">
+      <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+        <span>Razón Social:</span>
+        <span id="active-tenant-tag" class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">--</span>
+      </div>
+      <div class="flex gap-1.5">
+        <button onclick="cambiarEmpresa('cesar_gonzalez')" id="btn-tenant-cg" class="flex-1 py-1.5 rounded-lg text-[11px] font-semibold border transition">Cesar G.</button>
+        <button onclick="cambiarEmpresa('hr_employment')" id="btn-tenant-hr" class="flex-1 py-1.5 rounded-lg text-[11px] font-semibold border transition">HR Empl.</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gradient-to-b from-slate-900 to-slate-950">
+    <header class="bg-slate-900/70 border-b border-slate-800/80 px-8 py-4 flex flex-wrap justify-between items-center gap-4 sticky top-0 z-10 backdrop-blur-md">
+      <div>
+        <h2 class="text-xl font-bold text-white tracking-tight">Registro de Otros Ingresos</h2>
+        <span class="text-xs text-slate-400 font-mono">Emisión automática de póliza en libro mayor (accounting_ledger) • Partida Doble</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <input type="month" id="filtro-periodo" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-slate-200 outline-none focus:border-emerald-500">
+        <button onclick="abrirModalIngreso()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+          <i class="ph-bold ph-plus text-sm"></i> Registrar Otro Ingreso
+        </button>
+      </div>
+    </header>
+
+    <div class="p-8 space-y-6">
+      <!-- TARJETAS KPI -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <span class="text-xs font-mono text-slate-400 uppercase">Subtotal Otros Ingresos (Periodo)</span>
+          <p id="kpi-subtotal" class="text-2xl font-bold text-white font-mono mt-1">$0.00</p>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <span class="text-xs font-mono text-slate-400 uppercase">IVA Trasladado Generado</span>
+          <p id="kpi-iva" class="text-2xl font-bold text-amber-400 font-mono mt-1">$0.00</p>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+          <span class="text-xs font-mono text-slate-400 uppercase">Total Ingresado (Efectivo / Banco)</span>
+          <p id="kpi-total" class="text-2xl font-bold text-emerald-400 font-mono mt-1">$0.00</p>
+        </div>
+      </div>
+
+      <!-- TABLA DE MOVIMIENTOS -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+          <h3 class="text-sm font-bold text-white">Bitácora de Otros Ingresos Contabilizados</h3>
+          <span id="contador-registros" class="text-xs font-mono text-slate-400">0 registros</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-950/70 text-slate-400 font-mono uppercase border-b border-slate-800">
+                <th class="py-3 px-4">Fecha</th>
+                <th class="py-3 px-4">Póliza</th>
+                <th class="py-3 px-4">Pagador / Origen</th>
+                <th class="py-3 px-4">Concepto</th>
+                <th class="py-3 px-4">Destino</th>
+                <th class="py-3 px-4 text-right">Subtotal</th>
+                <th class="py-3 px-4 text-right">IVA</th>
+                <th class="py-3 px-4 text-right">Total</th>
+                <th class="py-3 px-4 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-ingresos-body" class="divide-y divide-slate-800/60">
+              <tr>
+                <td colspan="9" class="py-8 text-center text-slate-500 font-mono">Cargando movimientos contables...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL NUEVO OTRO INGRESO -->
+  <div id="modal-ingreso" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-700/80 space-y-5">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <i class="ph-bold ph-coins text-emerald-400 text-xl"></i>
+          <div>
+            <h4 class="text-base font-bold text-white">Registrar Otro Ingreso</h4>
+            <span class="text-[11px] font-mono text-slate-400">Genera asiento contable automático en ContaCore</span>
+          </div>
+        </div>
+        <button onclick="cerrarModalIngreso()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <form id="form-otro-ingreso" class="space-y-4 text-xs font-medium text-slate-300">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Fecha de Operación</label>
+            <input type="date" id="ing-fecha" required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Destino del Recurso</label>
+            <select id="ing-destino" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+              <option value="BANCO">102.01 - Bancos Nacionales (Transferencia / Depósito)</option>
+              <option value="CAJA_CHICA">101.01 - Caja Chica (Efectivo)</option>
+              <option value="CREDITO">105.01 - Pendiente de Cobro (Deudor Diverso)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Cuenta Contable de Abono</label>
+            <select id="ing-cuenta" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+              <option value="402.01">402.01 - Otros Ingresos y Productos Diversos</option>
+              <option value="401.01">401.01 - Ingresos por Servicios Facturados</option>
+            </select>
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Pagador / Emisor</label>
+            <input type="text" id="ing-pagador" placeholder="Ej: Banco BBVA, Reembolso Cliente..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Concepto Detallado</label>
+          <input type="text" id="ing-concepto" placeholder="Ej: Rendimientos bancarios, devolución de proveedor, venta de activo..." required class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Subtotal ($)</label>
+            <input type="number" step="0.01" min="0.01" id="ing-subtotal" required oninput="recalcularMontos()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Tasa IVA</label>
+            <select id="ing-tasa-iva" onchange="recalcularMontos()" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono outline-none focus:border-emerald-500">
+              <option value="0">0% (Exento / Sin IVA)</option>
+              <option value="0.16" selected>16% (IVA General)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block uppercase tracking-wider text-slate-400 mb-1">Total Ingreso ($)</label>
+            <input type="number" step="0.01" id="ing-total" readonly class="w-full px-3 py-2 bg-slate-900/60 border border-slate-800 rounded-xl text-emerald-400 font-bold font-mono outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block uppercase tracking-wider text-slate-400 mb-1">Enlace Comprobante / Drive (Opcional)</label>
+          <input type="url" id="ing-comprobante" placeholder="https://drive.google.com/..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white font-mono outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="cerrarModalIngreso()" class="px-4 py-2 border border-slate-700 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold">Cancelar</button>
+          <button type="submit" id="btn-guardar-ingreso" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-600/20 flex items-center gap-1.5">
+            <i class="ph-bold ph-check-circle"></i> Contabilizar Ingreso y Emitir Póliza
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, doc, getDoc, query, where, orderBy,
+      onSnapshot, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { polizaOtroIngreso } from "./contabilidad_core.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDg3sOINhPnnBsNQVkIFweGA0dTHTqTGeM",
+      authDomain: "contabilidad-general-hr-emco.firebaseapp.com",
+      projectId: "contabilidad-general-hr-emco",
+      storageBucket: "contabilidad-general-hr-emco.firebasestorage.app",
+      messagingSenderId: "392195682754",
+      appId: "1:392195682754:web:b8407240ba61caa1cb265b",
+      measurementId: "G-28RS9BPBYG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app, "emco-accounting");
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let activeCompanyId = urlParams.get("empresa") || localStorage.getItem("active_company_id") || "cesar_gonzalez";
+    localStorage.setItem("active_company_id", activeCompanyId);
+
+    let currentUser = null;
+    let currentUserStaff = null;
+    let unsubscribeIngresos = null;
+
+    const fmtMXN = (val) => new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(Number(val || 0));
+    const r2 = (num) => Math.round((Number(num || 0) + Number.EPSILON) * 100) / 100;
+
+    function syncNavLinks() {
+      const q = `?empresa=${encodeURIComponent(activeCompanyId)}`;
+      document.getElementById("link-back-portal").href = `portal_catalogo.html${q}`;
+      document.getElementById("link-otros-ingresos").href = `otros_ingresos.html${q}`;
+      document.getElementById("link-control-gastos").href = `control_gastos.html${q}`;
+      document.getElementById("link-gerencial").href = `modulo_gerencial.html${q}`;
+      document.getElementById("link-studio").href = `modulo_creador.html${q}`;
+      document.getElementById("link-logs").href = `modulo_logs.html${q}`;
+      document.getElementById("link-staff").href = `staff.html${q}`;
+
+      document.getElementById("active-tenant-tag").innerText = activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Geovanni";
+      document.getElementById("btn-tenant-cg").className = activeCompanyId === "cesar_gonzalez"
+        ? "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border bg-blue-600/20 border-blue-500/40 text-blue-300"
+        : "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-800 text-slate-400 hover:text-white";
+      document.getElementById("btn-tenant-hr").className = activeCompanyId === "hr_employment"
+        ? "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border bg-emerald-600/20 border-emerald-500/40 text-emerald-300"
+        : "flex-1 py-1.5 rounded-lg text-[11px] font-semibold border border-slate-800 text-slate-400 hover:text-white";
+    }
+
+    window.cambiarEmpresa = (empresaId) => {
+      activeCompanyId = empresaId;
+      localStorage.setItem("active_company_id", empresaId);
+      const url = new URL(window.location.href);
+      url.searchParams.set("empresa", empresaId);
+      window.history.replaceState({}, "", url);
+      syncNavLinks();
+      escucharIngresos();
+    };
+
+    syncNavLinks();
+
+    const hoy = new Date();
+    document.getElementById("filtro-periodo").value = hoy.toISOString().slice(0, 7);
+    document.getElementById("filtro-periodo").addEventListener("change", escucharIngresos);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.replace("index.html");
+        return;
+      }
+      currentUser = user;
+      const staffSnap = await getDoc(doc(db, "staff_users", user.uid));
+      if (staffSnap.exists()) currentUserStaff = staffSnap.data();
+      escucharIngresos();
+    });
+
+    async function logAudit(action, details = {}) {
+      try {
+        await addDoc(collection(db, "audit_logs"), {
+          timestamp: serverTimestamp(),
+          user_email: currentUser?.email || "admin",
+          user_name: currentUserStaff?.full_name || currentUserStaff?.name || currentUser?.email?.split("@")[0] || "Operador",
+          role_id: currentUserStaff?.role_id || "SUPERADMIN",
+          company_id: activeCompanyId,
+          company_name: activeCompanyId === "hr_employment" ? "HR Employment" : "Cesar Geovanni Gonzalez Contreras",
+          module_slug: "otros_ingresos",
+          action,
+          details,
+          user_agent: navigator.userAgent
+        });
+      } catch (e) {
+        console.warn("Log auditoría omitido:", e);
+      }
+    }
+
+    window.abrirModalIngreso = () => {
+      document.getElementById("form-otro-ingreso").reset();
+      document.getElementById("ing-fecha").value = new Date().toISOString().split("T")[0];
+      document.getElementById("modal-ingreso").classList.remove("hidden");
+    };
+
+    window.cerrarModalIngreso = () => {
+      document.getElementById("modal-ingreso").classList.add("hidden");
+    };
+
+    window.recalcularMontos = () => {
+      const subtotal = r2(document.getElementById("ing-subtotal").value);
+      const tasa = Number(document.getElementById("ing-tasa-iva").value || 0);
+      const iva = r2(subtotal * tasa);
+      const total = r2(subtotal + iva);
+      document.getElementById("ing-total").value = total.toFixed(2);
+    };
+
+    document.getElementById("form-otro-ingreso").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-guardar-ingreso");
+      btn.disabled = true;
+      btn.innerText = "Emitiendo póliza contable...";
+
+      try {
+        const fecha = document.getElementById("ing-fecha").value;
+        const destino_ingreso = document.getElementById("ing-destino").value;
+        const cuenta_ingreso = document.getElementById("ing-cuenta").value;
+        const pagador = document.getElementById("ing-pagador").value.trim();
+        const concepto = document.getElementById("ing-concepto").value.trim();
+        const subtotal = r2(document.getElementById("ing-subtotal").value);
+        const tasaIva = Number(document.getElementById("ing-tasa-iva").value || 0);
+        const iva = r2(subtotal * tasaIva);
+        const total = r2(subtotal + iva);
+        const comprobante_url = document.getElementById("ing-comprobante").value.trim();
+
+        // 1. Guardar documento operativo en colección otros_ingresos
+        const ingresoRef = await addDoc(collection(db, "otros_ingresos"), {
+          company_id: activeCompanyId,
+          fecha,
+          periodo: fecha.slice(0, 7),
+          destino_ingreso,
+          cuenta_ingreso,
+          pagador,
+          concepto,
+          subtotal,
+          iva,
+          total,
+          comprobante_url,
+          estatus: "CONTABILIZADO",
+          created_by: currentUser?.email || "SYSTEM",
+          created_at: serverTimestamp()
+        });
+
+        // 2. Disparar póliza automática en ContaCore (accounting_ledger)
+        const poliza = await polizaOtroIngreso(db, {
+          company_id: activeCompanyId,
+          fecha,
+          ingreso_id: ingresoRef.id,
+          pagador,
+          concepto_ingreso: concepto,
+          cuenta_ingreso,
+          subtotal,
+          iva,
+          total,
+          destino_ingreso,
+          user_uid: currentUser?.email || "SYSTEM"
+        });
+
+        await logAudit("OTRO_INGRESO_CONTABILIZADO", {
+          ingreso_id: ingresoRef.id,
+          poliza_folio: poliza.poliza_folio,
+          pagador,
+          total
+        });
+
+        cerrarModalIngreso();
+        alert(`Ingreso registrado y contabilizado.\nFolio de Póliza: ${poliza.poliza_folio}`);
+      } catch (err) {
+        alert("Error al contabilizar el ingreso: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph-bold ph-check-circle"></i> Contabilizar Ingreso y Emitir Póliza`;
+      }
+    });
+
+    function escucharIngresos() {
+      if (unsubscribeIngresos) unsubscribeIngresos();
+      const periodoFiltro = document.getElementById("filtro-periodo").value;
+
+      const q = query(
+        collection(db, "otros_ingresos"),
+        where("company_id", "==", activeCompanyId),
+        orderBy("fecha", "desc")
+      );
+
+      unsubscribeIngresos = onSnapshot(q, (snap) => {
+        const tbody = document.getElementById("tabla-ingresos-body");
+        tbody.innerHTML = "";
+
+        let sumSub = 0;
+        let sumIva = 0;
+        let sumTot = 0;
+        let count = 0;
+
+        snap.forEach((docSnap) => {
+          const item = docSnap.data();
+          if (periodoFiltro && item.periodo !== periodoFiltro) return;
+
+          count++;
+          sumSub = r2(sumSub + Number(item.subtotal || 0));
+          sumIva = r2(sumIva + Number(item.iva || 0));
+          sumTot = r2(sumTot + Number(item.total || 0));
+
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-800/40 transition";
+          tr.innerHTML = `
+            <td class="py-3 px-4 font-mono text-slate-300">${item.fecha}</td>
+            <td class="py-3 px-4 font-mono text-emerald-400">${item.cuenta_ingreso || "402.01"}</td>
+            <td class="py-3 px-4 font-semibold text-white">${item.pagador}</td>
+            <td class="py-3 px-4 text-slate-300">${item.concepto}</td>
+            <td class="py-3 px-4 font-mono text-xs text-slate-400">${item.destino_ingreso}</td>
+            <td class="py-3 px-4 text-right font-mono text-slate-200">${fmtMXN(item.subtotal)}</td>
+            <td class="py-3 px-4 text-right font-mono text-amber-300">${fmtMXN(item.iva)}</td>
+            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-400">${fmtMXN(item.total)}</td>
+            <td class="py-3 px-4 text-center">
+              ${item.comprobante_url
+                ? `<a href="${item.comprobante_url}" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline font-mono">Ver</a>`
+                : `<span class="text-slate-600 font-mono">--</span>`}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        document.getElementById("kpi-subtotal").innerText = fmtMXN(sumSub);
+        document.getElementById("kpi-iva").innerText = fmtMXN(sumIva);
+        document.getElementById("kpi-total").innerText = fmtMXN(sumTot);
+        document.getElementById("contador-registros").innerText = `${count} registros`;
+
+        if (count === 0) {
+          tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-500 font-mono">No hay otros ingresos registrados en este periodo.</td></tr>`;
+        }
+      });
+    }
+  </script>
+</body>
+</html>

@@ -27,14 +27,16 @@ export const CATALOGO_CUENTAS = {
 
   // ACTIVO NO CIRCULANTE / FIJO
   "156.01": { codigo: "156.01", nombre: "Equipo de Cómputo y Activos Fijos", tipo: "ACTIVO", subtipo: "NO_CIRCULANTE", naturaleza: "DEUDORA" },
-  "171.01": { codigo: "171.01", nombre: "Depreciación Acumulada de Activos", tipo: "ACTIVO", subtipo: "NO_CIRCULANTE", naturaleza: "ACREEDORA" }, // Cuenta complementaria (resta al activo)
+  "171.01": { codigo: "171.01", nombre: "Depreciación Acumulada de Activos", tipo: "ACTIVO", subtipo: "NO_CIRCULANTE", naturaleza: "ACREEDORA" },
 
   // PASIVO CIRCULANTE (Naturaleza Acreedora: Aumenta con Haber, Disminuye con Debe)
   "201.01": { codigo: "201.01", nombre: "Proveedores y Acreedores Diversos", tipo: "PASIVO", subtipo: "CIRCULANTE", naturaleza: "ACREEDORA" },
   "201.02": { codigo: "201.02", nombre: "Comisiones por Pagar a Ejecutivos", tipo: "PASIVO", subtipo: "CIRCULANTE", naturaleza: "ACREEDORA" },
+  "201.03": { codigo: "201.03", nombre: "Sueldos y Nómina por Pagar", tipo: "PASIVO", subtipo: "CIRCULANTE", naturaleza: "ACREEDORA" },
   "205.01": { codigo: "205.01", nombre: "Tarjetas de Crédito Corporativas", tipo: "PASIVO", subtipo: "CIRCULANTE", naturaleza: "ACREEDORA" },
   "208.01": { codigo: "208.01", nombre: "IVA Trasladado Cobrado", tipo: "PASIVO", subtipo: "CIRCULANTE", naturaleza: "ACREEDORA" },
   "209.01": { codigo: "209.01", nombre: "IVA Trasladado No Cobrado", tipo: "PASIVO", subtipo: "CIRCULANTE", naturaleza: "ACREEDORA" },
+  "213.01": { codigo: "213.01", nombre: "Impuestos y Retenciones de Nómina por Pagar (ISR/IMSS)", tipo: "PASIVO", subtipo: "CIRCULANTE", naturaleza: "ACREEDORA" },
 
   // CAPITAL CONTABLE (Naturaleza Acreedora)
   "301.01": { codigo: "301.01", nombre: "Capital Social / Patrimonio", tipo: "CAPITAL", subtipo: "CONTRIBUIDO", naturaleza: "ACREEDORA" },
@@ -42,6 +44,7 @@ export const CATALOGO_CUENTAS = {
 
   // INGRESOS - ESTADO DE RESULTADOS (Naturaleza Acreedora)
   "401.01": { codigo: "401.01", nombre: "Ingresos por Servicios Facturados", tipo: "INGRESO", subtipo: "OPERATIVO", naturaleza: "ACREEDORA" },
+  "402.01": { codigo: "402.01", nombre: "Otros Ingresos y Productos Diversos", tipo: "INGRESO", subtipo: "NO_OPERATIVO", naturaleza: "ACREEDORA" },
 
   // COSTOS - ESTADO DE RESULTADOS (Naturaleza Deudora)
   "501.01": { codigo: "501.01", nombre: "Costo Directo de Operación y Servicio", tipo: "COSTO", subtipo: "DIRECTO", naturaleza: "DEUDORA" },
@@ -51,24 +54,22 @@ export const CATALOGO_CUENTAS = {
   "601.02": { codigo: "601.02", nombre: "Gastos de Venta - Publicidad (Facebook Ads)", tipo: "GASTO", subtipo: "VENTA", naturaleza: "DEUDORA" },
   "601.03": { codigo: "601.03", nombre: "Gastos Generales - Movilidad (DiDi) y Viáticos", tipo: "GASTO", subtipo: "ADMINISTRACION", naturaleza: "DEUDORA" },
   "601.04": { codigo: "601.04", nombre: "Gastos Generales - Papelería y Caja Chica", tipo: "GASTO", subtipo: "ADMINISTRACION", naturaleza: "DEUDORA" },
-  "601.05": { codigo: "601.05", nombre: "Gasto por Depreciación Contable", tipo: "GASTO", subtipo: "ADMINISTRACION", naturaleza: "DEUDORA" }
+  "601.05": { codigo: "601.05", nombre: "Gasto por Depreciación Contable", tipo: "GASTO", subtipo: "ADMINISTRACION", naturaleza: "DEUDORA" },
+  "601.06": { codigo: "601.06", nombre: "Gastos Operativos Diversos y Servicios Generales", tipo: "GASTO", subtipo: "ADMINISTRACION", naturaleza: "DEUDORA" },
+  "601.07": { codigo: "601.07", nombre: "Sueldos, Salarios y Prestaciones de Nómina", tipo: "GASTO", subtipo: "ADMINISTRACION", naturaleza: "DEUDORA" },
+  "601.08": { codigo: "601.08", nombre: "Cuotas Patronales IMSS, Infonavit e ISN", tipo: "GASTO", subtipo: "ADMINISTRACION", naturaleza: "DEUDORA" }
 };
 
-// Redondeo bancario exacto a 2 decimales para evitar errores de punto flotante en JS
+// Redondeo bancario exacto a 2 decimales
 const r2 = (num) => Math.round((Number(num || 0) + Number.EPSILON) * 100) / 100;
 
 // ============================================================================
 // 2. NÚCLEO DE PARTIDA DOBLE (EMISOR DE PÓLIZAS BLINDADO)
 // ============================================================================
-/**
- * Registra una póliza contable en Firestore validando partida doble exacta.
- * @param {Object} db - Instancia de Firestore (emco-accounting)
- * @param {Object} params - Datos de la póliza
- */
 export async function emitirPolizaContable(db, {
   company_id,
   fecha,           // "YYYY-MM-DD"
-  origen_modulo,   // "CXC" | "CXP" | "CAJA_CHICA" | "ACTIVOS" | "APERTURA"
+  origen_modulo,   // "CXC" | "CXP" | "CAJA_CHICA" | "ACTIVOS" | "OTROS_INGRESOS" | "CONTROL_GASTOS" | "NOMINA_PROVISION" | "NOMINA_PAGO"
   origen_doc_id = "",
   concepto,
   movimientos,     // Array de { cuenta: "105.01", debe: 100, haber: 0, referencia?: "" }
@@ -109,7 +110,6 @@ export async function emitirPolizaContable(db, {
     };
   });
 
-  // VALIDACIÓN SUPREMA DE PARTIDA DOBLE
   if (totalDebe !== totalHaber) {
     throw new Error(
       `DESCUADRE CONTABLE DETECTADO: Total Debe ($${totalDebe}) != Total Haber ($${totalHaber}). Póliza rechazada.`
@@ -117,7 +117,7 @@ export async function emitirPolizaContable(db, {
   }
 
   const fechaStr = fecha || new Date().toISOString().split("T")[0];
-  const periodo = fechaStr.substring(0, 7); // "YYYY-MM"
+  const periodo = fechaStr.substring(0, 7);
   const folio = `POL-${periodo.replace("-", "")}-${Date.now().toString().slice(-5)}`;
 
   const polizaDoc = {
@@ -162,7 +162,6 @@ export async function polizaFacturaCliente(db, {
 }) {
   const resultados = [];
 
-  // 1. Póliza del Ingreso Facturado
   const polIngreso = await emitirPolizaContable(db, {
     company_id,
     fecha,
@@ -178,7 +177,6 @@ export async function polizaFacturaCliente(db, {
   });
   resultados.push(polIngreso);
 
-  // 2. Póliza Automática de Comisión Devengada (si aplica)
   if (r2(comision_monto) > 0) {
     const polComision = await emitirPolizaContable(db, {
       company_id,
@@ -216,7 +214,6 @@ export async function polizaCobroCliente(db, {
     { cuenta: "105.01", debe: 0, haber: monto_cobrado, referencia: cliente_nombre }
   ];
 
-  // Reclasificación de IVA No Cobrado -> IVA Cobrado (Efectivamente causado)
   if (r2(iva_proporcional) > 0) {
     movimientos.push({ cuenta: "209.01", debe: iva_proporcional, haber: 0, referencia: folio_factura });
     movimientos.push({ cuenta: "208.01", debe: 0, haber: iva_proporcional, referencia: folio_factura });
@@ -234,9 +231,7 @@ export async function polizaCobroCliente(db, {
 }
 
 /**
- * C) REGISTRO DE GASTOS OPERATIVOS: FACEBOOK ADS, DIDI, PROVEEDORES (CxP / Caja Chica)
- * @param {string} cuenta_gasto - Ej: "601.02" (Facebook), "601.03" (DiDi), "601.04" (Caja Chica)
- * @param {string} fuente_pago - "BANCO" ("102.01") | "TDC" ("205.01") | "CAJA_CHICA" ("101.01") | "CREDITO" ("201.01")
+ * C) REGISTRO DE GASTOS OPERATIVOS Y CONTROL DE GASTOS
  */
 export async function polizaGastoOperativo(db, {
   company_id,
@@ -244,18 +239,19 @@ export async function polizaGastoOperativo(db, {
   gasto_id,
   proveedor,
   concepto_gasto,
-  cuenta_gasto = "601.03",
+  cuenta_gasto = "601.06",
   subtotal,
   iva = 0,
   total,
-  fuente_pago = "BANCO", // BANCO | TDC | CAJA_CHICA | CREDITO
+  fuente_pago = "BANCO",
+  origen_modulo = "CONTROL_GASTOS",
   user_uid
 }) {
   const mapaFuente = {
     BANCO: { cuenta: "102.01", esPagado: true },
-    TDC: { cuenta: "205.01", esPagado: true },         // Con TDC el gasto ya está liquidado al proveedor
+    TDC: { cuenta: "205.01", esPagado: true },
     CAJA_CHICA: { cuenta: "101.01", esPagado: true },
-    CREDITO: { cuenta: "201.01", esPagado: false }     // Queda a deber a Proveedores
+    CREDITO: { cuenta: "201.01", esPagado: false }
   };
 
   const destino = mapaFuente[fuente_pago] || mapaFuente.BANCO;
@@ -267,10 +263,14 @@ export async function polizaGastoOperativo(db, {
     { cuenta: destino.cuenta, debe: 0, haber: total, referencia: proveedor }
   ];
 
+  const moduloFinal = fuente_pago === "CAJA_CHICA" && origen_modulo === "CXP"
+    ? "CAJA_CHICA"
+    : origen_modulo;
+
   return await emitirPolizaContable(db, {
     company_id,
     fecha,
-    origen_modulo: fuente_pago === "CAJA_CHICA" ? "CAJA_CHICA" : "CXP",
+    origen_modulo: moduloFinal,
     origen_doc_id: gasto_id,
     concepto: `${concepto_gasto} (${proveedor})`,
     user_uid,
@@ -304,7 +304,7 @@ export async function polizaFondeoCajaChica(db, {
 }
 
 /**
- * E) PAGO DE COMISIONES A EJECUTIVOS (Liquida el Pasivo 201.02 contra Bancos)
+ * E) PAGO DE COMISIONES A EJECUTIVOS
  */
 export async function polizaPagoComision(db, {
   company_id,
@@ -328,16 +328,124 @@ export async function polizaPagoComision(db, {
   });
 }
 
+/**
+ * F) OTROS INGRESOS
+ */
+export async function polizaOtroIngreso(db, {
+  company_id,
+  fecha,
+  ingreso_id,
+  pagador,
+  concepto_ingreso,
+  cuenta_ingreso = "402.01",
+  subtotal,
+  iva = 0,
+  total,
+  destino_ingreso = "BANCO",
+  user_uid
+}) {
+  const mapaDestino = {
+    BANCO: { cuenta: "102.01", esCobrado: true },
+    CAJA_CHICA: { cuenta: "101.01", esCobrado: true },
+    CREDITO: { cuenta: "105.01", esCobrado: false }
+  };
+
+  const destino = mapaDestino[destino_ingreso] || mapaDestino.BANCO;
+  const cuentaIva = destino.esCobrado ? "208.01" : "209.01";
+
+  const movimientos = [
+    { cuenta: destino.cuenta, debe: total, haber: 0, referencia: pagador },
+    { cuenta: cuenta_ingreso, debe: 0, haber: subtotal, referencia: pagador },
+    ...(r2(iva) > 0 ? [{ cuenta: cuentaIva, debe: 0, haber: iva, referencia: pagador }] : [])
+  ];
+
+  return await emitirPolizaContable(db, {
+    company_id,
+    fecha,
+    origen_modulo: "OTROS_INGRESOS",
+    origen_doc_id: ingreso_id,
+    concepto: `Otro Ingreso: ${concepto_ingreso} (${pagador})`,
+    user_uid,
+    movimientos
+  });
+}
+
+/**
+ * G) PROVISIÓN DE NÓMINA (Devenga el gasto de sueldos/costo directo y crea el pasivo)
+ */
+export async function polizaProvisionNomina(db, {
+  company_id,
+  fecha,
+  nomina_id,
+  periodo_label,
+  total_bruto_admin = 0,      // Cuenta 601.07
+  total_bruto_operativo = 0,  // Cuenta 501.01
+  carga_patronal = 0,         // Cuenta 601.08
+  total_retenciones = 0,      // Cuenta 213.01 (ISR / IMSS)
+  total_neto_pagar,           // Cuenta 201.03 (Sueldos por Pagar)
+  user_uid
+}) {
+  const movimientos = [];
+
+  if (r2(total_bruto_admin) > 0) {
+    movimientos.push({ cuenta: "601.07", debe: r2(total_bruto_admin), haber: 0, referencia: periodo_label });
+  }
+  if (r2(total_bruto_operativo) > 0) {
+    movimientos.push({ cuenta: "501.01", debe: r2(total_bruto_operativo), haber: 0, referencia: periodo_label });
+  }
+  if (r2(carga_patronal) > 0) {
+    movimientos.push({ cuenta: "601.08", debe: r2(carga_patronal), haber: 0, referencia: periodo_label });
+  }
+
+  movimientos.push({ cuenta: "201.03", debe: 0, haber: r2(total_neto_pagar), referencia: periodo_label });
+
+  const abonoImpuestos = r2(total_retenciones + carga_patronal);
+  if (abonoImpuestos > 0) {
+    movimientos.push({ cuenta: "213.01", debe: 0, haber: abonoImpuestos, referencia: periodo_label });
+  }
+
+  return await emitirPolizaContable(db, {
+    company_id,
+    fecha,
+    origen_modulo: "NOMINA_PROVISION",
+    origen_doc_id: nomina_id,
+    concepto: `Provisión de Nómina | ${periodo_label}`,
+    user_uid,
+    movimientos
+  });
+}
+
+/**
+ * H) DISPERSIÓN / PAGO DE NÓMINA (Liquida Pasivo 201.03 contra Bancos o Caja Chica)
+ */
+export async function polizaPagoNomina(db, {
+  company_id,
+  fecha,
+  nomina_id,
+  periodo_label,
+  monto_dispersado,
+  fuente_pago = "BANCO", // "BANCO" | "CAJA_CHICA"
+  user_uid
+}) {
+  const cuentaSalida = fuente_pago === "CAJA_CHICA" ? "101.01" : "102.01";
+
+  return await emitirPolizaContable(db, {
+    company_id,
+    fecha,
+    origen_modulo: "NOMINA_PAGO",
+    origen_doc_id: nomina_id,
+    concepto: `Dispersión / Pago de Nómina | ${periodo_label}`,
+    user_uid,
+    movimientos: [
+      { cuenta: "201.03", debe: r2(monto_dispersado), haber: 0, referencia: periodo_label },
+      { cuenta: cuentaSalida, debe: 0, haber: r2(monto_dispersado), referencia: periodo_label }
+    ]
+  });
+}
+
 // ============================================================================
 // 4. MOTOR DE ESTADOS FINANCIEROS (BALANCE GENERAL & ESTADO DE RESULTADOS)
 // ============================================================================
-/**
- * Genera el Estado de Resultados (por rango de fechas) y el Balance General (a fecha de corte)
- * @param {Object} db - Instancia Firestore
- * @param {string} company_id - "cesar_gonzalez" | "hr_employment" | "CONSOLIDADO"
- * @param {string} fechaInicio - "YYYY-MM-DD" (para Estado de Resultados)
- * @param {string} fechaCorte - "YYYY-MM-DD" (para ambos estados)
- */
 export async function generarEstadosFinancieros(db, company_id, fechaInicio, fechaCorte) {
   const colRef = collection(db, "accounting_ledger");
   const q = company_id === "CONSOLIDADO"
@@ -346,9 +454,8 @@ export async function generarEstadosFinancieros(db, company_id, fechaInicio, fec
 
   const snap = await getDocs(q);
 
-  // Acumuladores por cuenta
-  const saldosBalance = {};     // Acumulado histórico hasta fechaCorte
-  const saldosResultados = {};  // Acumulado del periodo [fechaInicio .. fechaCorte]
+  const saldosBalance = {};
+  const saldosResultados = {};
 
   Object.keys(CATALOGO_CUENTAS).forEach((cod) => {
     saldosBalance[cod] = { ...CATALOGO_CUENTAS[cod], debe: 0, haber: 0, saldo: 0 };
@@ -357,7 +464,7 @@ export async function generarEstadosFinancieros(db, company_id, fechaInicio, fec
 
   snap.forEach((docSnap) => {
     const poliza = docSnap.data();
-    if (fechaCorte && poliza.fecha > fechaCorte) return; // Ignorar movimientos posteriores al corte
+    if (fechaCorte && poliza.fecha > fechaCorte) return;
 
     const enPeriodoPL = (!fechaInicio || poliza.fecha >= fechaInicio) && (!fechaCorte || poliza.fecha <= fechaCorte);
 
@@ -365,11 +472,9 @@ export async function generarEstadosFinancieros(db, company_id, fechaInicio, fec
       const cta = saldosBalance[mov.cuenta];
       if (!cta) return;
 
-      // Acumulado histórico (para Balance General y Utilidad Acumulada)
       cta.debe = r2(cta.debe + mov.debe);
       cta.haber = r2(cta.haber + mov.haber);
 
-      // Acumulado del periodo (para Estado de Resultados)
       if (enPeriodoPL && ["INGRESO", "COSTO", "GASTO"].includes(cta.tipo)) {
         saldosResultados[mov.cuenta].debe = r2(saldosResultados[mov.cuenta].debe + mov.debe);
         saldosResultados[mov.cuenta].haber = r2(saldosResultados[mov.cuenta].haber + mov.haber);
@@ -377,7 +482,6 @@ export async function generarEstadosFinancieros(db, company_id, fechaInicio, fec
     });
   });
 
-  // Calcular saldos netos según naturaleza contable
   const calcularSaldoNeto = (item) => {
     return item.naturaleza === "DEUDORA"
       ? r2(item.debe - item.haber)
@@ -387,9 +491,6 @@ export async function generarEstadosFinancieros(db, company_id, fechaInicio, fec
   Object.values(saldosBalance).forEach((c) => { c.saldo = calcularSaldoNeto(c); });
   Object.values(saldosResultados).forEach((c) => { c.saldo = calcularSaldoNeto(c); });
 
-  // --------------------------------------------------------------------------
-  // A) CONSTRUCCIÓN DEL ESTADO DE RESULTADOS (P&L DEL PERIODO)
-  // --------------------------------------------------------------------------
   const ingresos = Object.values(saldosResultados).filter((c) => c.tipo === "INGRESO");
   const costos = Object.values(saldosResultados).filter((c) => c.tipo === "COSTO");
   const gastos = Object.values(saldosResultados).filter((c) => c.tipo === "GASTO");
@@ -400,14 +501,10 @@ export async function generarEstadosFinancieros(db, company_id, fechaInicio, fec
   const totalGastos = r2(gastos.reduce((acc, c) => acc + c.saldo, 0));
   const utilidadNetaPeriodo = r2(utilidadBruta - totalGastos);
 
-  // --------------------------------------------------------------------------
-  // B) CONSTRUCCIÓN DEL BALANCE GENERAL (A FECHA DE CORTE)
-  // --------------------------------------------------------------------------
   const activoCirculante = Object.values(saldosBalance).filter((c) => c.tipo === "ACTIVO" && c.subtipo === "CIRCULANTE");
   const activoNoCirculante = Object.values(saldosBalance).filter((c) => c.tipo === "ACTIVO" && c.subtipo === "NO_CIRCULANTE");
 
   const totalActivoCirculante = r2(activoCirculante.reduce((acc, c) => acc + c.saldo, 0));
-  // Nota: Depreciación acumulada (171.01) tiene naturaleza ACREEDORA, por eso resta al activo fijo
   const totalActivoNoCirculante = r2(
     activoNoCirculante.reduce((acc, c) => (c.naturaleza === "DEUDORA" ? acc + c.saldo : acc - c.saldo), 0)
   );
@@ -419,7 +516,6 @@ export async function generarEstadosFinancieros(db, company_id, fechaInicio, fec
   const cuentasCapital = Object.values(saldosBalance).filter((c) => c.tipo === "CAPITAL");
   const capitalContribuidoYGanado = r2(cuentasCapital.reduce((acc, c) => acc + c.saldo, 0));
 
-  // Utilidad Neta Acumulada Histórica hasta fechaCorte (para cuadrar el Balance General al 100%)
   const ingHist = Object.values(saldosBalance).filter((c) => c.tipo === "INGRESO").reduce((a, c) => a + c.saldo, 0);
   const cosHist = Object.values(saldosBalance).filter((c) => c.tipo === "COSTO").reduce((a, c) => a + c.saldo, 0);
   const gasHist = Object.values(saldosBalance).filter((c) => c.tipo === "GASTO").reduce((a, c) => a + c.saldo, 0);

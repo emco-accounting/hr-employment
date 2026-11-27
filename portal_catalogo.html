@@ -61,7 +61,6 @@
       <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
         <label class="text-[11px] font-mono uppercase text-slate-400 px-2">Empresa:</label>
         <select id="select-company" onchange="cambiarEmpresaActiva(this.value)" class="bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 outline-none focus:border-indigo-500 font-sans">
-          <!-- Opciones dinámicas según allowed_companies -->
         </select>
       </div>
 
@@ -87,10 +86,10 @@
           </h3>
           <span class="text-xs text-slate-400">Control operativo, flujo de efectivo, patrimonio y gobernanza</span>
         </div>
-        <span class="text-xs font-mono text-slate-500">6 Módulos Estándar</span>
+        <span class="text-xs font-mono text-slate-500">8 Módulos Estándar</span>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
         <!-- CARD 1: CUENTAS POR COBRAR (CxC) -->
         <div id="card-core-cxc" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-emerald-500/40 transition">
@@ -136,7 +135,51 @@
           </div>
         </div>
 
-        <!-- CARD 3: ACTIVOS & HARDWARE -->
+        <!-- CARD 3: OTROS INGRESOS (CORE) -->
+        <div id="card-core-otros-ingresos" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-teal-500/40 transition">
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-2xl">
+                <i class="ph-bold ph-coins"></i>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold">402.01 CORE</span>
+            </div>
+            <div>
+              <h4 class="text-base font-bold text-white leading-tight">Otros Ingresos</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">Ingresos extraordinarios, reembolsos y rendimientos conectados directo a pólizas contables.</p>
+            </div>
+          </div>
+          <div class="mt-5 pt-4 border-t border-slate-800">
+            <a id="btn-nav-otros-ingresos" href="#" class="w-full text-center py-2 px-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-teal-600/20">
+              <span>Abrir Otros Ingresos</span>
+              <i class="ph ph-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- CARD 4: CONTROL DE GASTOS (CORE) -->
+        <div id="card-core-control-gastos" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-orange-500/40 transition">
+          <div class="space-y-3">
+            <div class="flex justify-between items-start">
+              <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center text-2xl">
+                <i class="ph-bold ph-wallet"></i>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono bg-orange-500/10 text-orange-400 border border-orange-500/20 font-bold">601.XX CORE</span>
+            </div>
+            <div>
+              <h4 class="text-base font-bold text-white leading-tight">Control de Gastos</h4>
+              <p class="text-xs text-slate-400 mt-1 leading-relaxed">Egresos operativos por rubro NIF/SAT con emisión automática de póliza de partida doble.</p>
+            </div>
+          </div>
+          <div class="mt-5 pt-4 border-t border-slate-800">
+            <a id="btn-nav-control-gastos" href="#" class="w-full text-center py-2 px-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-orange-600/20">
+              <span>Abrir Control de Gastos</span>
+              <i class="ph ph-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- CARD 5: ACTIVOS & HARDWARE -->
         <div id="card-core-assets" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-indigo-500/40 transition">
           <div class="space-y-3">
             <div class="flex justify-between items-start">
@@ -158,7 +201,7 @@
           </div>
         </div>
 
-        <!-- CARD 4: TABLERO GERENCIAL -->
+        <!-- CARD 6: TABLERO GERENCIAL -->
         <div id="card-core-gerencial" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-purple-500/40 transition">
           <div class="space-y-3">
             <div class="flex justify-between items-start">
@@ -180,7 +223,7 @@
           </div>
         </div>
 
-        <!-- CARD 5: STAFF & GOBERNANZA RBAC -->
+        <!-- CARD 7: STAFF & GOBERNANZA RBAC -->
         <div id="card-core-staff" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-amber-500/40 transition">
           <div class="space-y-3">
             <div class="flex justify-between items-start">
@@ -202,7 +245,7 @@
           </div>
         </div>
 
-        <!-- CARD 6: CONSOLA DE AUDITORÍA FORENSE (LOGS) -->
+        <!-- CARD 8: CONSOLA DE AUDITORÍA FORENSE (LOGS) -->
         <div id="card-core-logs" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between hover:border-slate-700 transition">
           <div class="space-y-3">
             <div class="flex justify-between items-start">
@@ -317,15 +360,12 @@
         const allowed = currentUserStaff.allowed_companies || ["*"];
         const isSuper = currentUserStaff.role_id === "SUPERADMIN";
 
-        // Ajustar selector de empresas según permisos
         construirSelectorEmpresas(allowed, isSuper);
 
-        // Validar si la empresa activa solicitada es permitida
         if (!isSuper && !allowed.includes("*") && !allowed.includes(activeCompanyId)) {
           activeCompanyId = allowed[0] || "cesar_gonzalez";
         }
 
-        // Cargar permisos RBAC del rol
         const roleSnap = await getDoc(doc(db, "system_roles", currentUserStaff.role_id));
         if (roleSnap.exists()) {
           userPermissions = roleSnap.data().permissions || [];
@@ -365,7 +405,6 @@
         select.appendChild(el);
       });
 
-      // Si solo tiene una empresa permitida, deshabilitar selector
       if (options.length <= 1) {
         select.disabled = true;
         select.classList.add("opacity-60", "cursor-not-allowed");
@@ -383,6 +422,7 @@
       sessionStorage.setItem("active_company_id", activeCompanyId);
 
       const emp = EMPRESAS[activeCompanyId] || EMPRESAS["cesar_gonzalez"];
+      const q = `?empresa=${encodeURIComponent(activeCompanyId)}`;
       document.getElementById("select-company").value = activeCompanyId;
       document.getElementById("header-company-name").innerText = emp.name;
 
@@ -390,24 +430,27 @@
       badge.innerText = emp.short;
       badge.className = `px-2 py-0.5 rounded text-[10px] font-mono border ${emp.badgeColor}`;
 
-      // Configurar enlaces directos
-      document.getElementById("btn-nav-cxc").href = `${emp.cxc_file}?empresa=${encodeURIComponent(activeCompanyId)}`;
-      document.getElementById("btn-nav-cxp").href = `${emp.cxp_file}?empresa=${encodeURIComponent(activeCompanyId)}`;
-      document.getElementById("btn-nav-assets").href = `${emp.assets_file}?empresa=${encodeURIComponent(activeCompanyId)}`;
-      document.getElementById("btn-nav-gerencial").href = `modulo_gerencial.html?empresa=${encodeURIComponent(activeCompanyId)}`;
-      document.getElementById("btn-nav-staff").href = `staff.html?empresa=${encodeURIComponent(activeCompanyId)}`;
-      document.getElementById("btn-nav-logs").href = `modulo_logs.html?empresa=${encodeURIComponent(activeCompanyId)}`;
-      document.getElementById("link-studio-creator").href = `modulo_creador.html?empresa=${encodeURIComponent(activeCompanyId)}`;
+      // Configurar enlaces directos sincronizados
+      document.getElementById("btn-nav-cxc").href = `${emp.cxc_file}${q}`;
+      document.getElementById("btn-nav-cxp").href = `${emp.cxp_file}${q}`;
+      document.getElementById("btn-nav-otros-ingresos").href = `otros_ingresos.html${q}`;
+      document.getElementById("btn-nav-control-gastos").href = `control_gastos.html${q}`;
+      document.getElementById("btn-nav-assets").href = `${emp.assets_file}${q}`;
+      document.getElementById("btn-nav-gerencial").href = `modulo_gerencial.html${q}`;
+      document.getElementById("btn-nav-staff").href = `staff.html${q}`;
+      document.getElementById("btn-nav-logs").href = `modulo_logs.html${q}`;
+      document.getElementById("link-studio-creator").href = `modulo_creador.html${q}`;
 
-      // Evaluación completa de permisos sobre todos los módulos del núcleo
+      // Evaluación de permisos sobre todos los módulos del núcleo
       aplicarRestriccionVisual("card-core-cxc", "cxc.read");
       aplicarRestriccionVisual("card-core-cxp", "cxp.read");
+      aplicarRestriccionVisual("card-core-otros-ingresos", "otros_ingresos.read");
+      aplicarRestriccionVisual("card-core-control-gastos", "control_gastos.read");
       aplicarRestriccionVisual("card-core-assets", "assets.read");
       aplicarRestriccionVisual("card-core-gerencial", "gerencial.read");
       aplicarRestriccionVisual("card-core-staff", "staff.read");
       aplicarRestriccionVisual("card-core-logs", "audit.read");
 
-      // Botón del Creador Studio
       const isSuper = currentUserStaff?.role_id === "SUPERADMIN";
       const hasCreator = isSuper || userPermissions.includes("*") || userPermissions.includes("creator.read");
       const linkCreator = document.getElementById("link-studio-creator");
@@ -438,9 +481,10 @@
         card.classList.remove("opacity-40", "grayscale");
         if (btn) {
           btn.classList.remove("pointer-events-none", "bg-slate-800", "text-slate-500");
-          // Restaurar etiquetas originales
           if (cardId === "card-core-cxc") btn.innerText = "Abrir Cuentas por Cobrar";
           if (cardId === "card-core-cxp") btn.innerText = "Abrir Cuentas por Pagar";
+          if (cardId === "card-core-otros-ingresos") btn.innerText = "Abrir Otros Ingresos";
+          if (cardId === "card-core-control-gastos") btn.innerText = "Abrir Control de Gastos";
           if (cardId === "card-core-assets") btn.innerText = "Abrir Activos Fijos";
           if (cardId === "card-core-gerencial") btn.innerText = "Abrir Tablero Gerencial";
           if (cardId === "card-core-staff") btn.innerText = "Gestionar Staff";
@@ -449,14 +493,16 @@
       }
     }
 
-    // SINCRONIZACIÓN REACTIVA DE MÓDULOS CREADOS E IMPORTADOS
     function initDynamicModulesStream() {
       if (unsubscribeDynamicModules) unsubscribeDynamicModules();
 
       unsubscribeDynamicModules = onSnapshot(collection(db, "system_modules"), (snap) => {
         cachedModules = [];
         snap.forEach(d => {
-          cachedModules.push({ id: d.id, ...d.data() });
+          const data = d.data();
+          // Evitar duplicados si anteriormente existían en system_modules con los mismos slugs core
+          if (data.slug === "otros_ingresos" || data.slug === "control_gastos") return;
+          cachedModules.push({ id: d.id, ...data });
         });
         renderDynamicModules();
       }, (err) => {
